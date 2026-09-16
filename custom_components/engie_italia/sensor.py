@@ -1,5 +1,7 @@
 """Dated consumption and invoice summaries, without cumulative billing counters."""
 
+from datetime import datetime, time, timedelta
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -8,10 +10,13 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfEnergy
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from .api.mobile import ROME
 from .api.models import Utility
+from .api.tariffs import VERIFIED_TARIFFS, current_tariff, tariff_status
 from .const import DOMAIN
 
 COMMON = (
@@ -129,6 +134,22 @@ INVOICES = (
     ),
 )
 
+TARIFFS = (
+    SensorEntityDescription(
+        key="energy_unit_price",
+        translation_key="energy_unit_price",
+        icon="mdi:currency-eur",
+        suggested_display_precision=5,
+    ),
+    SensorEntityDescription(
+        key="annual_fixed_fee",
+        translation_key="annual_fixed_fee",
+        icon="mdi:calendar-currency",
+        native_unit_of_measurement="EUR/year",
+        suggested_display_precision=2,
+    ),
+)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = entry.runtime_data
@@ -155,6 +176,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.extend(
                 EngieSensor(coordinator, entry, key, data.supply.utility, description)
                 for description in descriptions
+            )
+            entities.extend(
+                EngieTariffSensor(
+                    coordinator, entry, key, data.supply.utility, description
+                )
+                for description in TARIFFS
             )
         if entities:
             async_add_entities(entities)
@@ -320,3 +347,91 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
             if self.supply_data.readings.last_update
             else None,
         }
+
+
+class EngieTariffSensor(EngieSensor):
+    """Reviewed energy component, independent of consumption availability."""
+
+    def __init__(self, coordinator, entry, key, utility, description):
+        super().__init__(coordinator, entry, key, utility, description)
+        self._unsub_midnight = None
+        if description.key == "energy_unit_price":
+            self._attr_native_unit_of_measurement = (
+                "EUR/kWh" if utility is Utility.ELECTRICITY else "EUR/Smc"
+            )
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        self._schedule_midnight()
+
+    async def async_will_remove_from_hass(self):
+        if self._unsub_midnight is not None:
+            self._unsub_midnight()
+            self._unsub_midnight = None
+        await super().async_will_remove_from_hass()
+
+    @callback
+    def _schedule_midnight(self):
+        tomorrow = dt_util.now(ROME).date() + timedelta(days=1)
+        self._unsub_midnight = async_track_point_in_utc_time(
+            self.hass,
+            self._async_midnight,
+            datetime.combine(tomorrow, time.min, ROME),
+        )
+
+    @callback
+    def _async_midnight(self, _now):
+        # Expire at Italian midnight even if the next API poll is hours away.
+        self.async_write_ha_state()
+        self._schedule_midnight()
+
+    def _tariff(self):
+        if not self.coordinator.last_update_success or self.supply_data is None:
+            return None
+        return current_tariff(self.supply_data.supply, dt_util.now(ROME).date())
+
+    @property
+    def available(self):
+        return self._tariff() is not None
+
+    @property
+    def native_value(self):
+        tariff = self._tariff()
+        if tariff is None:
+            return None
+        return (
+            tariff.unit_price
+            if self.entity_description.key == "energy_unit_price"
+            else tariff.annual_fee
+        )
+
+    @property
+    def extra_state_attributes(self):
+        data = self.supply_data
+        if data is None:
+            return None
+        attrs = {
+            "tariff_status": tariff_status(data.supply, dt_util.now(ROME).date())
+            if self.coordinator.last_update_success
+            else "update_failed",
+            "taxes_included": False,
+            "all_inclusive": False,
+        }
+        offer = data.supply.offer
+        if offer is not None:
+            attrs.update(
+                offer_code=offer.code,
+                valid_from=offer.valid_from.isoformat(),
+                valid_until=offer.valid_until.isoformat(),
+            )
+            verified = VERIFIED_TARIFFS.get(offer.code)
+            if verified is not None:
+                attrs["source_url"] = verified.source_url
+        tariff = self._tariff()
+        if tariff is not None and self.entity_description.key == "energy_unit_price":
+            attrs["fixed_fee_included"] = False
+            if data.supply.utility is Utility.ELECTRICITY:
+                attrs["network_losses_included"] = tariff.network_losses_included
+            elif tariff.reference_pcs_gj_smc is not None:
+                attrs["reference_pcs_gj_smc"] = str(tariff.reference_pcs_gj_smc)
+        return attrs

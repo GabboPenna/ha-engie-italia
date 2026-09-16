@@ -7,10 +7,10 @@
 
   <h1>ENGIE Italia per Home Assistant</h1>
 
-  <p>Forniture, consumi elettrici e riepilogo fatture, dentro Home Assistant.</p>
+  <p>Forniture, consumi elettrici, prezzi verificati e fatture, dentro Home Assistant.</p>
 
   <p>
-    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9"><img alt="Stato: beta 0.1.0b9" src="https://img.shields.io/badge/beta-0.1.0b9-f59e0b?style=flat-square"></a>
+    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b10"><img alt="Stato: beta 0.1.0b10" src="https://img.shields.io/badge/beta-0.1.0b10-f59e0b?style=flat-square"></a>
     <a href="#installazione"><img alt="Home Assistant 2026.9.0 o successivo" src="https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&amp;logo=homeassistant&amp;logoColor=white"></a>
     <a href="SECURITY.md"><img alt="Accesso in sola lettura" src="https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square"></a>
     <a href="LICENSE"><img alt="Licenza del codice: MIT" src="https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square"></a>
@@ -68,6 +68,7 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 | **Forniture** | Rilevamento automatico, un dispositivo per fornitura, stato e disponibilità dei dati. |
 | **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità e data dell'ultimo dato ENGIE. |
 | **Fatture · sperimentale** | Ultima fattura, importo, fatture aperte, residuo da pagare e scadenze sul dispositivo Account. [Sensori e limiti](docs/INVOICES.md). |
+| **Prezzi · sperimentale** | Componente energia in €/kWh e €/Smc e quota fissa annua, per le versioni di offerta verificate. [Copertura e limiti](docs/TARIFFS.md). |
 | **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo da 1 a 24 ore, pulsante manuale e data dell'ultima sincronizzazione. |
 | **Accesso** | Login e OTP sul sito ENGIE, rinnovo della sessione e riautenticazione quando richiesta. |
 | **Diagnostica** | Informazioni tecniche senza identificativi, credenziali, quantità consumate o importi. |
@@ -79,9 +80,11 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 > differiti: non rappresentano misure in tempo reale.
 
 Le risposte gas osservate sono errori del servizio, non consumi zero. Un account
-nuovo potrebbe non avere misure: la causa non è confermata. Prezzi unitari e
-tariffe automatiche restano in ricerca; nessun prezzo viene dedotto dal nome
-dell'offerta e non è richiesto un inserimento manuale.
+nuovo potrebbe non avere misure: la causa non è confermata. La b10 abbina il
+codice completo dell'offerta alle condizioni economiche pubbliche verificate:
+il catalogo iniziale include solo `PUMD#00016`. Altre versioni, rinnovi e prezzi
+indicizzati restano in ricerca. Nessun prezzo viene dedotto dal nome dell'offerta
+o richiesto manualmente. I valori escludono tasse e altri oneri della bolletta.
 
 I totali di consumo sono quelli del provider, non somme dei campioni arrotondati.
 Non è prevista l'importazione nella dashboard Energy o la creazione di falsi

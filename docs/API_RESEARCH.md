@@ -247,6 +247,38 @@ Non e' stata recuperata una risposta gas con misure: nessun parser o sensore gas
 viene dichiarato funzionante. Le unita' Smc compaiono nell'app, ma resta da
 verificare il payload di successo, compresi periodi e stime.
 
+### Prezzi e condizioni economiche: verifica del 16 settembre 2026
+
+La risposta `contracts/v2/user` espone per fornitura `productCode`,
+`prodottoCodiceUnivoco`, `priceType`, `tipoContratto`, `inizioCE`, `fineCE`
+e `durataCE`. Nella risposta osservata non contiene prezzi unitari numerici.
+Le tipologie domestiche riconosciute e le regole di abbinamento sono descritte
+in [TARIFFS.md](TARIFFS.md).
+
+Il documento pubblico ENGIE
+[223_pumd-00016](https://www.engie.it/documents/d/casa/223_pumd-00016)
+riporta il codice completo `PUMD#00016`, componente energia, quote annue,
+durata, perdite e PCS. La b10 include un catalogo di questa versione verificata;
+non effettua download di documenti durante il polling e non deduce prezzi dal
+nome commerciale. Fonte e impronta del PDF sono documentate; nessun contratto
+personale è incluso nel repository.
+
+Ulteriori letture dell'app, verificate staticamente e provate in sola lettura:
+
+- `POST contracts/v2/documents/documentsList`, lista documenti con `contractId`,
+  `fiscalCodeOrVat`, `practicesNames`: `contractKit` e `renewals` vuoti nella
+  prova. Il verbo POST viene usato dall'app per una consultazione.
+- `GET contracts/v2/invoicesCosts`, `contractId`, `dateFrom` opzionale:
+  HTTP 200 e `OK`, ma codici ENGIE 9/9.91 e lista `costs` vuota. Il DTO contiene
+  importi e periodi mensili, non quantità o prezzi unitari.
+- `GET contracts/v2/getIndexGraphByCommodity`, `commodity=power` oppure `gas`:
+  risposta riuscita con dodici valori `indexValue`/`periodLabel` e grafici
+  PUN Index GME in €/kWh e PSVDA in €/Smc. Sono indici di mercato; non sono
+  il prezzo personale di un'offerta a prezzo fisso. Per quelle indicizzate
+  servono anche formula, spread, perdite e periodo contrattuale verificati.
+
+Queste tre letture sono ricerca e non sono state aggiunte al client installato.
+
 ## Verifiche ancora necessarie
 
 ### Primo collegamento senza configurazione preesistente
