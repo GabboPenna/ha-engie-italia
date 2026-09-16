@@ -77,6 +77,9 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   [Copertura e limiti](TARIFFS.md).
 - [x] b10 installata tramite HACS su HA 2026.9.2: quattro sensori tariffari
   disponibili, 26 entità complessive, consumi conservati e nessun errore ENGIE.
+- [x] b11: 15 versioni aggiuntive verificate nei PDF ufficiali, per un totale
+  di 16 versioni di Energia PuntoFisso Mono 12 mesi. Prezzi, quote annue,
+  finestre di sottoscrizione e SHA-256 nel [registro delle fonti](TARIFF_SOURCES.md).
 - [ ] Ampliare le versioni verificate; verificare rinnovi e offerte indicizzate.
 - [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 

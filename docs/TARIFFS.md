@@ -22,21 +22,47 @@ L'integrazione non effettua queste conversioni e non calcola il costo completo
 della bolletta. I sensori sono utilizzabili nelle proprie automazioni; non
 configurano automaticamente il calcolo dei costi nella dashboard Energy.
 
-## Copertura iniziale
+## Catalogo verificato nella b11
 
 Il catalogo incluso nel componente contiene soltanto versioni controllate sui
-documenti pubblici ENGIE. Non scarica o interpreta PDF a ogni aggiornamento e
-non richiede un prezzo inserito manualmente.
+documenti pubblici ENGIE. La b11 aggiunge 15 versioni, portando il totale a
+**16 versioni di Energia PuntoFisso Mono 12 mesi**: da `PUMD#00008` a
+`PUMD#00018`, e da `PUMD#00020` a `PUMD#00024`. La `PUMD#00019` non è
+verificata e resta esclusa. Non sono sedici famiglie commerciali diverse.
+Il componente non scarica o interpreta PDF a ogni aggiornamento e non richiede
+un prezzo inserito manualmente.
 
 | Codice completo | Luce EUR/kWh | Luce EUR/anno | Gas EUR/Smc | Gas EUR/anno | Fonte |
 | :--- | ---: | ---: | ---: | ---: | :--- |
-| PUMD#00016 | 0,11670 | 72,00 | 0,45450 | 84,00 | [CTE ENGIE, pagine 1–3](https://www.engie.it/documents/d/casa/223_pumd-00016) |
+| PUMD#00008 | 0,11620 | 72,00 | 0,48400 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00008) |
+| PUMD#00009 | 0,11620 | 72,00 | 0,47600 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00009) |
+| PUMD#00010 | 0,11675 | 72,00 | 0,48300 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00010) |
+| PUMD#00011 | 0,12290 | 72,00 | 0,48300 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00011) |
+| PUMD#00012 | 0,12290 | 72,00 | 0,48300 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00012) |
+| PUMD#00013 | 0,11860 | 72,00 | 0,48300 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00013) |
+| PUMD#00014 | 0,11860 | 72,00 | 0,48300 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00014) |
+| PUMD#00015 | 0,11860 | 72,00 | 0,46450 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00015) |
+| PUMD#00016 | 0,11670 | 72,00 | 0,45450 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00016) |
+| PUMD#00017 | 0,11340 | 72,00 | 0,45450 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00017) |
+| PUMD#00018 | 0,12051 | 72,00 | 0,53900 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00018) |
+| PUMD#00020 | 0,12865 | 72,00 | 0,55450 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00020) |
+| PUMD#00021 | 0,13500 | 72,00 | 0,55450 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00021) |
+| PUMD#00022 | 0,14090 | 72,00 | 0,59900 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00022) |
+| PUMD#00023 | 0,14090 | 72,00 | 0,69000 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00023) |
+| PUMD#00024 | 0,18400 | 120,00 | 0,75000 | 120,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00024) |
 
-Documento controllato il 16 settembre 2026; PCS gas di riferimento
-0,03852 GJ/Smc. SHA-256 del PDF esaminato:
-`d9342c1e1c7a6813294cef34017928c47442e005b1ef6131443144f4dcc843e5`.
-La finestra di sottoscrizione 9–15 luglio 2026 è distinta dai dodici mesi di
-applicazione, che decorrono dall'attivazione della prima fornitura.
+Documenti controllati il 17 settembre 2026, con confronto delle condizioni e
+verifica visiva delle tabelle della componente energia e delle quote annue.
+I documenti condividono durata di dodici mesi, perdite luce incluse, assenza di
+sconti e PCS gas di riferimento 0,03852 GJ/Smc. Ogni versione ha i propri prezzi
+e la propria finestra di sottoscrizione: non viene usato il prezzo dell'ultima
+offerta disponibile come valore di ripiego.
+
+URL, finestre di sottoscrizione e impronte SHA-256 dei PDF esaminati sono nel
+[registro delle fonti](TARIFF_SOURCES.md). La scadenza per sottoscrivere l'offerta
+è distinta dalla validità economica del contratto: i dodici mesi decorrono
+dall'attivazione della prima fornitura. Il prezzo già supportato per
+`PUMD#00016` resta invariato.
 
 L'abbinamento usa `prodottoCodiceUnivoco` e `productCode` della risposta
 forniture; il nome commerciale non viene usato. Richiede prezzo `FIXED`, uso
@@ -49,7 +75,7 @@ la propria attivazione ma mantiene la scadenza comune.
 
 **Il rinnovo o il cambio prodotto non riutilizzano automaticamente il prezzo
 iniziale.** Non sono ancora supportati prezzi indicizzati, fasce orarie,
-altre versioni della stessa offerta o condizioni personalizzate non verificabili.
+versioni non presenti nel catalogo o condizioni personalizzate non verificabili.
 Eventuali accordi individuali e successive comunicazioni contrattuali devono
 essere verificati nelle proprie condizioni e fatture.
 
