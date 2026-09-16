@@ -4,25 +4,47 @@ Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
 La b9 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
-La prova di installazione e aggiornamento mediante HACS resta aperta nella
-[issue #3](https://github.com/GabboPenna/ha-engie-italia/issues/3).
+Il download della b9 attraverso un repository personalizzato è stato verificato
+con HACS 2.0.5 e Home Assistant 2026.9.2, partendo da una copia manuale della b8.
+Dopo il riavvio l'account è rimasto caricato, con le stesse 22 entità e gli stessi
+valori dei consumi. Le fatture hanno mantenuto l'indisponibilità dovuta a 9/9.91.
+La prova non conferma i dati che il servizio non ha restituito.
 
-## Procedura prevista
+## Installare la beta
 
 Occorrono HACS già configurato e Home Assistant 2026.9.0 o successivo.
 
 1. Apri HACS, il menu in alto a destra e **Repository personalizzati**.
 2. Inserisci `https://github.com/GabboPenna/ha-engie-italia`, scegli la categoria
    **Integrazione** e aggiungi il repository.
-3. Apri **ENGIE Italia** e scarica la versione che intendi provare. Controlla
-   versione, note e limiti: senza release HACS usa il ramo predefinito; un ramo
-   di sviluppo presente in una PR non viene installato automaticamente.
+3. Apri **ENGIE Italia** e abilita la visualizzazione delle versioni beta del
+   repository. Scegli **v0.1.0b9** nel selettore della versione e scaricala.
+   Se è già installata, usa **Riscarica / Redownload**. Controlla le
+   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9):
+   consumi gas e lettura di fatture reali restano da confermare.
 4. Riavvia Home Assistant e segui la [guida al collegamento](SETUP.md).
+
+La release è contrassegnata come **pre-release** su GitHub. Non viene presentata
+come versione stabile: a seconda della versione di HACS può essere necessario
+abilitare le beta o selezionarla esplicitamente nella finestra di download.
 
 Per passare da una copia manuale a HACS, la cartella del componente deve essere
 la stessa: `custom_components/engie_italia`. Conserva la config entry dell'account;
 la sessione risiede nel deposito privato HA, esterno alla cartella del componente.
 Un aggiornamento non richiede intenzionalmente la cancellazione dell'account.
+
+## Comparire nella ricerca di HACS
+
+Un repository personalizzato compare solo nell'HACS di chi lo ha aggiunto.
+Per renderlo trovabile agli altri utenti occorre l'inclusione in `hacs/default`:
+controlli superati, una release pubblicata dopo i controlli e accettazione della
+richiesta da parte dei manutentori. La candidatura non equivale all'inclusione.
+
+La [procedura ufficiale](https://www.hacs.xyz/docs/publish/include/) segnala che
+la revisione può richiedere mesi. Dopo l'accettazione il repository entra nel
+successivo aggiornamento del catalogo. `hacs.json` dichiara il Paese `IT`.
+La ricerca **Aggiungi integrazione** di Home Assistant trova il componente
+dopo che HACS lo ha scaricato e HA è stato riavviato.
 
 ## Controlli automatici
 

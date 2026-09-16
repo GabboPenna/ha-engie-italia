@@ -82,7 +82,8 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] Icone e loghi locali per tema chiaro/scuro e schermi ad alta densita'.
 - [x] Workflow automatici hassfest e HACS per push, PR e controllo settimanale.
 - [x] Validazione HACS e hassfest della b9 superata in CI, senza esclusioni.
-- [ ] Repository personalizzato HACS.
+- [x] Repository personalizzato HACS aggiunto e download b9 verificato su HA,
+  con passaggio dalla copia manuale e account conservato dopo il riavvio.
 - [ ] Eventuale richiesta di inclusione nel catalogo HACS, separata dal punto precedente.
 
 L'importazione storica nella dashboard Energy e' successiva alla corretta
