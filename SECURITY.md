@@ -11,6 +11,14 @@ Le future prove autenticate devono usare un account autorizzato, conservando
 i dati necessari solo localmente e con accesso limitato. Rispettare OTP,
 CAPTCHA e limiti del servizio. Non aggirare controlli di accesso.
 
+Il client mobile riceve chiave API e token tramite parametri privati e li mantiene
+solo in memoria. Non includere nel repository chiavi estratte dall'app, APK,
+codici OAuth, URL completi di callback o risposte dell'account. Gli errori pubblici
+espongono solo messaggi fissi e codici numerici selezionati. Non attivare trace
+HTTP che registrino richieste autenticate: POD/PDR possono essere nelle query.
+Anche i modelli normalizzati contengono identificativi privati: `repr` li omette,
+ma `dataclasses.asdict` e serializzazioni indiscriminate non sono diagnostica sicura.
+
 Il riepilogo diagnostico attuale accetta solo modelli normalizzati e produce
 metadati selezionati. Non rende sicuro un payload arbitrario o un HAR.
 

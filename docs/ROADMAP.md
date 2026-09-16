@@ -11,8 +11,11 @@
 
 - [x] Accesso manuale autorizzato e prima lettura delle forniture del portale.
 - [x] Parser forniture e probe interattivo con riepilogo privo di identificativi.
-- [ ] Autenticazione autonoma e rinnovo della sessione verificati.
-- [ ] Schema consumi elettrici verificato: unita', periodi, granularita', ritardo.
+- [x] Identificazione e lettura del backend dell'app, distinto dal portale.
+- [x] Login interattivo PKCE e rinnovo della sessione in memoria verificati.
+- [ ] Configurazione API distribuibile, persistenza sicura e riautenticazione HA.
+- [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
+- [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
 - [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
 - [ ] Differenze e disponibilita' reali dei consumi gas verificate sul servizio.
 - [ ] Limiti e condizioni d'uso verificati, campioni esclusivamente sintetici.
@@ -22,8 +25,10 @@ documentare il limite prima di procedere con un'integrazione installabile.
 
 ## Fase 2: client e Home Assistant
 
-- [ ] Client asincrono con sole operazioni di lettura autorizzate.
-- [ ] Test per scadenza sessione, errori rete, 429, dati parziali e rettifiche.
+- [x] Client asincrono per forniture e consumi elettrici, provato sull'account.
+- [x] Test per scadenza/rinnovo, errori rete, 429, dati mancanti e duplicati.
+- [ ] Schema gas di successo e relativo client/parser.
+- [ ] Politica di aggiornamento, cache e gestione delle rettifiche.
 - [ ] Config flow/reauth e coordinatore condiviso per account.
 - [ ] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
 - [ ] Bollette/letture aggiunte solo dopo verifica dei dati disponibili.

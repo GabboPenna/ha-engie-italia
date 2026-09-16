@@ -99,11 +99,112 @@ durante il proprio caricamento. Non riprodurre interi batch Aura intercettati.
 Consentire soltanto singole operazioni di lettura verificate; il probe pubblico
 non riproduce alcun batch o chiamata allo storico.
 
+## Backend dell'app verificato, 16 settembre 2026
+
+La successiva analisi dell'app Android `it.engie.appengie`, versione 10.1.0,
+ha identificato un backend REST distinto dal portale Salesforce:
+`https://api-mobileapp2022-prod.aws.engie.it/`.
+I DTO e le chiamate di lettura sono stati confrontati con risposte di un account
+autorizzato. Non sono state rimosse protezioni, installate app modificate o
+replicate operazioni di scrittura. Nessun APK o payload dell'account nel progetto.
+
+### Autenticazione
+
+Il servizio usa Auth0 su `https://login.engie.it/`, con audience
+`https://mobileapp.jwt`. Il primo accesso sperimentale ha usato Authorization
+Code con PKCE S256, login manuale, state/nonce e validazione RS256 dell'ID token
+tramite le chiavi dell'issuer. Una tolleranza di 30 secondi gestisce piccoli
+scarti di orologio senza disabilitare la verifica temporale.
+
+La configurazione pubblica dell'issuer e' disponibile nella
+[discovery OIDC](https://login.engie.it/.well-known/openid-configuration).
+L'access token va nell'header `sessionToken`, non `Authorization: Bearer`.
+Sono presenti anche `x-api-key` e `locale: IT`: la chiave dell'app non viene
+distribuita in questo repository. Non e' un'API pubblica documentata per terze parti.
+
+Il rinnovo con `refresh_token` su `/oauth/token` e una successiva lettura sono
+riusciti sia nel probe privato sia nel client asincrono del progetto.
+Questo verifica il rinnovo in una sessione, non ancora la persistenza HA,
+la durata massima del consenso o il recupero da revoche e challenge future.
+
+### Forniture mobile
+
+`GET contracts/v2/user` restituisce `code: OK` e `listaContratti`.
+Ogni contratto contiene `codContr` e `forniture`; ogni fornitura contiene
+`id`, `commodity` (`Luce`/`Gas`), `attiva` (`y` osservato),
+`dataAttivazione` (`YYYY-MM-DD`) e `punto.pod` oppure `punto.pdr`.
+Identificativi, coordinate bancarie e anagrafica non vengono stampati dal probe.
+Il parser seleziona solo i campi necessari e non presume la stabilita' degli ID
+quando un contratto cambia.
+
+### Consumi elettrici
+
+Letture riuscite e implementate:
+
+| Metodo/percorso GET | Parametri query |
+| --- | --- |
+| `consumptions/v2/power/getCommissioningDate` | `pod` |
+| `consumptions/v3/power/daily` | `pod`, `lowerBoundDate`, `startYear`, `endYear` |
+| `consumptions/v3/power/hourly` | `pod`, `lowerBoundDate`, `day` |
+
+Date e limiti usano `YYYY-MM-DD`; gli anni sono stringhe a quattro cifre.
+La data iniziale usa la commissioning date quando disponibile, altrimenti
+l'attivazione, limitata al primo gennaio di due anni prima, come nel chiamante app.
+
+Schema giornaliero osservato:
+
+```text
+code: "OK"
+lastUpdate: "YYYY-MM-DD"
+consumptionsList:
+  startYear / endYear: "YYYY"
+  years[]:
+    timeReference: "YYYY"
+    months[]:
+      timeReference: "YYYY-MM"
+      days[]:
+        timeReference: "YYYY-MM-DD"
+```
+
+Ogni livello ha `totalValue` numerico, `totalType` e stringhe di presentazione.
+Il parser legge solo il numero, senza interpretare `totalString` o `averageString`.
+Le unita' elettriche nell'app sono kWh. `totalType` distingue `REAL`,
+`ESTIMATED` e `NOT_PROVIDED`; valori futuri sconosciuti non diventano reali.
+
+La risposta oraria ha `consumptionsList.day.day` (`YYYY-MM-DD`), totale del
+giorno e `consumptions[]` con `timeReference: HH:00`, `totalValue`, `totalType`.
+Il giorno ordinario verificato contiene 24 campioni. Il comportamento reale
+nei giorni con ora ripetuta non e' ancora verificato: il parser rifiuta ore
+ambigue o inesistenti senza indovinare l'offset. Test sintetici coprono questi casi.
+
+I totali di anno/mese/giorno non coincidono necessariamente con la somma dei
+campioni arrotondati. Vengono conservati separatamente, senza correzioni arbitrarie.
+`lastUpdate` precede la data della richiesta: questi dati non sono in tempo reale.
+La verifica live del client ha incluso rinnovo, forniture, commissioning date,
+serie giornaliera e dettaglio orario, senza esportare token o dati dell'account.
+
+### Gas ancora non verificato con successo
+
+Nell'app sono presenti queste letture, provate privatamente:
+
+- `consumptions/v2/gas/getLastUpdateDate`, con `contractId`, `pdr`.
+- `consumptions/v2/gas/monthly`, con `contractId`, `pdr`, `lowerBoundDate`,
+  `supplyActivationDate`, `startYear`, `endYear`.
+
+`contractId` deriva da `codContr` del contratto, non dall'ID Salesforce.
+La data di aggiornamento ha restituito HTTP 404, `code: KO`, codici 9/9.53,
+descrizione "Pdr non trovato". La lettura mensile ha restituito HTTP 422,
+codici 9/9.54, descrizione "Input non valido". Questi errori **non dimostrano
+che il consumo sia zero**, ne' spiegano da soli il motivo del grafico vuoto.
+Non e' stata recuperata una risposta gas con misure: nessun parser o sensore gas
+viene dichiarato funzionante. Le unita' Smc compaiono nell'app, ma resta da
+verificare il payload di successo, compresi periodi e stime.
+
 ## Verifiche ancora necessarie
 
-1. Identificare il servizio del grafico attuale dell'app senza aggirare protezioni.
-2. Verificare login ripetibile, scadenza/rinnovo e gestione delle challenge.
-3. Verificare schema, unita', periodi, ritardo e dati mancanti di luce/gas.
+1. Rendere login e configurazione API distribuibili senza pubblicare chiavi dell'app.
+2. Persistenza sicura, riavvii, revoca del consenso e gestione delle challenge in HA.
+3. Consumi gas riusciti, rettifiche e dettaglio elettrico durante il cambio d'ora.
 4. Verificare limiti e condizioni d'uso prima della distribuzione.
 5. Ampliare solo con fixture inventate e test offline, mai risposte dell'account.
 

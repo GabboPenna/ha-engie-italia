@@ -4,8 +4,9 @@ Progetto per una integrazione Home Assistant **non ufficiale, in sola lettura**
 per le forniture luce e gas di ENGIE Italia.
 
 **Stato: sviluppo preliminare. Non e' ancora installabile in Home Assistant
-o tramite HACS. Prima lettura delle forniture verificata con login manuale;
-autenticazione automatica, rinnovo e consumi non ancora disponibili.**
+o tramite HACS. Client asincrono, forniture e consumi elettrici giornalieri/orari
+verificati su un account autorizzato, incluso il rinnovo della sessione.
+Primo accesso ancora interattivo; configurazione HA e consumi gas non pronti.**
 
 Non affiliato, sponsorizzato o approvato da ENGIE. Il nome ENGIE appartiene
 al rispettivo titolare.
@@ -35,28 +36,32 @@ altra operazione di scrittura sull'account.
 - Validazione di valori, unita' e intervalli temporali, incluso il cambio d'ora.
 - Riepilogo diagnostico con soli metadati selezionati.
 - Parser delle forniture del portale, verificato durante una sessione autorizzata.
+- Client asincrono per il servizio dell'app, limitato alle letture verificate.
+- Parser forniture dell'app e consumi elettrici giornalieri/orari in kWh,
+  con qualita', data di aggiornamento e totali ENGIE separati dai campioni.
+- Rinnovo token in memoria, timeout, rispetto di `Retry-After` e nessun
+  inoltro delle credenziali attraverso redirect HTTP.
 - Test offline con dati interamente sintetici e CI su GitHub.
 - Uno strumento opzionale che controlla il percorso pubblico di accesso,
   senza inserire credenziali o salvare una sessione.
 - Una prova interattiva opzionale che legge le forniture dopo il login manuale
   e restituisce solo tipo e stato, senza esportare dati personali o sessioni.
 
-Il parser riconosce le forniture luce/gas nel caricamento iniziale della dashboard.
-**Non legge ancora serie di consumo o bollette** e non e' un client autonomo.
-La chiamata allo storico individuata nel portale ha restituito un errore del
-servizio a monte; non e' dimostrato che coincida con il grafico dell'app.
-Dettagli e limiti in [ricerca API](docs/API_RESEARCH.md).
+Il client usa il backend mobile, distinto dallo storico del portale che nella
+prima prova restituiva un errore 503 a monte. La lettura elettrica ora funziona;
+non sono ancora implementate bollette o letture gas utilizzabili. Le risposte
+gas osservate sono errori espliciti, non una serie vuota da interpretare come zero.
+
+Le credenziali di sessione e la configurazione di accesso all'API devono essere
+fornite al client tramite un canale privato. **Il repository non include chiavi
+dell'app, token, un primo login mobile pubblico o persistenza delle credenziali.**
+Il rinnovo verificato non significa ancora autenticazione HA pronta all'uso.
+Dettagli in [client e limiti](docs/CLIENT.md) e [ricerca API](docs/API_RESEARCH.md).
 
 ## Sviluppo
 
-Python 3.12 o successivo. Il nucleo usa solo la libreria standard:
-
-```sh
-python -m unittest discover -s tests -v
-```
-
-Per lint, formato e tutti i test anche su Windows, installare le dipendenze
-di sviluppo, incluso il database dei fusi orari:
+Python 3.12 o successivo. Il client usa `aiohttp`; su Windows viene installato
+anche il database dei fusi orari. Installare le dipendenze prima dei test:
 
 ```sh
 python -m pip install -e ".[dev]"
@@ -94,8 +99,9 @@ caricamento della dashboard; queste non vengono replicate dal progetto.
 
 ## Prossimi passi
 
-1. Verificare autenticazione ripetibile, rinnovo e servizio consumi usato dall'app.
-2. Implementare un client asincrono limitato alle chiamate di lettura verificate.
+1. Rendere il primo login e il rinnovo utilizzabili in HA, con persistenza sicura
+   e configurazione API distribuibile; verificare condizioni e limiti d'uso.
+2. Chiarire gli errori gas e verificare una risposta con consumi prima del parser.
 3. Aggiungere l'integrazione nativa HA e test di configurazione/recupero.
 4. Provare una beta privata; solo dopo preparare la distribuzione HACS.
 

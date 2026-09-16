@@ -2,24 +2,24 @@
 
 ## Confini
 
-Il nucleo `engie_italia` contiene modelli normalizzati, diagnostica selezionata
-e un parser per lo schema forniture osservato nel portale. Non conosce
-credenziali, HTTP o Home Assistant. Non e' ancora un client ENGIE autonomo.
-Il probe opzionale usa un browser temporaneo con login manuale; non esporta
-sessioni e non e' il meccanismo di autenticazione della futura integrazione.
+Modelli, diagnostica e parser restano indipendenti da HTTP e Home Assistant.
+`mobile.py` interpreta forniture e consumi elettrici del servizio dell'app;
+`portal.py` conserva il parser del portale. `client.py` aggiunge il trasporto
+asincrono `aiohttp`, con credenziali fornite dal chiamante e nessuna persistenza.
+Il probe pubblico usa il portale con login manuale; non e' il meccanismo di
+autenticazione della futura integrazione mobile.
 
 `PortalSupply` rappresenta soltanto l'identita', il tipo e lo stato osservato
 di una fornitura. Rimane distinto da `SupplySnapshot`, che descrive intervalli
 di consumo: nessuna lettura contrattuale genera misure energetiche implicite.
 
-Il futuro client asincrono avra' autenticazione e letture separate, timeout,
-limiti di frequenza, richieste deduplicate e retry limitati. Una risposta
-401 deve portare a rinnovo controllato o richiesta di riautenticazione;
-429 e problemi di rete non devono generare cicli di login continui.
-Anche HTTP 200 puo' contenere errori Aura o applicativi. Verificare tutti i
-livelli prima di aggiornare i dati; non trattare errori come liste vuote.
+Il client attuale serializza letture e rinnovi, applica timeout e limiti sulle
+risposte, vieta redirect e gestisce un solo rinnovo/retry dopo 401. Rispetta
+`Retry-After` e non riprova rete/5xx in ciclo. Verifica gli errori applicativi
+anche con HTTP 200. Cache, deduplicazione delle richieste identiche e pianificazione
+restano responsabilita' del futuro coordinatore: nessun polling implicito per entita'.
 
-Le sole operazioni ammesse saranno autenticazione/rinnovo e lettura dei dati
+Le sole operazioni ammesse sono rinnovo e lettura dei dati
 verificati. Il verbo HTTP non e' una garanzia: una lettura Salesforce puo'
 usare POST, percio' vanno consentite le singole operazioni note, non tutti i POST.
 Non si implementeranno pagamenti, autoletture o modifiche alle forniture.
@@ -36,8 +36,10 @@ Non si implementeranno pagamenti, autoletture o modifiche alle forniture.
 - Serie duplicate, granularita' sovrapposte e rettifiche richiederanno una
   politica esplicita prima di qualsiasi aggregazione o importazione storica.
 
-Il modello attuale non valida completezza o assenza di sovrapposizioni nelle
-serie. Non usare la somma degli intervalli come totale fatturabile.
+Il parser mobile rifiuta duplicati e sovrapposizioni alla stessa granularita',
+ma non presume completezza delle serie. Conserva i riepiloghi ENGIE separati
+dai campioni: non usare la loro somma come totale fatturabile.
+Dettaglio di autenticazione, errori, arrotondamenti e DST in [CLIENT.md](CLIENT.md).
 
 ## Integrazione Home Assistant futura
 
