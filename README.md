@@ -161,9 +161,10 @@ La beta non usa proxy delle credenziali e non aggira questa protezione.
 
 ### HACS
 
-La struttura e `hacs.json` sono predisposti per un repository personalizzato,
-con controlli automatici HACS e hassfest. Il progetto **non è nel catalogo HACS**.
-L'installazione completa tramite HACS resta da verificare: [procedura e controlli](docs/HACS.md).
+La beta si distribuisce tramite repository personalizzato, con controlli
+automatici HACS e hassfest. Il progetto **non è ancora nel catalogo HACS**:
+la comparsa nella ricerca generale richiede l'approvazione della richiesta
+d'inclusione. [Procedura per provarla e stato del catalogo](docs/HACS.md).
 Non vengono distribuiti APK.
 I parametri comuni inclusi non costituiscono un'approvazione ENGIE e possono
 cambiare. Le condizioni d'uso/distribuzione restano da verificare
