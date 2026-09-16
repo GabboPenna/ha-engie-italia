@@ -10,7 +10,7 @@
   <p>Forniture, consumi elettrici, prezzi verificati e fatture, dentro Home Assistant.</p>
 
   <p>
-    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b10"><img alt="Stato: beta 0.1.0b10" src="https://img.shields.io/badge/beta-0.1.0b10-f59e0b?style=flat-square"></a>
+    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b11"><img alt="Stato: beta 0.1.0b11" src="https://img.shields.io/badge/beta-0.1.0b11-f59e0b?style=flat-square"></a>
     <a href="#installazione"><img alt="Home Assistant 2026.9.0 o successivo" src="https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&amp;logo=homeassistant&amp;logoColor=white"></a>
     <a href="SECURITY.md"><img alt="Accesso in sola lettura" src="https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square"></a>
     <a href="LICENSE"><img alt="Licenza del codice: MIT" src="https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square"></a>
@@ -81,8 +81,9 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 
 Le risposte gas osservate sono errori del servizio, non consumi zero. Un account
 nuovo potrebbe non avere misure: la causa non è confermata. La b10 abbina il
-codice completo dell'offerta alle condizioni economiche pubbliche verificate:
-il catalogo iniziale include solo `PUMD#00016`. Altre versioni, rinnovi e prezzi
+codice completo dell'offerta alle condizioni economiche pubbliche verificate.
+La b11 include **16 versioni di Energia PuntoFisso Mono 12 mesi**:
+[elenco e prezzi](docs/TARIFFS.md#catalogo-verificato-nella-b11). Rinnovi e prezzi
 indicizzati restano in ricerca. Nessun prezzo viene dedotto dal nome dell'offerta
 o richiesto manualmente. I valori escludono tasse e altri oneri della bolletta.
 
