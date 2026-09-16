@@ -10,7 +10,7 @@
   <p>Forniture, consumi elettrici e riepilogo fatture, dentro Home Assistant.</p>
 
   <p>
-    <a href="docs/ROADMAP.md"><img alt="Stato: beta 0.1.0b9" src="https://img.shields.io/badge/beta-0.1.0b9-f59e0b?style=flat-square"></a>
+    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9"><img alt="Stato: beta 0.1.0b9" src="https://img.shields.io/badge/beta-0.1.0b9-f59e0b?style=flat-square"></a>
     <a href="#installazione"><img alt="Home Assistant 2026.9.0 o successivo" src="https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&amp;logo=homeassistant&amp;logoColor=white"></a>
     <a href="SECURITY.md"><img alt="Accesso in sola lettura" src="https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square"></a>
     <a href="LICENSE"><img alt="Licenza del codice: MIT" src="https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square"></a>
@@ -163,8 +163,9 @@ La beta non usa proxy delle credenziali e non aggira questa protezione.
 
 La beta si distribuisce tramite repository personalizzato, con controlli
 automatici HACS e hassfest. Il progetto **non è ancora nel catalogo HACS**:
-la comparsa nella ricerca generale richiede l'approvazione della richiesta
-d'inclusione. [Procedura per provarla e stato del catalogo](docs/HACS.md).
+la comparsa nella ricerca generale richiede l'approvazione della
+[richiesta d'inclusione #11034](https://github.com/hacs/default/pull/11034).
+[Procedura per provarla e stato del catalogo](docs/HACS.md).
 Non vengono distribuiti APK.
 I parametri comuni inclusi non costituiscono un'approvazione ENGIE e possono
 cambiare. Le condizioni d'uso/distribuzione restano da verificare

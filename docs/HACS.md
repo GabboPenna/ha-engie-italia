@@ -4,11 +4,13 @@ Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
 La b9 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
-Il download della b9 attraverso un repository personalizzato è stato verificato
+Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
 con HACS 2.0.5 e Home Assistant 2026.9.2, partendo da una copia manuale della b8.
 Dopo il riavvio l'account è rimasto caricato, con le stesse 22 entità e gli stessi
 valori dei consumi. Le fatture hanno mantenuto l'indisponibilità dovuta a 9/9.91.
 La prova non conferma i dati che il servizio non ha restituito.
+HACS riconosce la versione installata e disponibile come `v0.1.0b9`, senza
+aggiornamenti o riavvii pendenti dopo la verifica.
 
 ## Installare la beta
 
@@ -39,6 +41,11 @@ Un repository personalizzato compare solo nell'HACS di chi lo ha aggiunto.
 Per renderlo trovabile agli altri utenti occorre l'inclusione in `hacs/default`:
 controlli superati, una release pubblicata dopo i controlli e accettazione della
 richiesta da parte dei manutentori. La candidatura non equivale all'inclusione.
+
+La [richiesta hacs/default #11034](https://github.com/hacs/default/pull/11034)
+è stata aperta il **16 settembre 2026** ed è in attesa di accettazione.
+La [beta pubblica v0.1.0b9](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9)
+è già disponibile tramite la procedura qui sopra.
 
 La [procedura ufficiale](https://www.hacs.xyz/docs/publish/include/) segnala che
 la revisione può richiedere mesi. Dopo l'accettazione il repository entra nel

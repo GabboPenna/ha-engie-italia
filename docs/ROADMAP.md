@@ -84,7 +84,11 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] Validazione HACS e hassfest della b9 superata in CI, senza esclusioni.
 - [x] Repository personalizzato HACS aggiunto e download b9 verificato su HA,
   con passaggio dalla copia manuale e account conservato dopo il riavvio.
-- [ ] Eventuale richiesta di inclusione nel catalogo HACS, separata dal punto precedente.
+- [x] [Beta pubblica v0.1.0b9](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9)
+  pubblicata come pre-release dopo i controlli sul commit della release.
+- [x] Richiesta di inclusione nel catalogo HACS:
+  [hacs/default #11034](https://github.com/hacs/default/pull/11034).
+- [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
 
 L'importazione storica nella dashboard Energy e' successiva alla corretta
 gestione dei dati: nessuna promessa di tempo reale o di calcolo completo bolletta.
