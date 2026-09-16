@@ -5,6 +5,7 @@ import json
 import math
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from email.utils import parsedate_to_datetime
@@ -18,10 +19,12 @@ from .errors import (
     TokenPersistenceError,
     TransportError,
 )
+from .invoices import InvoiceSnapshot, merge_invoices, parse_invoices
 from .mobile import (
     ROME,
     ElectricityReadings,
     MobileSupply,
+    identifier,
     iso_date,
     parse_daily_electricity,
     parse_hourly_electricity,
@@ -38,6 +41,7 @@ MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 READ_PATHS = frozenset(
     {
         "contracts/v2/user",
+        "contracts/v2/invoices",
         "consumptions/v2/power/getCommissioningDate",
         "consumptions/v3/power/daily",
         "consumptions/v3/power/hourly",
@@ -60,6 +64,12 @@ def _retry_seconds(value: str | None) -> float:
     except (ValueError, TypeError, OverflowError):
         pass
     return 60
+
+
+@dataclass(slots=True, repr=False)
+class _SharedRead:
+    task: asyncio.Task[dict]
+    waiters: int = 0
 
 
 class EngieMobileClient:
@@ -100,6 +110,8 @@ class EngieMobileClient:
         self._auth_failed = False
         self._token_updated = token_updated
         self._pending_tokens: SessionTokens | None = None
+        self._invoice_contract_ids: tuple[str, ...] | None = None
+        self._reads: dict[tuple, _SharedRead] = {}
 
     def clear_credentials(self) -> None:
         """Forget in-memory credentials; close the caller's session separately."""
@@ -109,6 +121,10 @@ class EngieMobileClient:
         self._client_id = None
         self._auth_failed = True
         self._pending_tokens = None
+        self._invoice_contract_ids = None
+        for read in self._reads.values():
+            read.task.cancel()
+        self._reads.clear()
 
     async def _save_pending_tokens(self) -> None:
         if self._pending_tokens is None or self._token_updated is None:
@@ -216,6 +232,26 @@ class EngieMobileClient:
     async def _get(self, path: str, params: dict | None = None) -> dict:
         if path not in READ_PATHS:
             raise ValueError("Operation is not an approved read")
+        self._ready()
+        # Share overlapping reads only. A later poll must see corrected data,
+        # even if ENGIE has not changed its lastUpdate date.
+        key = (path, tuple(sorted((params or {}).items())))
+        read = self._reads.get(key)
+        if read is None:
+            read = _SharedRead(asyncio.create_task(self._get_once(path, params)))
+            self._reads[key] = read
+        read.waiters += 1
+        try:
+            return await asyncio.shield(read.task)
+        finally:
+            read.waiters -= 1
+            if not read.waiters:
+                if self._reads.get(key) is read:
+                    del self._reads[key]
+                if not read.task.done():
+                    read.task.cancel()
+
+    async def _get_once(self, path: str, params: dict | None) -> dict:
         async with self._lock:
             self._ready()
             await self._save_pending_tokens()
@@ -234,7 +270,7 @@ class EngieMobileClient:
                             "x-api-key": self._api_key,
                             "locale": "IT",
                             "Accept": "application/json",
-                            "User-Agent": "ha-engie-italia/0.1.0b3 (read-only)",
+                            "User-Agent": "ha-engie-italia (read-only)",
                         },
                     )
                     return successful_payload(payload)
@@ -247,7 +283,26 @@ class EngieMobileClient:
         raise AuthenticationError("Interactive login required")
 
     async def async_supplies(self) -> tuple[MobileSupply, ...]:
-        return parse_mobile_supplies(await self._get("contracts/v2/user"))
+        data = await self._get("contracts/v2/user")
+        supplies = parse_mobile_supplies(data)
+        # Retain contracts even if they no longer have a supply in the response.
+        self._invoice_contract_ids = tuple(
+            dict.fromkeys(
+                identifier(contract.get("codContr"))
+                for contract in data["listaContratti"]
+            )
+        )
+        return supplies
+
+    async def async_invoices(self) -> InvoiceSnapshot:
+        """Read all invoices once per distinct contract, without a recent-item limit."""
+        if self._invoice_contract_ids is None:
+            await self.async_supplies()
+        invoices = []
+        for contract_id in self._invoice_contract_ids:
+            data = await self._get("contracts/v2/invoices", {"contractId": contract_id})
+            invoices.extend(parse_invoices(data))
+        return InvoiceSnapshot(merge_invoices(invoices), datetime.now(UTC))
 
     @staticmethod
     def _electricity(supply: MobileSupply) -> None:

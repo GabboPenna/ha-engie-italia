@@ -11,7 +11,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api.client import EngieMobileClient
-from .api.errors import AuthenticationError, EngieError, TokenPersistenceError
+from .api.errors import (
+    AuthenticationError,
+    EngieError,
+    ServiceError,
+    TokenPersistenceError,
+)
+from .api.invoices import InvoiceSnapshot
 from .api.mobile import ElectricityReadings, MobileSupply
 from .api.models import Utility
 from .api.portal import SupplyStatus
@@ -33,6 +39,14 @@ class SupplyData:
     status: str = "no_data"
 
 
+@dataclass(frozen=True, slots=True)
+class BillingData:
+    snapshot: InvoiceSnapshot | None = None
+    status: str = "error"
+    error_code: int | None = None
+    detailed_error_code: str | None = None
+
+
 class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
     def __init__(self, hass, entry: ConfigEntry, client: EngieMobileClient):
         super().__init__(
@@ -48,11 +62,37 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
         self._commissioning = {}
         self._commissioning_checked = {}
         self.last_success: datetime | None = None
+        self.billing = BillingData()
+
+    async def _async_update_billing(self, today):
+        try:
+            snapshot = await self.client.async_invoices()
+            self.billing = BillingData(snapshot, snapshot.data_status(today))
+        except (AuthenticationError, TokenPersistenceError):
+            raise
+        except (EngieError, ValueError) as error:
+            # A billing outage must not hide consumption or expose a partial sum.
+            self.billing = BillingData(
+                snapshot=self.billing.snapshot,
+                status="error",
+                error_code=error.error_code
+                if isinstance(error, ServiceError)
+                else None,
+                detailed_error_code=str(error.detailed_code)
+                if isinstance(error, ServiceError) and error.detailed_code is not None
+                else None,
+            )
 
     async def _async_update_data(self):
         try:
             supplies = await self.client.async_supplies()
             today = dt_util.now().date()
+            cache_keys = {
+                (s.point_id, s.contract_id, s.activation_date) for s in supplies
+            }
+            for cache in (self._commissioning, self._commissioning_checked):
+                for old in cache.keys() - cache_keys:
+                    del cache[old]
             result = {}
             for supply in supplies:
                 key = supply_key(supply)
@@ -65,13 +105,18 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
                     result[key] = SupplyData(supply)
                     continue
                 try:
-                    if self._commissioning_checked.get(supply.point_id) != today:
+                    cache_key = (
+                        supply.point_id,
+                        supply.contract_id,
+                        supply.activation_date,
+                    )
+                    if self._commissioning_checked.get(cache_key) != today:
                         self._commissioning[
-                            supply.point_id
+                            cache_key
                         ] = await self.client.async_commissioning_date(supply)
-                        self._commissioning_checked[supply.point_id] = today
+                        self._commissioning_checked[cache_key] = today
                     lower = self.client.lower_bound(
-                        supply, self._commissioning[supply.point_id], today=today
+                        supply, self._commissioning[cache_key], today=today
                     )
                     readings = await self.client.async_daily_electricity(
                         supply, lower_bound=lower, year=today.year
@@ -104,6 +149,7 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
                         if previous
                         else SupplyData(supply, status="error")
                     )
+            await self._async_update_billing(today)
             self.last_success = dt_util.utcnow()
             return result
         except AuthenticationError as error:

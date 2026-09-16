@@ -11,7 +11,13 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 import aiohttp
 import jwt
 
-from .errors import AuthenticationError, PayloadError, TransportError
+from .errors import (
+    AuthenticationError,
+    AuthorizationError,
+    AuthorizationFailure,
+    PayloadError,
+    TransportError,
+)
 from .session import SessionTokens, credential
 
 ISSUER = "https://login.engie.it/"
@@ -57,12 +63,20 @@ class AuthorizationAttempt:
             )
         )
 
-    def consume_callback(self, value: str) -> str:
-        if self.consumed or time.monotonic() - self.created_at > ATTEMPT_LIFETIME:
-            raise AuthenticationError("Authorization attempt expired or already used")
+    @property
+    def expired(self) -> bool:
+        return time.monotonic() - self.created_at > ATTEMPT_LIFETIME
+
+    def validate_callback(self, value: str) -> str:
+        if self.consumed:
+            raise AuthorizationError(AuthorizationFailure.USED)
+        if self.expired:
+            raise AuthorizationError(AuthorizationFailure.EXPIRED)
         try:
+            if not isinstance(value, str) or len(value) > 8192:
+                raise ValueError
             url = urlsplit(value.strip())
-            query = parse_qs(url.query)
+            query = parse_qs(url.query, keep_blank_values=True, max_num_fields=12)
             if (
                 url.scheme != "https"
                 or url.netloc != "login.engie.it"
@@ -70,15 +84,21 @@ class AuthorizationAttempt:
                 or url.fragment
             ):
                 raise ValueError
-            if (
-                query.get("state") != [self.state]
-                or "error" in query
-                or len(query.get("code", [])) != 1
-            ):
+            if len(query.get("state", [])) != 1:
+                raise ValueError
+            if not secrets.compare_digest(query["state"][0], self.state):
+                raise AuthorizationError(AuthorizationFailure.STATE_MISMATCH)
+            if "error" in query:
+                raise AuthorizationError(AuthorizationFailure.DENIED)
+            if len(query.get("code", [])) != 1:
                 raise ValueError
             code = credential(query["code"][0])
-        except (ValueError, AttributeError):
-            raise AuthenticationError("Invalid authorization response") from None
+        except (ValueError, TypeError, AttributeError):
+            raise AuthorizationError(AuthorizationFailure.INVALID_CALLBACK) from None
+        return code
+
+    def consume_callback(self, value: str) -> str:
+        code = self.validate_callback(value)
         self.consumed = True
         return code
 
@@ -118,22 +138,28 @@ async def async_complete_authorization(
     attempt: AuthorizationAttempt,
     callback_url: str,
 ) -> tuple[str, SessionTokens]:
-    code = attempt.consume_callback(callback_url)
+    attempt.validate_callback(callback_url)
     # Fetch keys before consuming the one-use authorization code at the server.
     jwks = await _json_request(session, "GET", ".well-known/jwks.json")
-    payload = await _json_request(
-        session,
-        "POST",
-        "oauth/token",
-        json={
-            "grant_type": "authorization_code",
-            "client_id": attempt.client_id,
-            "code": code,
-            "code_verifier": attempt.verifier,
-            "redirect_uri": CALLBACK,
-        },
-    )
-    attempt.verifier = ""
+    code = attempt.consume_callback(callback_url)
+    try:
+        payload = await _json_request(
+            session,
+            "POST",
+            "oauth/token",
+            json={
+                "grant_type": "authorization_code",
+                "client_id": attempt.client_id,
+                "code": code,
+                "code_verifier": attempt.verifier,
+                "redirect_uri": CALLBACK,
+            },
+        )
+    except AuthenticationError:
+        raise AuthorizationError(AuthorizationFailure.TOKEN_EXCHANGE) from None
+    finally:
+        # A failed exchange may still have consumed the one-use server code.
+        attempt.verifier = ""
     try:
         token = credential(payload.get("id_token"))
         key_id = jwt.get_unverified_header(token)["kid"]
@@ -157,7 +183,10 @@ async def async_complete_authorization(
             raise ValueError
         subject = credential(identity["sub"])
         account_key = hashlib.sha256((ISSUER + subject).encode()).hexdigest()
-        tokens = SessionTokens.from_response(payload)
-        return account_key, tokens
     except (jwt.PyJWTError, ValueError, TypeError, KeyError, StopIteration):
-        raise AuthenticationError("Invalid identity or session response") from None
+        raise AuthorizationError(AuthorizationFailure.IDENTITY) from None
+    try:
+        tokens = SessionTokens.from_response(payload)
+    except ValueError:
+        raise AuthorizationError(AuthorizationFailure.SESSION) from None
+    return account_key, tokens

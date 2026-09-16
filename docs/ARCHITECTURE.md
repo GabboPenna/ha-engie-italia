@@ -4,6 +4,7 @@
 
 Modelli, diagnostica e parser restano indipendenti da HTTP e Home Assistant.
 `mobile.py` interpreta forniture e consumi elettrici del servizio dell'app;
+`invoices.py` normalizza i metadati delle fatture e calcola i residui aperti;
 `portal.py` conserva il parser del portale. `client.py` aggiunge il trasporto
 asincrono `aiohttp`, con credenziali e callback di persistenza forniti dal chiamante.
 Il probe pubblico usa il portale con login manuale; non e' il meccanismo di
@@ -17,8 +18,9 @@ di consumo: nessuna lettura contrattuale genera misure energetiche implicite.
 Il client attuale serializza letture e rinnovi, applica timeout e limiti sulle
 risposte, vieta redirect e gestisce un solo rinnovo/retry dopo 401. Rispetta
 `Retry-After` e non riprova rete/5xx in ciclo. Verifica gli errori applicativi
-anche con HTTP 200. Cache, deduplicazione delle richieste identiche e pianificazione
-sono responsabilita' del coordinatore: nessun polling implicito per entita'.
+anche con HTTP 200. Le letture identiche contemporanee condividono una richiesta
+nel client; il coordinatore gestisce cache commissioning e pianificazione.
+Nessun polling implicito per entita' e nessuna cache temporale dei consumi.
 
 Le sole operazioni ammesse sono rinnovo e lettura dei dati
 verificati. Il verbo HTTP non e' una garanzia: una lettura Salesforce puo'
@@ -52,8 +54,16 @@ Il config flow gestisce PKCE, riautenticazione dello stesso account e rimozione
 senza YAML. Chiave e token sono in un deposito HA privato, non nella config entry.
 Il primo accesso e' assistito per il vincolo sul callback del client nativo.
 Aggiornamento ogni 6 ore, configurabile 1-24, e un pulsante condiviso di refresh.
-La data di commissioning e' memorizzata per un giorno. Le forniture aggiunte
+La data di commissioning e' memorizzata per un giorno, invalidata al cambio
+di contratto o attivazione e rimossa insieme alle forniture cessate. Le forniture aggiunte
 vengono rilevate al refresh; quelle rimosse diventano indisponibili.
+
+Le fatture hanno sensori sul dispositivo Account e una lettura per contratto
+distinto. Il client conserva i codici dei contratti dell'ultima lettura delle
+forniture e deduplica i documenti per numero fiscale. Il coordinatore mantiene
+il riepilogo fatture separato dai consumi, senza pubblicare importi vecchi o
+somme parziali dopo un errore. Valori correnti in EUR e conteggi non hanno
+`state_class` cumulativa. Non ci sono notifiche o automazioni incorporate.
 
 La diagnostica HA usa solo metadati approvati. Non includere payload
 grezzi, identificativi, nomi, indirizzi o dati delle bollette nei log.

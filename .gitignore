@@ -23,6 +23,10 @@ secrets.yaml
 *.pem
 *.key
 *.token
+*.apk
+*.apks
+*.xapk
+*.aab
 .vscode/
 .idea/
 .DS_Store

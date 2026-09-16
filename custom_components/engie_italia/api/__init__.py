@@ -1,1 +1,1 @@
-"""Data models for a future read-only ENGIE Italia client; no live API yet."""
+"""Read-only ENGIE Italia client, authentication and normalized data models."""

@@ -59,7 +59,7 @@ non e' ancora verificata: non sono una scelta definitiva per gli unique ID HA.
 
 Il bootstrap contiene anche metadati bollette in `bills.data`, oltre a dati
 personali e di pagamento non necessari. Il parser li scarta. Non sono stati
-implementati download documenti, importi/scadenze o interpretazioni dei campi
+implementati nel parser del portale download documenti, importi/scadenze o interpretazioni dei campi
 `consumoE`, `consumoG`, `perFat` e dei valori del contatore.
 La presenza di questi campi non ne dimostra unita', periodo o granularita'.
 
@@ -119,8 +119,9 @@ scarti di orologio senza disabilitare la verifica temporale.
 La configurazione pubblica dell'issuer e' disponibile nella
 [discovery OIDC](https://login.engie.it/.well-known/openid-configuration).
 L'access token va nell'header `sessionToken`, non `Authorization: Bearer`.
-Sono presenti anche `x-api-key` e `locale: IT`: la chiave dell'app non viene
-distribuita in questo repository. Non e' un'API pubblica documentata per terze parti.
+Sono presenti anche `x-api-key` e `locale: IT`: dalla b5 il parametro comune
+proviene dal profilo applicativo incluso, separato dai token personali.
+Non e' un'API pubblica documentata per terze parti.
 
 Il rinnovo con `refresh_token` su `/oauth/token` e una successiva lettura sono
 riusciti sia nel probe privato sia nel client asincrono del progetto.
@@ -184,6 +185,51 @@ campioni arrotondati. Vengono conservati separatamente, senza correzioni arbitra
 La verifica live del client ha incluso rinnovo, forniture, commissioning date,
 serie giornaliera e dettaglio orario, senza esportare token o dati dell'account.
 
+### Fatture: schema statico e risposta live contraddittoria
+
+L'app 10.1.0 dichiara `GET contracts/v2/invoices`, con query `contractId`
+e `numberOfInvoices` opzionale. Il chiamante della cronologia passa `codContr`
+come `contractId` e omette `numberOfInvoices`; le schede sintetiche dell'app
+usano invece un limite. Il client b8 segue il percorso della cronologia,
+una volta per codice contratto distinto, non per singola fornitura.
+
+DTO verificati staticamente: `InvoicesResponse.response` contiene
+`InvoicesHistoryResult`, con `invoices`, `inMaintenance` e `maintenanceMessage`.
+Campi selezionati da `Invoice`:
+
+| Campo API | Tipo / significato nell'app |
+| --- | --- |
+| `fiscalNumber` | Stringa, numero fiscale della fattura |
+| `amount` | Numero, importo originale; presentazione in EUR nell'app |
+| `unpaidRemainingAmount` | Numero, importo residuo da pagare |
+| `emissionDate` | Stringa `YYYY-MM-DD`, data di emissione |
+| `expiryDate` | Stringa `YYYY-MM-DD`, scadenza |
+| `invoiceStatus` | `PAID`, `NOT_PAID`, `EXPIRED`, `PARTIALLY_PAID` |
+
+La conversione dell'app conferma le date ISO e la presentazione numerica in
+euro. Il parser conserva sconosciuti eventuali stati futuri. Non conserva
+`pdfUrl`, dati di addebito, periodi o quantità fatturate non necessari ai sensori.
+
+La lettura autorizzata del 16 settembre 2026 ha restituito **HTTP 200 e
+`code: OK`**, ma anche **`engieErrorCode: 9`, `engieDetailedErrorCode: 9.91`**,
+`response.invoices: []` e `inMaintenance: false`. Una verifica limitata con
+`numberOfInvoices` esplicito ha prodotto lo stesso risultato. Non è una
+risposta positiva con documenti, né una prova di assenza di fatture o debito.
+Il significato esatto del codice non è confermato. `user/v4/dashboard`, letto
+durante la ricerca, non ha fornito un riepilogo alternativo delle fatture e
+non è stato aggiunto alle operazioni del client.
+
+Parser e sensori b8 sono sperimentali, con fixture inventate per pagamenti
+parziali, errori, scadenze, dati mancanti e duplicati. Una risposta con errore
+applicativo non produce importi zero. Rimane aperta la verifica di fatture
+reali e della copertura storica effettiva: [dettagli](INVOICES.md).
+
+La b8 è stata installata e riavviata su HA 2026.9.2: tutte le 11 nuove entità
+sono state create sul dispositivo Account. La lettura reale produce stato
+fatture `error`, codici 9/9.91 e valori indisponibili; i sensori di consumo
+precedenti restano disponibili. Verificati 113 test del client e 33 test HA
+isolati, oltre al controllo della configurazione e alla corrispondenza dei file.
+
 ### Gas ancora non verificato con successo
 
 Nell'app sono presenti queste letture, provate privatamente:
@@ -203,7 +249,42 @@ verificare il payload di successo, compresi periodi e stime.
 
 ## Verifiche ancora necessarie
 
-1. Rendere login e configurazione API distribuibili senza pubblicare chiavi dell'app.
+### Primo collegamento senza configurazione preesistente
+
+La chiave `x-api-key` e' una risorsa statica comune del client mobile,
+non una credenziale generata dal login del singolo account. La b5 la include
+nel profilo applicativo: non chiede APK e non esegue un recupero da mirror.
+Questo non costituisce un'approvazione del provider o una verifica delle
+condizioni di distribuzione.
+
+Verifiche senza sessioni personali, 16 settembre 2026:
+
+- `GET authentication/v2/configurations` senza chiave restituisce HTTP 403.
+- Lo stesso endpoint con il profilo comune restituisce HTTP 200: configurazione
+  dell'app, flag manutenzione, versioni e opzioni, non dati di un account.
+- Il codice del client aggiunge `x-api-key` dalle risorse; `sessionToken`
+  viene invece dalla gestione delle credenziali OAuth. Sono due ruoli distinti.
+- I grant `password` e `http://auth0.com/oauth/grant-type/password-realm`
+  restituiscono HTTP 403, `unauthorized_client`. Le prove non hanno inviato
+  username, password o OTP, ne' effettuato tentativi su account.
+- La discovery OIDC e gli asset pubblici del login esaminati non forniscono
+  un bootstrap senza chiave. La ricerca degli asset non e' esaustiva.
+- Il dominio `engieapp.engie.it` non era risolvibile durante la prova.
+
+La versione Android esaminata e' 10.1.0, pacchetto `it.engie.appengie`.
+La firma v3 e' stata verificata con Android `apksigner`; il certificato SHA-256
+`e2d2a82a217c536d7f5cd9ff809415da8dd581438b54d9265804e40d924a601d`
+corrisponde alla dichiarazione ENGIE in
+[assetlinks.json](https://login.engie.it/.well-known/assetlinks.json).
+La verifica e' ricerca statica: il componente HA non esegue o interpreta APK.
+
+Il prototipo b4 di importazione APK e' stato rimosso. La b5 risolve il
+provisioning dei parametri, non il callback OAuth: il ritorno manuale descritto
+in [SETUP.md](SETUP.md) rimane necessario.
+
+### Criteri di completamento
+
+1. Completare la verifica reale del primo login b5 e valutare un client dedicato.
 2. Osservare la sessione nel tempo e verificare revoca/challenge reali in HA.
 3. Consumi gas riusciti, rettifiche e dettaglio elettrico durante il cambio d'ora.
 4. Verificare limiti e condizioni d'uso prima della distribuzione.

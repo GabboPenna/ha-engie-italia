@@ -8,6 +8,7 @@ from email.utils import format_datetime
 from unittest.mock import patch
 
 import aiohttp
+from invoice_fixtures import invoice, invoices
 from mobile_fixtures import daily, hourly, supplies
 
 from engie_italia.client import API, TOKEN_URL, EngieMobileClient, _retry_seconds
@@ -49,6 +50,25 @@ class Session:
         yield result
 
 
+class GatedSession(Session):
+    def __init__(self, *responses):
+        super().__init__(*responses)
+        self.started = asyncio.Event()
+        self.release = asyncio.Event()
+        self.cancelled = asyncio.Event()
+
+    @asynccontextmanager
+    async def request(self, method, url, **kwargs):
+        async with super().request(method, url, **kwargs) as response:
+            self.started.set()
+            try:
+                await self.release.wait()
+                yield response
+            except asyncio.CancelledError:
+                self.cancelled.set()
+                raise
+
+
 def token(**overrides):
     return Response(
         payload={
@@ -73,6 +93,165 @@ def client(session, **kwargs):
 
 
 class ClientTests(unittest.IsolatedAsyncioTestCase):
+    async def test_concurrent_read_survives_one_cancelled_waiter(self):
+        session = GatedSession(Response(payload=supplies()))
+        reader = client(session)
+        first = asyncio.create_task(reader.async_supplies())
+        second = asyncio.create_task(reader.async_supplies())
+        await asyncio.wait_for(session.started.wait(), 1)
+        first.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await first
+        session.release.set()
+        self.assertEqual(len(await second), 2)
+        self.assertFalse(session.cancelled.is_set())
+        self.assertEqual(len(session.calls), 1)
+
+    async def test_all_cancelled_waiters_stop_read_and_next_call_can_retry(self):
+        session = GatedSession(
+            Response(payload=supplies()), Response(payload=supplies())
+        )
+        reader = client(session)
+        pending = [asyncio.create_task(reader.async_supplies()) for _ in range(2)]
+        await asyncio.wait_for(session.started.wait(), 1)
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+        await asyncio.wait_for(session.cancelled.wait(), 1)
+        session.release.set()
+        self.assertEqual(len(await reader.async_supplies()), 2)
+        self.assertEqual(len(session.calls), 2)
+
+    async def test_clear_credentials_cancels_inflight_reads_and_prevents_reuse(self):
+        session = GatedSession(Response(payload=supplies()))
+        reader = client(session)
+        pending = [asyncio.create_task(reader.async_supplies()) for _ in range(2)]
+        await asyncio.wait_for(session.started.wait(), 1)
+        reader.clear_credentials()
+        results = await asyncio.gather(*pending, return_exceptions=True)
+        self.assertTrue(
+            all(isinstance(result, asyncio.CancelledError) for result in results)
+        )
+        self.assertTrue(session.cancelled.is_set())
+        with self.assertRaises(AuthenticationError):
+            await reader.async_supplies()
+        self.assertEqual(len(session.calls), 1)
+
+    async def test_concurrent_error_is_shared_but_not_cached(self):
+        session = GatedSession(Response(503), Response(payload=supplies()))
+        reader = client(session)
+        pending = [asyncio.create_task(reader.async_supplies()) for _ in range(2)]
+        await asyncio.wait_for(session.started.wait(), 1)
+        session.release.set()
+        results = await asyncio.gather(*pending, return_exceptions=True)
+        self.assertTrue(all(isinstance(result, ServiceError) for result in results))
+        self.assertEqual(len(session.calls), 1)
+        self.assertEqual(len(await reader.async_supplies()), 2)
+        self.assertEqual(len(session.calls), 2)
+
+    async def test_different_periods_and_accounts_never_share_responses(self):
+        power = parse_mobile_supplies(supplies())[0]
+        session = Session(
+            Response(payload=hourly()), Response(payload=hourly("2025-03-11"))
+        )
+        reader = client(session)
+        results = await asyncio.gather(
+            *(
+                reader.async_hourly_electricity(
+                    power, lower_bound=date(2025, 3, 1), day=day
+                )
+                for day in (date(2025, 3, 10), date(2025, 3, 11))
+            )
+        )
+        self.assertNotEqual(
+            results[0].snapshot.intervals[0].start,
+            results[1].snapshot.intervals[0].start,
+        )
+        self.assertEqual(len(session.calls), 2)
+        session = Session(Response(payload=supplies()), Response(payload=supplies()))
+        await asyncio.gather(
+            client(session).async_supplies(), client(session).async_supplies()
+        )
+        self.assertEqual(len(session.calls), 2)
+
+    async def test_later_poll_receives_correction_even_when_data_date_is_unchanged(
+        self,
+    ):
+        corrected = daily()
+        corrected["consumptionsList"]["years"][0]["months"][0]["days"][0][
+            "totalValue"
+        ] = 0.75
+        session = Session(Response(payload=daily()), Response(payload=corrected))
+        reader = client(session)
+        power = parse_mobile_supplies(supplies())[0]
+        first = await reader.async_daily_electricity(
+            power, lower_bound=date(2025, 3, 1), year=2025
+        )
+        second = await reader.async_daily_electricity(
+            power, lower_bound=date(2025, 3, 1), year=2025
+        )
+        self.assertEqual(first.last_update, second.last_update)
+        self.assertEqual(first.snapshot.intervals[0].value, Decimal("1.25"))
+        self.assertEqual(second.snapshot.intervals[0].value, Decimal("0.75"))
+        self.assertEqual(len(session.calls), 2)
+
+    async def test_invoices_fetch_full_list_once_per_contract_not_per_supply(self):
+        contracts = supplies()
+        contracts["listaContratti"].append(
+            {"codContr": "synthetic-retired-contract", "forniture": []}
+        )
+        session = Session(
+            Response(payload=contracts),
+            Response(payload=invoices(invoice())),
+            Response(
+                payload=invoices(invoice(), invoice(fiscalNumber="SYNTHETIC-OTHER"))
+            ),
+        )
+        reader = client(session)
+        await reader.async_supplies()
+        result = await reader.async_invoices()
+        self.assertEqual(len(result.invoices), 2)
+        self.assertEqual(result.outstanding, Decimal("201.50"))
+        self.assertEqual(len(session.calls), 3)
+        for call, code in zip(
+            session.calls[1:],
+            ("synthetic-contract", "synthetic-retired-contract"),
+            strict=True,
+        ):
+            self.assertEqual(call[:2], ("GET", API + "contracts/v2/invoices"))
+            self.assertEqual(call[2]["params"], {"contractId": code})
+            self.assertFalse(call[2]["allow_redirects"])
+        self.assertIsNotNone(result.fetched_at.tzinfo)
+
+    async def test_invoice_failure_in_later_contract_does_not_return_partial_total(
+        self,
+    ):
+        contracts = supplies()
+        contracts["listaContratti"].append(
+            {"codContr": "synthetic-second", "forniture": []}
+        )
+        session = Session(
+            Response(payload=contracts),
+            Response(payload=invoices(invoice())),
+            Response(payload=invoices(engieErrorCode=9, engieDetailedErrorCode=9.91)),
+        )
+        with self.assertRaises(ServiceError):
+            await client(session).async_invoices()
+        self.assertEqual(len(session.calls), 3)
+
+    async def test_invoice_contract_cache_tracks_account_contract_changes(self):
+        empty = {"code": "OK", "listaContratti": []}
+        session = Session(
+            Response(payload=supplies()),
+            Response(payload=invoices(invoice())),
+            Response(payload=empty),
+        )
+        reader = client(session)
+        self.assertEqual(len((await reader.async_invoices()).invoices), 1)
+        await reader.async_supplies()
+        self.assertEqual((await reader.async_invoices()).open_count, 0)
+        self.assertEqual(len(session.calls), 3)
+
     async def test_rotated_token_persisted_before_next_read(self):
         saved = []
 
@@ -168,12 +347,11 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
             Response(401),
             token(),
             Response(payload=supplies()),
-            Response(payload=supplies()),
         )
         reader = client(session)
         result = await asyncio.gather(reader.async_supplies(), reader.async_supplies())
         self.assertEqual([len(x) for x in result], [2, 2])
-        self.assertEqual([c[0] for c in session.calls], ["GET", "POST", "GET", "GET"])
+        self.assertEqual([c[0] for c in session.calls], ["GET", "POST", "GET"])
         refresh = session.calls[1]
         self.assertEqual(refresh[1], TOKEN_URL)
         self.assertEqual(refresh[2]["json"]["grant_type"], "refresh_token")
