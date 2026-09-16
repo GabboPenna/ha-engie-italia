@@ -6,6 +6,8 @@ from urllib.parse import parse_qs, urlencode, urlsplit
 
 import jwt
 from cryptography.hazmat.primitives.asymmetric import rsa
+from test_client import Response, Session
+
 from engie_italia.auth import (
     CALLBACK,
     ISSUER,
@@ -14,7 +16,6 @@ from engie_italia.auth import (
 )
 from engie_italia.errors import AuthenticationError, PayloadError, TransportError
 from engie_italia.session import SessionTokens
-from test_client import Response, Session
 
 
 def callback(attempt, **changes):

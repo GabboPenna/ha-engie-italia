@@ -8,6 +8,8 @@ from email.utils import format_datetime
 from unittest.mock import patch
 
 import aiohttp
+from mobile_fixtures import daily, hourly, supplies
+
 from engie_italia.client import API, TOKEN_URL, EngieMobileClient, _retry_seconds
 from engie_italia.errors import (
     AuthenticationError,
@@ -18,7 +20,6 @@ from engie_italia.errors import (
     TransportError,
 )
 from engie_italia.mobile import parse_mobile_supplies
-from mobile_fixtures import daily, hourly, supplies
 
 
 class Response:
