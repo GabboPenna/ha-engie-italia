@@ -2,16 +2,59 @@
   "title": "ENGIE Italia",
   "config": {
     "step": {
-      "user": {"title": "Connect to ENGIE Italia", "description": "Connect your electricity and gas supplies in read-only mode. This unofficial integration never asks for your ENGIE password.", "menu_options": {"connect": "Sign in to ENGIE", "api_setup": "API connection (advanced)"}},
-      "api_setup": {"title": "Prepare the connection", "description": "This assisted beta requires a privately supplied API key for the initial connection. This is not your ENGIE password. If no key is available, cancel setup: independent public setup is not supported yet.", "data": {"api_key": "API connection key"}, "sections": {"oauth": {"name": "Advanced OAuth settings", "description": "Leave the default unchanged unless using a separately provisioned client.", "data": {"client_id": "OAuth client ID"}}}},
-      "authorize": {"title": "Sign in to ENGIE", "description": "[Open the ENGIE sign-in page]({authorization_url})\n\nComplete sign-in and any verification code on the ENGIE website. Then copy the complete final address from the browser and paste it below, even if the return page is blank or shows an error.\n\nENGIE does not yet allow an automatic return to Home Assistant. Complete this step within 10 minutes and do not share the address: it contains a temporary code. Future session renewals are automatic while ENGIE permits them.", "data": {"callback_url": "Final address from ENGIE"}},
+      "user": {
+        "title": "Before you start",
+        "description": "This unofficial integration reads your supplies without changing them.\n\n**For the first connection you need:**\n- An API key obtained for an assisted trial.\n- Your ENGIE account and any verification code.\n\nThe API key is not your ENGIE password or a Home Assistant token. First prepare the connection, then sign in on the ENGIE website and bring the final address back here.\n\n**No API key?** Choose the option below before continuing.",
+        "menu_options": {
+          "api_setup": "I have a key: start",
+          "api_help": "I do not have a key",
+          "connect": "Use an existing connection"
+        }
+      },
+      "api_help": {
+        "title": "How to get access",
+        "description": "The API key identifies the connection to ENGIE's service. **It is not your account password**, and this dialog cannot generate it.\n\n**What to do next:**\n1. If you are taking part in an assisted trial, ask the person assisting you for the connection configuration.\n2. Otherwise check [initial access status and support](https://github.com/GabboPenna/ha-engie-italia/issues/1): there is no verified public procedure for obtaining the key yet.\n3. Once you have it, return here and choose **I have a key: continue**.\n\nWithout a key, you cannot finish setting up this beta. Never post passwords, verification codes, keys or return addresses in issues.",
+        "menu_options": {
+          "user": "Back to the start",
+          "api_setup": "I have a key: continue"
+        }
+      },
+      "api_setup": {
+        "title": "1. Prepare the connection",
+        "description": "Paste the API key obtained for the assisted trial, then press **Submit**. You will sign in on the ENGIE website in the next step.\n\n**No API key?** Close this dialog, reopen ENGIE Italia from Add integration and choose **I do not have a key**. Do not try account passwords or Home Assistant tokens instead.",
+        "data": {
+          "api_key": "API key"
+        },
+        "data_description": {
+          "api_key": "Only the connection key supplied for the assisted trial."
+        },
+        "sections": {
+          "oauth": {
+            "name": "Advanced OAuth settings",
+            "description": "Leave these settings unchanged unless given specific instructions for a dedicated client.",
+            "data": {
+              "client_id": "OAuth client ID"
+            }
+          }
+        }
+      },
+      "authorize": {
+        "title": "2. Sign in to ENGIE",
+        "description": "1. [Open the ENGIE website]({authorization_url}) and sign in, including any verification code.\n2. Copy the **entire final address from the browser address bar**, even if the final page is blank or shows an error. It must contain `code=` and `state=`: do not copy the verification code or the initial sign-in address.\n3. Return to this dialog, paste the address below and press **Submit**.\n\n**Complete this within 10 minutes.** The current ENGIE client does not allow an automatic return to HA. After this step, the session is saved and renewed while ENGIE permits it.\n\n**Does your phone open the ENGIE app?** Start setup again in HA using a desktop browser, where you can copy the final address.",
+        "data": {
+          "callback_url": "Final browser address"
+        },
+        "data_description": {
+          "callback_url": "Paste the complete address. It contains a temporary code: do not share it."
+        }
+      },
       "finish": {"title": "Save authorization"},
       "reauth_confirm": {"title": "Sign in to ENGIE again", "description": "ENGIE requires a new sign-in. Your API connection is already configured. Continue using the same ENGIE account as before."}
     },
     "error": {
-      "invalid_config": "The API configuration is invalid.",
-      "invalid_auth": "Authorization failed or expired. A new sign-in is required.",
-      "cannot_connect": "ENGIE is unavailable. Try signing in again later.",
+      "invalid_config": "Invalid key or settings. Paste only the API key, without spaces; keep the default OAuth settings unless given specific instructions.",
+      "invalid_auth": "The address is invalid, expired, or ENGIE rejected sign-in. Open the link above again and copy the new final address.",
+      "cannot_connect": "The ENGIE service is not responding. Try again later by reopening the link and completing a new sign-in.",
       "storage_error": "The session could not be saved. Retry saving without signing in again."
     },
     "abort": {

@@ -8,7 +8,7 @@
 Integrazione Home Assistant **non ufficiale, in sola lettura** per le forniture
 ENGIE Italia. Non affiliata, sponsorizzata o approvata da ENGIE.
 
-**Beta 0.1.0b2, accesso iniziale assistito.** Il client legge forniture luce/gas
+**Beta 0.1.0b3, accesso iniziale assistito.** Il client legge forniture luce/gas
 e consumi elettrici; OAuth/PKCE gestisce login, rinnovo e persistenza della
 sessione. La chiave API necessaria non viene distribuita nel repository:
 questa beta non e' ancora un'installazione pubblica pronta all'uso.
@@ -46,19 +46,24 @@ Richiede Home Assistant **2026.9.0 o successivo**, test del framework su 2026.9.
    della configurazione di HA e riavviare.
 2. In **Impostazioni > Dispositivi e servizi > Aggiungi integrazione**, cercare
    **ENGIE Italia**.
-3. Scegliere **Accedi a ENGIE**. Se esiste gia' una sola configurazione API
-   distinta, viene riutilizzata senza chiedere la chiave; l'account va comunque
-   autorizzato nuovamente. Al primo collegamento, o in caso di configurazioni
-   ambigue/non disponibili, inserire la chiave ottenuta privatamente.
-   **Connessione API (avanzata)** permette una configurazione esplicita;
-   il Client ID pubblico e' nella sezione OAuth richiudibile.
-   Non inserire password ENGIE in questo modulo.
+3. Il popup **Prima di iniziare** elenca i requisiti. Scegliere **Ho la chiave:
+   inizia** per inserire la configurazione tecnica della prova assistita, oppure
+   **Non ho la chiave** per sapere come procedere e consultare lo stato del supporto.
+   Non sostituire la chiave con password ENGIE o token Home Assistant. Lasciare
+   invariati i parametri OAuth, salvo istruzioni specifiche.
 4. Aprire il collegamento, completare login ed eventuale OTP. Copiare l'indirizzo
    completo di ritorno nel campo dedicato di HA. Il callback dell'app puo'
    mostrare una pagina vuota o un errore: interessa l'indirizzo
    `https://login.engie.it/android/it.engie.appengie/callback?...`.
 5. Completare entro 10 minuti. Non condividere quell'indirizzo: contiene un
    codice temporaneo. Un tentativo scaduto richiede un nuovo accesso.
+
+La [guida al primo collegamento](docs/SETUP.md) descrive anche il caso senza
+chiave, l'uso da smartphone e il recupero degli errori. Le istruzioni essenziali
+sono nel popup, non richiedono di leggere il repository.
+Solo quando esistono account configurati appare anche **Usa una connessione
+esistente**: riutilizza una configurazione API non ambigua, mai il consenso di
+un altro account. Non e' un prerequisito per il primo collegamento.
 
 La sessione viene salvata e riutilizzata dopo un riavvio; il browser puo' essere
 chiuso. Revoca o scadenza definitiva del consenso richiedono un nuovo login:

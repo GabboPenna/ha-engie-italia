@@ -37,8 +37,14 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._authorized = None
 
     async def async_step_user(self, user_input=None):
+        options = ["api_setup", "api_help"]
+        if self.hass.config_entries.async_entries(DOMAIN):
+            options.append("connect")
+        return self.async_show_menu(step_id="user", menu_options=options)
+
+    async def async_step_api_help(self, user_input=None):
         return self.async_show_menu(
-            step_id="user", menu_options=["connect", "api_setup"]
+            step_id="api_help", menu_options=["user", "api_setup"]
         )
 
     async def async_step_connect(self, user_input=None):
@@ -73,7 +79,7 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_authorize()
         fields = {
             vol.Required(CONF_API_KEY): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
             ),
             vol.Optional("oauth"): section(
                 vol.Schema(
@@ -114,7 +120,9 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_CALLBACK): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD, autocomplete="off"
+                        )
                     )
                 }
             ),

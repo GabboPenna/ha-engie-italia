@@ -265,13 +265,92 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         flow.context = {"source": "user", **context}
         return flow
 
-    async def test_welcome_has_login_and_separate_advanced_connection(self):
+    async def test_fresh_install_starts_with_key_or_help_without_existing_account(self):
         result = await self.config_flow().async_step_user()
         self.assertEqual(result["type"], "menu")
-        self.assertEqual(result["menu_options"], ["connect", "api_setup"])
+        self.assertEqual(result["menu_options"], ["api_setup", "api_help"])
         self.assertEqual(
             {str(k) for k in result["data_schema"].schema}, {"next_step_id"}
         )
+
+    async def test_existing_connection_is_secondary_and_only_shown_when_present(self):
+        with patch.object(
+            self.hass.config_entries, "async_entries", return_value=[self.entry]
+        ):
+            result = await self.config_flow().async_step_user()
+        self.assertEqual(result["menu_options"], ["api_setup", "api_help", "connect"])
+
+    async def test_missing_key_help_has_navigation_without_starting_login(self):
+        flow = self.config_flow()
+        with patch(MODULE + "config_flow.async_load_credentials", AsyncMock()) as load:
+            result = await flow.async_step_api_help()
+            self.assertEqual(result["menu_options"], ["user", "api_setup"])
+            self.assertEqual((await flow.async_step_user())["step_id"], "user")
+            self.assertEqual(
+                (await flow.async_step_api_setup())["step_id"], "api_setup"
+            )
+        load.assert_not_awaited()
+        self.assertIsNone(flow._attempt)
+        self.assertIsNone(flow._api_key)
+        self.assertFalse(Path(self.directory.name, ".storage").exists())
+
+    async def test_first_setup_completes_with_only_synthetic_credentials(self):
+        flow = self.config_flow()
+        flow.async_set_unique_id = AsyncMock()
+        flow._abort_if_unique_id_configured = MagicMock()
+        tokens = SessionTokens(
+            "synthetic-access", "synthetic-refresh", time.time() + 300
+        )
+        self.assertEqual((await flow.async_step_user())["step_id"], "user")
+        self.assertEqual((await flow.async_step_api_setup())["step_id"], "api_setup")
+        result = await flow.async_step_api_setup({"api_key": "synthetic-key"})
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(
+            result["data_schema"].schema["callback_url"].config["autocomplete"], "off"
+        )
+        with (
+            patch(
+                MODULE + "config_flow.async_get_clientsession", return_value=object()
+            ),
+            patch(
+                MODULE + "config_flow.async_complete_authorization",
+                AsyncMock(return_value=(ACCOUNT, tokens)),
+            ) as authorize,
+        ):
+            result = await flow.async_step_authorize(
+                {"callback_url": "synthetic-callback"}
+            )
+        authorize.assert_awaited_once()
+        self.assertEqual(result["type"], "create_entry")
+        self.assertEqual(result["data"], {"account_key": ACCOUNT})
+        stored = await async_load_credentials(self.hass, ACCOUNT)
+        self.assertEqual(
+            stored, credentials("synthetic-key", DEFAULT_CLIENT_ID, tokens)
+        )
+        self.assertIsNone(flow._attempt)
+        self.assertIsNone(flow._authorized)
+
+    async def test_invalid_or_expired_callback_issues_a_fresh_link_without_echo(self):
+        flow = self.config_flow()
+        first = await flow.async_step_api_setup({"api_key": "synthetic-key"})
+        with (
+            patch(
+                MODULE + "config_flow.async_get_clientsession", return_value=object()
+            ),
+            patch(
+                MODULE + "config_flow.async_complete_authorization",
+                AsyncMock(side_effect=AuthenticationError("rejected")),
+            ),
+        ):
+            result = await flow.async_step_authorize(
+                {"callback_url": "private-callback"}
+            )
+        self.assertEqual(result["errors"], {"base": "invalid_auth"})
+        self.assertNotEqual(
+            first["description_placeholders"], result["description_placeholders"]
+        )
+        self.assertNotIn("private-callback", str(result))
+        self.assertNotIn("synthetic-key", str(result))
 
     async def test_first_install_requires_key_but_hides_client_id(self):
         flow = self.config_flow()
@@ -428,7 +507,22 @@ class MetadataTests(unittest.TestCase):
         )
         for language in (source, italian):
             menu = language["config"]["step"]["user"]["menu_options"]
-            self.assertEqual(set(menu), {"connect", "api_setup"})
+            self.assertEqual(set(menu), {"connect", "api_setup", "api_help"})
+            self.assertEqual(
+                set(language["config"]["step"]["api_help"]["menu_options"]),
+                {"user", "api_setup"},
+            )
+            self.assertIn(
+                "https://github.com/GabboPenna/ha-engie-italia/issues/1",
+                language["config"]["step"]["api_help"]["description"],
+            )
+            for step, field in (
+                ("api_setup", "api_key"),
+                ("authorize", "callback_url"),
+            ):
+                self.assertIn(
+                    field, language["config"]["step"][step]["data_description"]
+                )
             self.assertIn(
                 "{authorization_url}",
                 language["config"]["step"]["authorize"]["description"],

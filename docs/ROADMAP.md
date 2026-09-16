@@ -16,6 +16,7 @@
 - [x] Persistenza privata atomica dei token e riautenticazione dello stesso account.
 - [ ] Configurazione API distribuibile senza provisioning privato.
 - [x] Riutilizzo sicuro della connessione API e accesso separato dai parametri tecnici.
+- [x] Primo avvio senza account preesistenti: requisiti nel popup, aiuto senza chiave e istruzioni passo passo.
 - [ ] Ritorno automatico dal login con callback HA autorizzato dal provider.
 - [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
 - [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
