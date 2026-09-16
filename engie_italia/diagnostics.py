@@ -3,6 +3,18 @@
 from collections.abc import Iterable
 
 from .models import Quality, SupplySnapshot
+from .portal import PortalSupply
+
+
+def portal_summary(supplies: Iterable[PortalSupply]) -> dict:
+    """Report verified supply metadata, never raw account or meter fields."""
+    return {
+        "schema_version": 1,
+        "supplies": [
+            {"utility": supply.utility.value, "status": supply.status.value}
+            for supply in supplies
+        ],
+    }
 
 
 def diagnostic_summary(snapshots: Iterable[SupplySnapshot]) -> dict:

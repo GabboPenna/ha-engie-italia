@@ -2,14 +2,22 @@
 
 ## Confini
 
-Il nucleo `engie_italia` contiene solo modelli normalizzati e diagnostica
-selezionata. Non conosce credenziali, HTTP o Home Assistant. Non e' ancora
-un client ENGIE: nessun endpoint autenticato e' stato assunto o inventato.
+Il nucleo `engie_italia` contiene modelli normalizzati, diagnostica selezionata
+e un parser per lo schema forniture osservato nel portale. Non conosce
+credenziali, HTTP o Home Assistant. Non e' ancora un client ENGIE autonomo.
+Il probe opzionale usa un browser temporaneo con login manuale; non esporta
+sessioni e non e' il meccanismo di autenticazione della futura integrazione.
+
+`PortalSupply` rappresenta soltanto l'identita', il tipo e lo stato osservato
+di una fornitura. Rimane distinto da `SupplySnapshot`, che descrive intervalli
+di consumo: nessuna lettura contrattuale genera misure energetiche implicite.
 
 Il futuro client asincrono avra' autenticazione e letture separate, timeout,
 limiti di frequenza, richieste deduplicate e retry limitati. Una risposta
 401 deve portare a rinnovo controllato o richiesta di riautenticazione;
 429 e problemi di rete non devono generare cicli di login continui.
+Anche HTTP 200 puo' contenere errori Aura o applicativi. Verificare tutti i
+livelli prima di aggiornare i dati; non trattare errori come liste vuote.
 
 Le sole operazioni ammesse saranno autenticazione/rinnovo e lettura dei dati
 verificati. Il verbo HTTP non e' una garanzia: una lettura Salesforce puo'

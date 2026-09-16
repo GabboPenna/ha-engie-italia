@@ -4,7 +4,8 @@ Progetto per una integrazione Home Assistant **non ufficiale, in sola lettura**
 per le forniture luce e gas di ENGIE Italia.
 
 **Stato: sviluppo preliminare. Non e' ancora installabile in Home Assistant
-o tramite HACS e non recupera ancora i dati di un account ENGIE.**
+o tramite HACS. Prima lettura delle forniture verificata con login manuale;
+autenticazione automatica, rinnovo e consumi non ancora disponibili.**
 
 Non affiliato, sponsorizzato o approvato da ENGIE. Il nome ENGIE appartiene
 al rispettivo titolare.
@@ -33,12 +34,18 @@ altra operazione di scrittura sull'account.
 - Modello dati indipendente da Home Assistant per forniture e intervalli di consumo.
 - Validazione di valori, unita' e intervalli temporali, incluso il cambio d'ora.
 - Riepilogo diagnostico con soli metadati selezionati.
+- Parser delle forniture del portale, verificato durante una sessione autorizzata.
 - Test offline con dati interamente sintetici e CI su GitHub.
 - Uno strumento opzionale che controlla il percorso pubblico di accesso,
   senza inserire credenziali o salvare una sessione.
+- Una prova interattiva opzionale che legge le forniture dopo il login manuale
+  e restituisce solo tipo e stato, senza esportare dati personali o sessioni.
 
-Questi modelli **non sono parser delle risposte ENGIE**. Gli endpoint autenticati,
-il formato dei dati e il rinnovo della sessione devono ancora essere verificati.
+Il parser riconosce le forniture luce/gas nel caricamento iniziale della dashboard.
+**Non legge ancora serie di consumo o bollette** e non e' un client autonomo.
+La chiamata allo storico individuata nel portale ha restituito un errore del
+servizio a monte; non e' dimostrato che coincida con il grafico dell'app.
+Dettagli e limiti in [ricerca API](docs/API_RESEARCH.md).
 
 ## Sviluppo
 
@@ -70,9 +77,24 @@ Lo strumento apre un browser nuovo senza profilo personale, prosegue fino alla
 pagina di login e termina. Non dimostra che autenticazione, rinnovo o lettura
 dei consumi funzionino. Non produce HAR, screenshot, cookie o token su disco.
 
+Prova opzionale con il proprio account, dopo la stessa installazione browser:
+
+```sh
+python tools/probe_account.py
+```
+
+Completare il login nella finestra aperta, incluso l'eventuale OTP. Non fornire
+password nel terminale o nei file del progetto. La prova attende al massimo
+10 minuti (modificabili con `--timeout`, in secondi), legge solo il riepilogo
+delle forniture e chiude il browser. Chiudere la finestra annulla la prova.
+Nessun HAR, screenshot, cookie o token viene esportato dallo strumento.
+Non effettua chiamate allo storico, pagamenti, autoletture o modifiche contrattuali.
+Il sito puo' eseguire proprie richieste di contorno durante il login e il
+caricamento della dashboard; queste non vengono replicate dal progetto.
+
 ## Prossimi passi
 
-1. Verificare accesso autorizzato, rinnovo della sessione e prima lettura reale.
+1. Verificare autenticazione ripetibile, rinnovo e servizio consumi usato dall'app.
 2. Implementare un client asincrono limitato alle chiamate di lettura verificate.
 3. Aggiungere l'integrazione nativa HA e test di configurazione/recupero.
 4. Provare una beta privata; solo dopo preparare la distribuzione HACS.

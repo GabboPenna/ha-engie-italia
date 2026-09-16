@@ -9,10 +9,12 @@
 
 ## Fase 1: prova di fattibilita' autenticata
 
-- [ ] Accesso autorizzato e rinnovo della sessione verificati.
-- [ ] Lettura di almeno una fornitura e confronto con l'app.
+- [x] Accesso manuale autorizzato e prima lettura delle forniture del portale.
+- [x] Parser forniture e probe interattivo con riepilogo privo di identificativi.
+- [ ] Autenticazione autonoma e rinnovo della sessione verificati.
 - [ ] Schema consumi elettrici verificato: unita', periodi, granularita', ritardo.
-- [ ] Fornitura gas senza consumi gestita senza fabbricare zeri.
+- [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
+- [ ] Differenze e disponibilita' reali dei consumi gas verificate sul servizio.
 - [ ] Limiti e condizioni d'uso verificati, campioni esclusivamente sintetici.
 
 Se l'accesso richiede challenge incompatibili con un aggiornamento autonomo,
