@@ -125,6 +125,12 @@
       },
       "invoices_last_sync": {
         "name": "Ultima sincronizzazione fatture"
+      },
+      "energy_unit_price": {
+        "name": "Prezzo componente energia"
+      },
+      "annual_fixed_fee": {
+        "name": "Quota fissa annua vendita"
       }
     },
     "button": {

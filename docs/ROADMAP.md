@@ -72,7 +72,10 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [ ] Confermare una risposta con fatture reali: prova attuale vuota con
   codici ENGIE 9/9.91 nonostante `OK`; nessuna conferma di zero da pagare.
 - [ ] Eventuali ulteriori letture aggiunte solo dopo verifica dei dati disponibili.
-- [ ] Recupero automatico dei prezzi unitari verificabili, senza stime dal nome offerta.
+- [x] b10: prezzi della componente energia e quote fisse da CTE pubbliche,
+  con abbinamento esatto `PUMD#00016`, prima decorrenza e scadenza automatiche.
+  [Copertura e limiti](TARIFFS.md).
+- [ ] Ampliare le versioni verificate; verificare rinnovi e offerte indicizzate.
 - [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 
 ## Fase 3: distribuzione

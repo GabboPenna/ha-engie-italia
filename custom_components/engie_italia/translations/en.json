@@ -125,6 +125,12 @@
       },
       "invoices_last_sync": {
         "name": "Last successful invoice sync"
+      },
+      "energy_unit_price": {
+        "name": "Energy component price"
+      },
+      "annual_fixed_fee": {
+        "name": "Annual supply fixed fee"
       }
     },
     "button": {

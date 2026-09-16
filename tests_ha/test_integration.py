@@ -21,7 +21,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 from invoice_fixtures import invoice, invoices  # noqa: E402
 from mobile_fixtures import daily, supplies  # noqa: E402
+from tariff_fixtures import catalog, tariff_supplies  # noqa: E402
 
+from custom_components.engie_italia.api import tariffs  # noqa: E402
 from custom_components.engie_italia.api.client import EngieMobileClient  # noqa: E402
 from custom_components.engie_italia.api.errors import (  # noqa: E402
     AuthenticationError,
@@ -53,8 +55,10 @@ from custom_components.engie_italia.sensor import (  # noqa: E402
     COMMON,
     ELECTRICITY,
     INVOICES,
+    TARIFFS,
     EngieInvoiceSensor,
     EngieSensor,
+    EngieTariffSensor,
 )
 from custom_components.engie_italia.sensor import (
     async_setup_entry as setup_sensors,
@@ -136,6 +140,118 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     def invoice_sensor(self, key):
         description = next(d for d in INVOICES if d.key == key)
         return EngieInvoiceSensor(self.coordinator, self.entry, description)
+
+    def tariff_sensor(self, supply, key="energy_unit_price"):
+        description = next(d for d in TARIFFS if d.key == key)
+        return EngieTariffSensor(
+            self.coordinator,
+            self.entry,
+            supply_key(supply),
+            supply.utility,
+            description,
+        )
+
+    async def prepare_tariffs(self):
+        verified = catalog(tariffs)
+        for target in ("api.tariffs", "sensor"):
+            mocked = patch(MODULE + target + ".VERIFIED_TARIFFS", verified)
+            mocked.start()
+            self.addCleanup(mocked.stop)
+        self.power, self.gas = parse_mobile_supplies(tariff_supplies())
+        self.client.async_supplies.return_value = (self.power, self.gas)
+        await self.refresh()
+
+    async def test_tariffs_work_without_consumption_and_do_not_leak_to_diagnostics(
+        self,
+    ):
+        await self.prepare_tariffs()
+        self.client.async_daily_electricity.side_effect = TransportError()
+        await self.refresh()
+        self.assertFalse(self.sensor("last_day").available)
+        power = self.tariff_sensor(self.power)
+        gas = self.tariff_sensor(self.gas)
+        fixed = self.tariff_sensor(self.gas, "annual_fixed_fee")
+        self.assertTrue(power.available)
+        self.assertTrue(gas.available)
+        self.assertEqual(power.native_value, Decimal("0.12345"))
+        self.assertEqual(gas.native_value, Decimal("0.56789"))
+        self.assertEqual(fixed.native_value, Decimal("75"))
+        self.assertEqual(power.native_unit_of_measurement, "EUR/kWh")
+        self.assertEqual(gas.native_unit_of_measurement, "EUR/Smc")
+        self.assertEqual(fixed.native_unit_of_measurement, "EUR/year")
+        self.assertIsNone(gas.device_class)
+        self.assertEqual(power.device_info, self.sensor("last_day").device_info)
+        self.assertEqual(power.extra_state_attributes["tariff_status"], "verified")
+        self.assertFalse(power.extra_state_attributes["all_inclusive"])
+        self.assertFalse(power.extra_state_attributes["taxes_included"])
+        self.assertTrue(power.extra_state_attributes["network_losses_included"])
+        self.assertEqual(gas.extra_state_attributes["reference_pcs_gj_smc"], "0.03999")
+        diagnostics = json.dumps(
+            await async_get_config_entry_diagnostics(self.hass, self.entry)
+        )
+        for private in (
+            "SYNTHETIC",
+            "0.12345",
+            "0.56789",
+            "0.03999",
+            "2026-02-28",
+            "example.invalid",
+            "Domestico",
+        ):
+            self.assertNotIn(private, diagnostics)
+
+    async def test_tariff_update_failure_missing_supply_and_renewal_are_unavailable(
+        self,
+    ):
+        await self.prepare_tariffs()
+        sensor = self.tariff_sensor(self.power)
+        original_id = sensor.unique_id
+        self.coordinator.last_update_success = False
+        self.assertFalse(sensor.available)
+        self.assertIsNone(sensor.native_value)
+        self.assertEqual(
+            sensor.extra_state_attributes["tariff_status"], "update_failed"
+        )
+        self.coordinator.last_update_success = True
+        renewed = replace(
+            self.power, offer=replace(self.power.offer, code="SYNTHETIC#00124")
+        )
+        self.client.async_supplies.return_value = (renewed, self.gas)
+        await self.refresh()
+        self.assertEqual(sensor.unique_id, original_id)
+        self.assertFalse(sensor.available)
+        self.assertIsNone(sensor.native_value)
+        self.assertEqual(
+            sensor.extra_state_attributes["tariff_status"], "unverified_offer"
+        )
+        self.coordinator.data = {}
+        self.assertFalse(sensor.available)
+        self.assertIsNone(sensor.extra_state_attributes)
+
+    async def test_tariff_expires_at_italian_midnight_without_api_calls(self):
+        await self.prepare_tariffs()
+        sensor = self.tariff_sensor(self.gas)
+        sensor.hass = self.hass
+        sensor.async_write_ha_state = MagicMock()
+        with patch(MODULE + "sensor.async_track_point_in_utc_time") as track:
+            await sensor.async_added_to_hass()
+            self.assertEqual(
+                track.call_args.args[2].isoformat(), "2025-03-12T00:00:00+01:00"
+            )
+            with patch(
+                MODULE + "sensor.dt_util.now", return_value=datetime(2026, 3, 1)
+            ):
+                sensor._async_midnight(None)
+                self.assertFalse(sensor.available)
+                self.assertIsNone(sensor.native_value)
+                self.assertEqual(
+                    sensor.extra_state_attributes["tariff_status"], "expired"
+                )
+                sensor.async_write_ha_state.assert_called_once()
+            cancel = track.return_value
+            await sensor.async_will_remove_from_hass()
+            cancel.assert_called_once()
+        self.client.async_supplies.assert_awaited_once()
 
     async def test_account_invoice_sensors_expose_residual_dates_and_stable_reference(
         self,
@@ -399,14 +515,16 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         await self.refresh()
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
-        self.assertEqual(len(add.call_args.args[0]), 10 + len(INVOICES))
+        self.assertEqual(
+            len(add.call_args.args[0]), 10 + len(INVOICES) + 2 * len(TARIFFS)
+        )
         self.coordinator.async_update_listeners()
         self.assertEqual(add.call_count, 1)
         other = replace(self.power, point_id="synthetic-other")
         self.client.async_supplies.return_value = (self.power, self.gas, other)
         await self.refresh()
         self.coordinator.async_update_listeners()
-        self.assertEqual(len(add.call_args.args[0]), 8)
+        self.assertEqual(len(add.call_args.args[0]), 8 + len(TARIFFS))
 
     async def test_private_atomic_storage_reload_and_remove(self):
         data = credentials(

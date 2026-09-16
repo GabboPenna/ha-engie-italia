@@ -18,6 +18,7 @@ from .models import (
     consumption_value,
 )
 from .portal import SupplyStatus
+from .tariffs import SupplyOffer, parse_supply_offer
 
 ROME = ZoneInfo("Europe/Rome")
 
@@ -91,6 +92,7 @@ class MobileSupply:
     utility: Utility
     status: SupplyStatus
     activation_date: date | None = field(repr=False)
+    offer: SupplyOffer | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         for value in (self.supply_id, self.contract_id, self.point_id):
@@ -110,7 +112,14 @@ def parse_mobile_supplies(payload: object) -> tuple[MobileSupply, ...]:
     for raw_contract in list_value(data.get("listaContratti")):
         contract = object_value(raw_contract)
         contract_id = identifier(contract.get("codContr"))
-        for raw_supply in list_value(contract.get("forniture")):
+        raw_supplies = list_value(contract.get("forniture"))
+        activations = [object_value(s).get("dataAttivazione") for s in raw_supplies]
+        first_activation = (
+            min(iso_date(value) for value in activations)
+            if activations and all(value is not None for value in activations)
+            else None
+        )
+        for raw_supply in raw_supplies:
             supply = object_value(raw_supply)
             commodity = supply.get("commodity")
             if commodity not in ("Luce", "Gas"):
@@ -134,6 +143,7 @@ def parse_mobile_supplies(payload: object) -> tuple[MobileSupply, ...]:
                     if supply.get("attiva") == "y"
                     else SupplyStatus.UNKNOWN,
                     iso_date(activation) if activation is not None else None,
+                    parse_supply_offer(supply, first_activation),
                 )
             )
     return tuple(result)
