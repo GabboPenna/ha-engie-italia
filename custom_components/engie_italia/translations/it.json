@@ -4,7 +4,7 @@
     "step": {
       "authorize": {
         "title": "Collega il tuo account ENGIE",
-        "description": "1. [Accedi al tuo account ENGIE]({authorization_url}) e completa l'accesso. **Lascia aperta questa finestra.**\n2. Al termine, **copia tutto l'indirizzo dalla barra del browser**, anche se la pagina e' vuota o mostra un errore.\n3. Torna qui, incolla l'indirizzo e premi **Invia** entro 10 minuti.\n\nSe sul telefono si apre l'app ENGIE, completa il collegamento da un browser su computer. [Hai bisogno di aiuto?](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md)",
+        "description": "1. [Accedi al tuo account ENGIE]({authorization_url}) e completa l'accesso. **Lascia aperta questa finestra.**\n2. Al termine, **copia tutto l'indirizzo dalla barra del browser**, anche se la pagina e' vuota o mostra un errore.\n3. Torna qui, incolla l'indirizzo e premi **Invia** entro 10 minuti.\n\nSe sul telefono si apre l'app ENGIE, completa il collegamento da un browser su computer. [Hai bisogno di aiuto?]({setup_url})",
         "data": {
           "callback_url": "Indirizzo finale del browser"
         },

@@ -107,7 +107,8 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={
-                "authorization_url": self._attempt.authorization_url
+                "authorization_url": self._attempt.authorization_url,
+                "setup_url": "https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md",
             },
         )
 

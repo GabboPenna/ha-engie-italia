@@ -542,6 +542,10 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         result = await self.config_flow().async_step_authorize()
         self.assertEqual(result["step_id"], "authorize")
         self.assertIn("authorization_url", result["description_placeholders"])
+        self.assertEqual(
+            result["description_placeholders"]["setup_url"],
+            "https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md",
+        )
 
     async def test_invalid_or_expired_callback_issues_a_fresh_link_without_echo(self):
         flow = self.config_flow()
@@ -750,10 +754,7 @@ class MetadataTests(unittest.TestCase):
             self.assertEqual(set(authorize["data"]), {"callback_url"})
             self.assertIn("callback_url", authorize["data_description"])
             self.assertIn("{authorization_url}", authorize["description"])
-            self.assertIn(
-                "https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md",
-                authorize["description"],
-            )
+            self.assertIn("{setup_url}", authorize["description"])
 
     def test_setup_copy_describes_user_actions_without_implementation_details(self):
         root = Path(__file__).resolve().parents[1] / "custom_components/engie_italia"
