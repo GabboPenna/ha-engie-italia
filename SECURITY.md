@@ -16,6 +16,9 @@ Il client riceve chiave API e token tramite parametri privati. In HA, un deposit
 atomiche. Il deposito non e' cifrato: amministratori, accesso al disco e backup
 possono esporlo. Proteggere host e backup con cifratura appropriata.
 La config entry contiene solo un identificativo derivato, non chiavi o token.
+Per un ulteriore account sulla stessa istanza HA, il config flow puo' riutilizzare
+una connessione API non ambigua dai depositi gia' configurati. Non riutilizza mai
+access token o refresh token di un altro account; richiede un nuovo consenso ENGIE.
 Rimuovere l'integrazione elimina il deposito locale, non revoca il consenso
 dal provider; copie nei backup rimangono fino alla loro eliminazione.
 

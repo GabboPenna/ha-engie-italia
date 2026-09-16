@@ -234,7 +234,7 @@ class EngieMobileClient:
                             "x-api-key": self._api_key,
                             "locale": "IT",
                             "Accept": "application/json",
-                            "User-Agent": "ha-engie-italia/0.1.0b1 (read-only)",
+                            "User-Agent": "ha-engie-italia/0.1.0b2 (read-only)",
                         },
                     )
                     return successful_payload(payload)

@@ -1,9 +1,14 @@
 # ENGIE Italia
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="custom_components/engie_italia/brand/dark_logo.png">
+  <img alt="ENGIE" src="custom_components/engie_italia/brand/logo.png" width="220">
+</picture>
+
 Integrazione Home Assistant **non ufficiale, in sola lettura** per le forniture
 ENGIE Italia. Non affiliata, sponsorizzata o approvata da ENGIE.
 
-**Beta 0.1.0b1, accesso iniziale assistito.** Il client legge forniture luce/gas
+**Beta 0.1.0b2, accesso iniziale assistito.** Il client legge forniture luce/gas
 e consumi elettrici; OAuth/PKCE gestisce login, rinnovo e persistenza della
 sessione. La chiave API necessaria non viene distribuita nel repository:
 questa beta non e' ancora un'installazione pubblica pronta all'uso.
@@ -19,11 +24,14 @@ questa beta non e' ancora un'installazione pubblica pronta all'uso.
 - Login nel sito ENGIE, eventuale OTP gestito da ENGIE, rinnovo automatico
   e riautenticazione quando il provider richiede un nuovo accesso.
 - Diagnostica senza identificativi, credenziali o quantita' consumate.
+- Configurazione guidata, connessione API riutilizzabile e loghi chiari/scuri.
 
 **Gas: viene rilevata la fornitura, ma non sono ancora disponibili sensori
 di consumo.** Le risposte osservate sono errori del servizio, non consumi zero.
 Un account nuovo potrebbe non avere misure: la causa non e' confermata.
 Bollette, importi e autoletture non sono implementati.
+Prezzi unitari e tariffe automatiche restano in ricerca: nessun prezzo viene
+dedotto dal nome dell'offerta e non e' richiesto un inserimento manuale.
 
 I dati ENGIE arrivano in ritardo, non sono misure in tempo reale. I totali
 sono quelli del provider, non somme dei campioni arrotondati. Nessuna
@@ -38,8 +46,13 @@ Richiede Home Assistant **2026.9.0 o successivo**, test del framework su 2026.9.
    della configurazione di HA e riavviare.
 2. In **Impostazioni > Dispositivi e servizi > Aggiungi integrazione**, cercare
    **ENGIE Italia**.
-3. Inserire la configurazione API ottenuta privatamente. Il Client ID proposto
-   e' pubblico; non inserire password ENGIE in questo modulo.
+3. Scegliere **Accedi a ENGIE**. Se esiste gia' una sola configurazione API
+   distinta, viene riutilizzata senza chiedere la chiave; l'account va comunque
+   autorizzato nuovamente. Al primo collegamento, o in caso di configurazioni
+   ambigue/non disponibili, inserire la chiave ottenuta privatamente.
+   **Connessione API (avanzata)** permette una configurazione esplicita;
+   il Client ID pubblico e' nella sezione OAuth richiudibile.
+   Non inserire password ENGIE in questo modulo.
 4. Aprire il collegamento, completare login ed eventuale OTP. Copiare l'indirizzo
    completo di ritorno nel campo dedicato di HA. Il callback dell'app puo'
    mostrare una pagina vuota o un errore: interessa l'indirizzo
@@ -50,6 +63,17 @@ Richiede Home Assistant **2026.9.0 o successivo**, test del framework su 2026.9.
 La sessione viene salvata e riutilizzata dopo un riavvio; il browser puo' essere
 chiuso. Revoca o scadenza definitiva del consenso richiedono un nuovo login:
 non viene promessa una sessione perpetua.
+
+### Perche' non torna automaticamente a HA?
+
+Il client nativo verificato accetta il callback dell'app ENGIE, non quello di
+Home Assistant. Il provider rifiuta il callback HA con `Callback URL mismatch`
+e non abilita il grant `device_code`. Anche una sessione valida non permette
+di leggere le forniture senza chiave API (HTTP 403).
+
+Per un login completamente automatico occorre una configurazione applicativa
+autorizzata dal provider: non basta cambiare la schermata o l'URL di ritorno.
+La beta non usa proxy delle credenziali e non aggira questa protezione.
 
 La struttura e `hacs.json` sono predisposti per un repository personalizzato,
 ma il progetto **non e' nel catalogo HACS**. Distribuzione della configurazione
@@ -90,4 +114,5 @@ del portale web, non configurano la sessione mobile. Richiedono l'extra
 
 Documentazione: [architettura](docs/ARCHITECTURE.md), [client](docs/CLIENT.md),
 [ricerca API](docs/API_RESEARCH.md), [roadmap](docs/ROADMAP.md).
-Contributi: [CONTRIBUTING.md](CONTRIBUTING.md). Licenza [MIT](LICENSE).
+Contributi: [CONTRIBUTING.md](CONTRIBUTING.md). Codice: licenza [MIT](LICENSE).
+Marchi e immagini: [attribuzione e limiti](docs/BRANDING.md).

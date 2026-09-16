@@ -2,6 +2,7 @@
 
 import json
 import stat
+import struct
 import sys
 import tempfile
 import time
@@ -30,6 +31,7 @@ from custom_components.engie_italia.api.mobile import (  # noqa: E402
 )
 from custom_components.engie_italia.api.session import SessionTokens  # noqa: E402
 from custom_components.engie_italia.config_flow import EngieConfigFlow  # noqa: E402
+from custom_components.engie_italia.const import DEFAULT_CLIENT_ID  # noqa: E402
 from custom_components.engie_italia.coordinator import (  # noqa: E402
     EngieCoordinator,
     supply_key,
@@ -257,6 +259,131 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["data"], {"account_key": ACCOUNT})
         self.assertIsNone(flow._authorized)
 
+    def config_flow(self, **context):
+        flow = EngieConfigFlow()
+        flow.hass = self.hass
+        flow.context = {"source": "user", **context}
+        return flow
+
+    async def test_welcome_has_login_and_separate_advanced_connection(self):
+        result = await self.config_flow().async_step_user()
+        self.assertEqual(result["type"], "menu")
+        self.assertEqual(result["menu_options"], ["connect", "api_setup"])
+        self.assertEqual(
+            {str(k) for k in result["data_schema"].schema}, {"next_step_id"}
+        )
+
+    async def test_first_install_requires_key_but_hides_client_id(self):
+        flow = self.config_flow()
+        result = await flow.async_step_connect()
+        self.assertEqual(result["step_id"], "api_setup")
+        self.assertEqual(
+            {str(k) for k in result["data_schema"].schema}, {"api_key", "oauth"}
+        )
+        self.assertTrue(result["data_schema"].schema["oauth"].options["collapsed"])
+        result = await flow.async_step_api_setup({"api_key": "synthetic-key"})
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(flow._client_id, DEFAULT_CLIENT_ID)
+        self.assertEqual(
+            {str(k) for k in result["data_schema"].schema}, {"callback_url"}
+        )
+        self.assertNotIn("synthetic-key", str(result))
+
+    async def test_advanced_client_override_and_invalid_key(self):
+        flow = self.config_flow()
+        result = await flow.async_step_api_setup()
+        self.assertIn(
+            "client_id",
+            {str(k) for k in result["data_schema"].schema["oauth"].schema.schema},
+        )
+        result = await flow.async_step_api_setup({"api_key": ""})
+        self.assertEqual(result["errors"], {"base": "invalid_config"})
+        result = await flow.async_step_api_setup(
+            {"api_key": "synthetic-key", "oauth": {"client_id": "custom-client"}}
+        )
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(flow._client_id, "custom-client")
+
+    async def test_reuse_only_api_profile_with_new_authorization(self):
+        data = credentials(
+            "synthetic-key",
+            "synthetic-client",
+            SessionTokens("old-access", "old-refresh", time.time() + 300),
+        )
+        flow = self.config_flow()
+        with (
+            patch.object(
+                self.hass.config_entries, "async_entries", return_value=[self.entry]
+            ),
+            patch(
+                MODULE + "config_flow.async_load_credentials",
+                AsyncMock(return_value=data),
+            ),
+        ):
+            result = await flow.async_step_connect()
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(flow._api_key, "synthetic-key")
+        self.assertEqual(flow._client_id, "synthetic-client")
+        self.assertIsNone(flow._authorized)
+        self.assertIsNotNone(flow._attempt)
+        for secret in ("synthetic-key", "old-access", "old-refresh"):
+            self.assertNotIn(secret, str(result))
+        for token in ("old-access", "old-refresh"):
+            self.assertNotIn(token, str(vars(flow)))
+
+    async def test_damaged_or_ambiguous_profiles_require_explicit_setup(self):
+        def profile(key):
+            return credentials(
+                key, "client", SessionTokens("a", "r", time.time() + 300)
+            )
+
+        cases = [
+            ([ValueError("missing")], "api_setup"),
+            ([OSError("unreadable")], "api_setup"),
+            ([profile("first"), profile("second")], "api_setup"),
+            ([profile("same"), profile("same")], "authorize"),
+            ([ValueError("missing"), profile("valid")], "authorize"),
+        ]
+        for responses, step in cases:
+            with (
+                self.subTest(step=step, profiles=len(responses)),
+                patch.object(
+                    self.hass.config_entries,
+                    "async_entries",
+                    return_value=[self.entry] * len(responses),
+                ),
+                patch(
+                    MODULE + "config_flow.async_load_credentials",
+                    AsyncMock(side_effect=responses),
+                ),
+            ):
+                self.assertEqual(
+                    (await self.config_flow().async_step_connect())["step_id"], step
+                )
+
+    async def test_reauth_uses_own_profile_or_requests_repair(self):
+        data = credentials(
+            "own-key", "own-client", SessionTokens("a", "r", time.time() + 300)
+        )
+        flow = self.config_flow(source="reauth")
+        with patch(
+            MODULE + "config_flow.async_load_credentials", AsyncMock(return_value=data)
+        ):
+            result = await flow.async_step_reauth(self.entry.data)
+        self.assertEqual(result["step_id"], "reauth_confirm")
+        self.assertEqual(
+            (await flow.async_step_reauth_confirm({}))["step_id"], "authorize"
+        )
+        self.assertEqual(flow._api_key, "own-key")
+        with patch(
+            MODULE + "config_flow.async_load_credentials",
+            AsyncMock(side_effect=ValueError),
+        ):
+            result = await self.config_flow(source="reauth").async_step_reauth(
+                self.entry.data
+            )
+        self.assertEqual(result["step_id"], "api_setup")
+
     async def test_reauth_cannot_replace_another_account(self):
         flow = EngieConfigFlow()
         flow.hass = self.hass
@@ -296,3 +423,31 @@ class MetadataTests(unittest.TestCase):
         italian = json.loads((integration / "translations/it.json").read_text())
         for section in ("config", "options", "entity"):
             self.assertEqual(source[section].keys(), italian[section].keys())
+        self.assertEqual(
+            source["config"]["step"].keys(), italian["config"]["step"].keys()
+        )
+        for language in (source, italian):
+            menu = language["config"]["step"]["user"]["menu_options"]
+            self.assertEqual(set(menu), {"connect", "api_setup"})
+            self.assertIn(
+                "{authorization_url}",
+                language["config"]["step"]["authorize"]["description"],
+            )
+
+    def test_local_brand_images_and_retina_dimensions(self):
+        folder = (
+            Path(__file__).resolve().parents[1] / "custom_components/engie_italia/brand"
+        )
+        for theme in ("", "dark_"):
+            for kind in ("icon", "logo"):
+                dimensions = []
+                for retina in ("", "@2x"):
+                    data = (folder / f"{theme}{kind}{retina}.png").read_bytes()
+                    self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+                    width, height = struct.unpack(">II", data[16:24])
+                    dimensions.append((width, height))
+                    self.assertEqual(data[25], 6, "Expected RGBA transparency")
+                    if kind == "icon":
+                        self.assertEqual(width, height)
+                    self.assertEqual(min(width, height), 512 if retina else 256)
+                self.assertEqual(dimensions[1], tuple(d * 2 for d in dimensions[0]))

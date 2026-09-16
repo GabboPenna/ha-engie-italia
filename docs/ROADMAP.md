@@ -15,6 +15,8 @@
 - [x] Login interattivo PKCE e rinnovo della sessione in memoria verificati.
 - [x] Persistenza privata atomica dei token e riautenticazione dello stesso account.
 - [ ] Configurazione API distribuibile senza provisioning privato.
+- [x] Riutilizzo sicuro della connessione API e accesso separato dai parametri tecnici.
+- [ ] Ritorno automatico dal login con callback HA autorizzato dal provider.
 - [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
 - [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
 - [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
@@ -34,13 +36,15 @@ documentare il limite prima di procedere con un'integrazione installabile.
 - [x] Config flow/reauth e coordinatore condiviso per account.
 - [x] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
 - [ ] Bollette/letture aggiunte solo dopo verifica dei dati disponibili.
+- [ ] Recupero automatico dei prezzi unitari verificabili, senza stime dal nome offerta.
 - [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 
 ## Fase 3: distribuzione
 
 - [x] Manifest, traduzioni italiano/inglese e installazione assistita documentata.
 - [x] Test isolati sul framework Home Assistant e beta installata.
-- [ ] Asset di integrazione e validazione completa HACS.
+- [x] Icone e loghi locali per tema chiaro/scuro e schermi ad alta densita'.
+- [ ] Validazione completa HACS.
 - [ ] Repository personalizzato HACS.
 - [ ] Eventuale richiesta di inclusione nel catalogo HACS, separata dal punto precedente.
 

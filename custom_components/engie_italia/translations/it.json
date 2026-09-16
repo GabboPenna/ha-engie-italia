@@ -2,10 +2,11 @@
   "title": "ENGIE Italia",
   "config": {
     "step": {
-      "user": {"title": "Accesso API ENGIE", "data": {"api_key": "Chiave API", "client_id": "Client ID OAuth"}},
-      "authorize": {"title": "Autorizzazione ENGIE", "description": "[Accedi a ENGIE]({authorization_url})", "data": {"callback_url": "Indirizzo di ritorno dopo l'accesso"}},
+      "user": {"title": "Collega ENGIE Italia", "description": "Collega le tue forniture luce e gas in sola lettura. Questa integrazione non ufficiale non richiede mai la tua password ENGIE.", "menu_options": {"connect": "Accedi a ENGIE", "api_setup": "Connessione API (avanzata)"}},
+      "api_setup": {"title": "Prepara la connessione", "description": "Questa beta assistita richiede una chiave API fornita privatamente per la prima connessione. Non e' la password ENGIE. Se non disponi della chiave, annulla: la configurazione pubblica autonoma non e' ancora supportata.", "data": {"api_key": "Chiave di connessione API"}, "sections": {"oauth": {"name": "Parametri OAuth avanzati", "description": "Mantieni il valore predefinito, salvo configurazioni con un client dedicato.", "data": {"client_id": "Client ID OAuth"}}}},
+      "authorize": {"title": "Accedi a ENGIE", "description": "[Apri la pagina di accesso ENGIE]({authorization_url})\n\nCompleta l'accesso e l'eventuale codice di verifica sul sito ENGIE. Poi copia l'indirizzo finale completo dal browser e incollalo qui sotto, anche se la pagina di ritorno e' vuota o mostra un errore.\n\nENGIE non consente ancora il ritorno automatico a Home Assistant. Completa entro 10 minuti e non condividere l'indirizzo: contiene un codice temporaneo. I successivi rinnovi della sessione sono automatici finche' ENGIE li consente.", "data": {"callback_url": "Indirizzo finale di ENGIE"}},
       "finish": {"title": "Salva autorizzazione"},
-      "reauth_confirm": {"title": "Rinnova autorizzazione ENGIE"}
+      "reauth_confirm": {"title": "Accedi nuovamente a ENGIE", "description": "ENGIE richiede un nuovo accesso. La connessione API e' gia' configurata. Prosegui con lo stesso account ENGIE usato in precedenza."}
     },
     "error": {
       "invalid_config": "La configurazione API non e' valida.",

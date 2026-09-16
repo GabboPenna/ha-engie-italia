@@ -3,6 +3,7 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -36,29 +37,53 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._authorized = None
 
     async def async_step_user(self, user_input=None):
+        return self.async_show_menu(
+            step_id="user", menu_options=["connect", "api_setup"]
+        )
+
+    async def async_step_connect(self, user_input=None):
+        profiles = set()
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            try:
+                data = await async_load_credentials(
+                    self.hass, entry.data[CONF_ACCOUNT_KEY]
+                )
+            except (ValueError, KeyError, OSError):
+                continue
+            profiles.add((data[CONF_API_KEY], data[CONF_CLIENT_ID]))
+        # Reuse only the API connection, never another account's authorization.
+        if len(profiles) != 1:
+            return await self.async_step_api_setup()
+        self._api_key, self._client_id = profiles.pop()
+        self._attempt = AuthorizationAttempt(self._client_id)
+        return await self.async_step_authorize()
+
+    async def async_step_api_setup(self, user_input=None):
         errors = {}
         if user_input is not None:
             try:
                 self._api_key = credential(user_input.get(CONF_API_KEY))
                 self._client_id = credential(
-                    user_input.get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID)
+                    user_input.get("oauth", {}).get(CONF_CLIENT_ID, DEFAULT_CLIENT_ID)
                 )
             except ValueError:
                 errors["base"] = "invalid_config"
             else:
                 self._attempt = AuthorizationAttempt(self._client_id)
                 return await self.async_step_authorize()
-        return self.async_show_form(
-            step_id="user",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_KEY): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                    ),
-                    vol.Optional(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): str,
-                }
+        fields = {
+            vol.Required(CONF_API_KEY): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.PASSWORD)
             ),
+            vol.Optional("oauth"): section(
+                vol.Schema(
+                    {vol.Optional(CONF_CLIENT_ID, default=DEFAULT_CLIENT_ID): str}
+                ),
+                {"collapsed": True},
+            ),
+        }
+        return self.async_show_form(
+            step_id="api_setup", errors=errors, data_schema=vol.Schema(fields)
         )
 
     async def async_step_authorize(self, user_input=None):
@@ -136,7 +161,7 @@ class EngieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data = await async_load_credentials(self.hass, entry_data[CONF_ACCOUNT_KEY])
             self._api_key, self._client_id = data[CONF_API_KEY], data[CONF_CLIENT_ID]
         except (ValueError, KeyError, OSError):
-            return await self.async_step_user()
+            return await self.async_step_api_setup()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):

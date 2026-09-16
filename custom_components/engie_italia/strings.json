@@ -2,10 +2,11 @@
   "title": "ENGIE Italia",
   "config": {
     "step": {
-      "user": {"title": "ENGIE API access", "data": {"api_key": "API key", "client_id": "OAuth client ID"}},
-      "authorize": {"title": "ENGIE authorization", "description": "[Sign in to ENGIE]({authorization_url})", "data": {"callback_url": "Return address after sign-in"}},
+      "user": {"title": "Connect to ENGIE Italia", "description": "Connect your electricity and gas supplies in read-only mode. This unofficial integration never asks for your ENGIE password.", "menu_options": {"connect": "Sign in to ENGIE", "api_setup": "API connection (advanced)"}},
+      "api_setup": {"title": "Prepare the connection", "description": "This assisted beta requires a privately supplied API key for the initial connection. This is not your ENGIE password. If no key is available, cancel setup: independent public setup is not supported yet.", "data": {"api_key": "API connection key"}, "sections": {"oauth": {"name": "Advanced OAuth settings", "description": "Leave the default unchanged unless using a separately provisioned client.", "data": {"client_id": "OAuth client ID"}}}},
+      "authorize": {"title": "Sign in to ENGIE", "description": "[Open the ENGIE sign-in page]({authorization_url})\n\nComplete sign-in and any verification code on the ENGIE website. Then copy the complete final address from the browser and paste it below, even if the return page is blank or shows an error.\n\nENGIE does not yet allow an automatic return to Home Assistant. Complete this step within 10 minutes and do not share the address: it contains a temporary code. Future session renewals are automatic while ENGIE permits them.", "data": {"callback_url": "Final address from ENGIE"}},
       "finish": {"title": "Save authorization"},
-      "reauth_confirm": {"title": "Renew ENGIE authorization"}
+      "reauth_confirm": {"title": "Sign in to ENGIE again", "description": "ENGIE requires a new sign-in. Your API connection is already configured. Continue using the same ENGIE account as before."}
     },
     "error": {
       "invalid_config": "The API configuration is invalid.",
