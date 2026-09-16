@@ -1,0 +1,27 @@
+name: Segnalazione problema
+description: Problema riproducibile, senza dati personali o allegati di rete.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Non allegare credenziali, HAR, bollette, cookie, token o POD/PDR. Il progetto non legge ancora account reali."
+  - type: input
+    id: version
+    attributes:
+      label: Versione o commit
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Comportamento e riproduzione
+      description: Indica risultato atteso, risultato ottenuto e passaggi con dati sintetici.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: Ho escluso dati personali, credenziali e acquisizioni di rete.
+          required: true

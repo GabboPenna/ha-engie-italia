@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ha-engie-italia"
+version = "0.0.1.dev0"
+description = "Read-only ENGIE Italia integration research and data models for Home Assistant"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Gabriele Pennacchia"}]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dev = ["ruff==0.16.3", "tzdata==2026.4"]
+browser = ["playwright==1.61.0"]
+
+[project.urls]
+Repository = "https://github.com/GabboPenna/ha-engie-italia"
+Issues = "https://github.com/GabboPenna/ha-engie-italia/issues"
+
+[tool.setuptools.packages.find]
+include = ["engie_italia*"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
