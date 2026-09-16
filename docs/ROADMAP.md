@@ -81,7 +81,7 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] Test isolati sul framework Home Assistant e beta installata.
 - [x] Icone e loghi locali per tema chiaro/scuro e schermi ad alta densita'.
 - [x] Workflow automatici hassfest e HACS per push, PR e controllo settimanale.
-- [ ] Validazione completa HACS.
+- [x] Validazione HACS e hassfest della b9 superata in CI, senza esclusioni.
 - [ ] Repository personalizzato HACS.
 - [ ] Eventuale richiesta di inclusione nel catalogo HACS, separata dal punto precedente.
 

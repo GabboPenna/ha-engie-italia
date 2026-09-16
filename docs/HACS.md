@@ -1,6 +1,7 @@
 # Repository personalizzato HACS
 
 Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
+La b9 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
 La prova di installazione e aggiornamento mediante HACS resta aperta nella
