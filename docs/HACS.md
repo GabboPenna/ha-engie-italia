@@ -1,7 +1,7 @@
 # Repository personalizzato HACS
 
 Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
-La b10 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
+La b11 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
 Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
@@ -22,6 +22,13 @@ Nella verifica HACS 2.0.5 elenca entrambe le beta ma indica ancora b9 come
 versione disponibile: **selezionare esplicitamente v0.1.0b10** nel download.
 Il download della b10 riesce e HACS la riconosce installata dopo il riavvio.
 Questo dettaglio del selettore non impedisce il funzionamento dell'integrazione.
+
+Il **17 settembre 2026** è stato verificato anche il passaggio **b10 → b11**
+tramite HACS: 26 entità conservate, prezzi e consumi invariati, account caricato
+e nessun errore ENGIE nei log. I 32 file installati corrispondono alla release;
+controllo configurazione e riavvio riusciti. Le 15 versioni aggiuntive sono
+verificate sui documenti pubblici; la prova live usa la versione già supportata.
+Anche per b11 è stata necessaria la selezione esplicita della versione nel download.
 
 ## Installare la beta
 
