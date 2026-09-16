@@ -2,60 +2,37 @@
   "title": "ENGIE Italia",
   "config": {
     "step": {
-      "user": {
-        "title": "Prima di iniziare",
-        "description": "Questa integrazione non ufficiale legge le tue forniture senza modificarle.\n\n**Per il primo collegamento servono:**\n- Una chiave API ottenuta per una prova assistita.\n- Il tuo account ENGIE, con eventuale codice di verifica.\n\nLa chiave API non e' la password ENGIE ne' un token Home Assistant. Prima preparerai la connessione, poi accederai sul sito ENGIE e riporterai qui l'indirizzo finale.\n\n**Non hai la chiave?** Scegli la voce qui sotto prima di proseguire.",
-        "menu_options": {
-          "api_setup": "Ho la chiave: inizia",
-          "api_help": "Non ho la chiave",
-          "connect": "Usa una connessione esistente"
-        }
-      },
-      "api_help": {
-        "title": "Come ottenere l'accesso",
-        "description": "La chiave API identifica la connessione al servizio ENGIE. **Non e' la password del tuo account** e questo popup non puo' generarla.\n\n**Cosa fare adesso:**\n1. Se partecipi a una prova assistita, chiedi la configurazione tecnica a chi segue la prova.\n2. Altrimenti consulta lo [stato dell'accesso iniziale e l'assistenza](https://github.com/GabboPenna/ha-engie-italia/issues/1): non abbiamo ancora una procedura pubblica verificata per ottenere la chiave.\n3. Quando la possiedi, torna qui e scegli **Ho la chiave: continua**.\n\nSenza chiave non puoi completare questa beta. Non pubblicare password, OTP, chiavi o indirizzi di ritorno nelle issue.",
-        "menu_options": {
-          "user": "Torna all'inizio",
-          "api_setup": "Ho la chiave: continua"
-        }
-      },
-      "api_setup": {
-        "title": "1. Prepara la connessione",
-        "description": "Incolla la chiave API ottenuta per la prova assistita, poi premi **Invia**. Nel prossimo passaggio accederai sul sito ENGIE.\n\n**Non hai la chiave?** Chiudi questo popup, riapri ENGIE Italia da Aggiungi integrazione e scegli **Non ho la chiave**. Non inserire password o token Home Assistant per tentativi.",
-        "data": {
-          "api_key": "Chiave API"
-        },
-        "data_description": {
-          "api_key": "Solo la chiave di connessione ricevuta per la prova assistita."
-        },
-        "sections": {
-          "oauth": {
-            "name": "Parametri OAuth avanzati",
-            "description": "Non modificare questi parametri salvo istruzioni specifiche per un client dedicato.",
-            "data": {
-              "client_id": "Client ID OAuth"
-            }
-          }
-        }
-      },
       "authorize": {
-        "title": "2. Accedi a ENGIE",
-        "description": "1. [Apri il sito ENGIE]({authorization_url}) e completa l'accesso, incluso l'eventuale codice di verifica.\n2. Alla fine copia **tutto l'indirizzo dalla barra del browser**, anche se la pagina finale e' vuota o mostra un errore. Deve contenere `code=` e `state=`: non copiare il codice OTP o l'indirizzo della pagina iniziale.\n3. Torna a questo popup, incolla l'indirizzo qui sotto e premi **Invia**.\n\n**Completa entro 10 minuti.** Il client ENGIE attuale non permette il ritorno automatico a HA. Dopo questo passaggio salviamo la sessione e la rinnoviamo finche' ENGIE lo consente.\n\n**Il telefono apre l'app ENGIE?** Ricomincia la configurazione da HA in un browser su computer, dove puoi copiare l'indirizzo finale.",
+        "title": "Collega il tuo account ENGIE",
+        "description": "1. [Accedi al tuo account ENGIE]({authorization_url}) e completa l'accesso. **Lascia aperta questa finestra.**\n2. Al termine, **copia tutto l'indirizzo dalla barra del browser**, anche se la pagina e' vuota o mostra un errore.\n3. Torna qui, incolla l'indirizzo e premi **Invia** entro 10 minuti.\n\nSe sul telefono si apre l'app ENGIE, completa il collegamento da un browser su computer. [Hai bisogno di aiuto?]({setup_url})",
         "data": {
           "callback_url": "Indirizzo finale del browser"
         },
         "data_description": {
-          "callback_url": "Incolla l'indirizzo completo. Contiene un codice temporaneo: non condividerlo."
+          "callback_url": "Incolla l'indirizzo completo. Non condividerlo."
         }
       },
-      "finish": {"title": "Salva autorizzazione"},
-      "reauth_confirm": {"title": "Accedi nuovamente a ENGIE", "description": "ENGIE richiede un nuovo accesso. La connessione API e' gia' configurata. Prosegui con lo stesso account ENGIE usato in precedenza."}
+      "finish": {
+        "title": "Completa il collegamento"
+      },
+      "reauth_confirm": {
+        "title": "Accedi nuovamente a ENGIE",
+        "description": "Accedi nuovamente con lo stesso account ENGIE usato per questo collegamento."
+      }
     },
     "error": {
-      "invalid_config": "Chiave o parametri non validi. Incolla solo la chiave API, senza spazi; mantieni i parametri OAuth predefiniti salvo istruzioni specifiche.",
-      "invalid_auth": "L'indirizzo non e' valido, e' scaduto oppure ENGIE ha rifiutato l'accesso. Apri nuovamente il link qui sopra e ricopia il nuovo indirizzo finale.",
-      "cannot_connect": "Il servizio ENGIE non risponde. Riprova piu' tardi aprendo nuovamente il link e completando un nuovo accesso.",
-      "storage_error": "Impossibile salvare la sessione. Riprova il salvataggio senza effettuare un nuovo accesso."
+      "invalid_auth": "Accesso non riuscito. Apri il link qui sopra, accedi nuovamente e incolla il nuovo indirizzo finale.",
+      "cannot_connect": "ENGIE non risponde. Attendi qualche minuto, poi apri il link qui sopra e ripeti l'accesso.",
+      "storage_error": "Il collegamento non e' stato salvato. Premi di nuovo Invia, senza ripetere l'accesso.",
+      "invalid_callback": "Copia tutto l'indirizzo dalla barra del browser e incollalo qui, senza altro testo.",
+      "callback_mismatch": "Questo indirizzo proviene da un altro accesso. Usa il link di questa finestra, lasciala aperta e incolla qui il nuovo indirizzo finale.",
+      "authorization_expired": "Il tempo a disposizione e' scaduto. Apri il nuovo link qui sopra e completa l'accesso senza chiudere questa finestra.",
+      "authorization_used": "Questo accesso e' gia' stato utilizzato. Apri il nuovo link qui sopra e accedi nuovamente.",
+      "authorization_denied": "L'accesso non e' stato completato. Apri il nuovo link qui sopra e riprova.",
+      "token_exchange_failed": "ENGIE non ha accettato questo accesso. Apri il nuovo link e riprova. Se succede ancora, segnala questo messaggio senza condividere l'indirizzo.",
+      "invalid_identity": "Non e' stato possibile confermare il tuo account. Accedi nuovamente dal link qui sopra. Se succede ancora, segnala questo messaggio.",
+      "invalid_session": "Non e' stato possibile completare il collegamento con ENGIE. Accedi nuovamente dal link qui sopra. Se succede ancora, segnala questo messaggio.",
+      "retry_authorization": "La verifica dell'accesso non e' riuscita. Premi di nuovo Invia con lo stesso indirizzo, senza ripetere l'accesso."
     },
     "abort": {
       "already_configured": "Questo account e' gia' configurato.",
@@ -64,18 +41,96 @@
       "reauth_successful": "Autorizzazione rinnovata."
     }
   },
-  "options": {"step": {"init": {"title": "Aggiornamenti", "data": {"interval_hours": "Intervallo di aggiornamento (ore)"}}}},
+  "options": {
+    "step": {
+      "init": {
+        "title": "Aggiornamenti",
+        "data": {
+          "interval_hours": "Intervallo di aggiornamento (ore)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
-      "supply_status": {"name": "Stato fornitura", "state": {"active": "Attiva", "unknown": "Sconosciuto"}},
-      "data_status": {"name": "Dati di consumo", "state": {"available": "Disponibili", "no_data": "Nessuna misura", "unsupported": "Non supportati in questa beta", "error": "Aggiornamento non riuscito"}},
-      "last_day": {"name": "Consumo ultimo giorno disponibile"},
-      "last_day_date": {"name": "Ultimo giorno di consumo"},
-      "month": {"name": "Consumo ultimo mese disponibile"},
-      "year": {"name": "Consumo ultimo anno disponibile"},
-      "last_data_update": {"name": "Dati aggiornati al"},
-      "last_sync": {"name": "Ultima sincronizzazione riuscita"}
+      "supply_status": {
+        "name": "Stato fornitura",
+        "state": {
+          "active": "Attiva",
+          "unknown": "Sconosciuto"
+        }
+      },
+      "data_status": {
+        "name": "Dati di consumo",
+        "state": {
+          "available": "Disponibili",
+          "no_data": "Nessuna misura",
+          "unsupported": "Non supportati in questa beta",
+          "error": "Aggiornamento non riuscito"
+        }
+      },
+      "last_day": {
+        "name": "Consumo ultimo giorno disponibile"
+      },
+      "last_day_date": {
+        "name": "Ultimo giorno di consumo"
+      },
+      "month": {
+        "name": "Consumo ultimo mese disponibile"
+      },
+      "year": {
+        "name": "Consumo ultimo anno disponibile"
+      },
+      "last_data_update": {
+        "name": "Dati aggiornati al"
+      },
+      "last_sync": {
+        "name": "Ultima sincronizzazione riuscita"
+      },
+      "invoice_data_status": {
+        "name": "Dati fatture",
+        "state": {
+          "available": "Disponibili",
+          "no_invoices": "Nessuna fattura",
+          "incomplete": "Dati incompleti",
+          "error": "Aggiornamento non riuscito"
+        }
+      },
+      "invoices_count": {
+        "name": "Fatture disponibili"
+      },
+      "open_invoices": {
+        "name": "Fatture aperte"
+      },
+      "outstanding_amount": {
+        "name": "Totale da pagare"
+      },
+      "overdue_invoices": {
+        "name": "Fatture scadute"
+      },
+      "latest_invoice": {
+        "name": "Ultima fattura"
+      },
+      "latest_invoice_amount": {
+        "name": "Importo ultima fattura"
+      },
+      "latest_invoice_date": {
+        "name": "Data ultima fattura"
+      },
+      "latest_invoice_due_date": {
+        "name": "Scadenza ultima fattura"
+      },
+      "earliest_invoice_due_date": {
+        "name": "Prima scadenza aperta"
+      },
+      "invoices_last_sync": {
+        "name": "Ultima sincronizzazione fatture"
+      }
     },
-    "button": {"refresh": {"name": "Aggiorna dati"}}
+    "button": {
+      "refresh": {
+        "name": "Aggiorna dati"
+      }
+    }
   }
 }

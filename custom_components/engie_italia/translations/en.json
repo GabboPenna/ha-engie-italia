@@ -2,60 +2,37 @@
   "title": "ENGIE Italia",
   "config": {
     "step": {
-      "user": {
-        "title": "Before you start",
-        "description": "This unofficial integration reads your supplies without changing them.\n\n**For the first connection you need:**\n- An API key obtained for an assisted trial.\n- Your ENGIE account and any verification code.\n\nThe API key is not your ENGIE password or a Home Assistant token. First prepare the connection, then sign in on the ENGIE website and bring the final address back here.\n\n**No API key?** Choose the option below before continuing.",
-        "menu_options": {
-          "api_setup": "I have a key: start",
-          "api_help": "I do not have a key",
-          "connect": "Use an existing connection"
-        }
-      },
-      "api_help": {
-        "title": "How to get access",
-        "description": "The API key identifies the connection to ENGIE's service. **It is not your account password**, and this dialog cannot generate it.\n\n**What to do next:**\n1. If you are taking part in an assisted trial, ask the person assisting you for the connection configuration.\n2. Otherwise check [initial access status and support](https://github.com/GabboPenna/ha-engie-italia/issues/1): there is no verified public procedure for obtaining the key yet.\n3. Once you have it, return here and choose **I have a key: continue**.\n\nWithout a key, you cannot finish setting up this beta. Never post passwords, verification codes, keys or return addresses in issues.",
-        "menu_options": {
-          "user": "Back to the start",
-          "api_setup": "I have a key: continue"
-        }
-      },
-      "api_setup": {
-        "title": "1. Prepare the connection",
-        "description": "Paste the API key obtained for the assisted trial, then press **Submit**. You will sign in on the ENGIE website in the next step.\n\n**No API key?** Close this dialog, reopen ENGIE Italia from Add integration and choose **I do not have a key**. Do not try account passwords or Home Assistant tokens instead.",
-        "data": {
-          "api_key": "API key"
-        },
-        "data_description": {
-          "api_key": "Only the connection key supplied for the assisted trial."
-        },
-        "sections": {
-          "oauth": {
-            "name": "Advanced OAuth settings",
-            "description": "Leave these settings unchanged unless given specific instructions for a dedicated client.",
-            "data": {
-              "client_id": "OAuth client ID"
-            }
-          }
-        }
-      },
       "authorize": {
-        "title": "2. Sign in to ENGIE",
-        "description": "1. [Open the ENGIE website]({authorization_url}) and sign in, including any verification code.\n2. Copy the **entire final address from the browser address bar**, even if the final page is blank or shows an error. It must contain `code=` and `state=`: do not copy the verification code or the initial sign-in address.\n3. Return to this dialog, paste the address below and press **Submit**.\n\n**Complete this within 10 minutes.** The current ENGIE client does not allow an automatic return to HA. After this step, the session is saved and renewed while ENGIE permits it.\n\n**Does your phone open the ENGIE app?** Start setup again in HA using a desktop browser, where you can copy the final address.",
+        "title": "Connect your ENGIE account",
+        "description": "1. [Sign in to your ENGIE account]({authorization_url}) and complete sign-in. **Keep this window open.**\n2. Once finished, **copy the entire address from the browser address bar**, even if the page is blank or displays an error.\n3. Return here, paste the address and select **Submit** within 10 minutes.\n\nIf your phone opens the ENGIE app, complete setup in a browser on a computer. [Need help?]({setup_url})",
         "data": {
           "callback_url": "Final browser address"
         },
         "data_description": {
-          "callback_url": "Paste the complete address. It contains a temporary code: do not share it."
+          "callback_url": "Paste the full address. Do not share it."
         }
       },
-      "finish": {"title": "Save authorization"},
-      "reauth_confirm": {"title": "Sign in to ENGIE again", "description": "ENGIE requires a new sign-in. Your API connection is already configured. Continue using the same ENGIE account as before."}
+      "finish": {
+        "title": "Complete setup"
+      },
+      "reauth_confirm": {
+        "title": "Sign in to ENGIE again",
+        "description": "Sign in again with the same ENGIE account used for this connection."
+      }
     },
     "error": {
-      "invalid_config": "Invalid key or settings. Paste only the API key, without spaces; keep the default OAuth settings unless given specific instructions.",
-      "invalid_auth": "The address is invalid, expired, or ENGIE rejected sign-in. Open the link above again and copy the new final address.",
-      "cannot_connect": "The ENGIE service is not responding. Try again later by reopening the link and completing a new sign-in.",
-      "storage_error": "The session could not be saved. Retry saving without signing in again."
+      "invalid_auth": "Sign-in failed. Open the link above, sign in again and paste the new final address.",
+      "cannot_connect": "ENGIE is not responding. Wait a few minutes, then open the link above and sign in again.",
+      "storage_error": "The connection could not be saved. Select Submit again without repeating sign-in.",
+      "invalid_callback": "Copy the entire address from the browser address bar and paste it here without any other text.",
+      "callback_mismatch": "This address comes from a different sign-in. Use the link in this window, keep it open and paste the new final address here.",
+      "authorization_expired": "The time limit has expired. Open the new link above and sign in without closing this window.",
+      "authorization_used": "This sign-in has already been used. Open the new link above and sign in again.",
+      "authorization_denied": "Sign-in was not completed. Open the new link above and try again.",
+      "token_exchange_failed": "ENGIE did not accept this sign-in. Open the new link and try again. If this happens again, report this message without sharing the address.",
+      "invalid_identity": "Your account could not be confirmed. Sign in again using the link above. If this happens again, report this message.",
+      "invalid_session": "The connection to ENGIE could not be completed. Sign in again using the link above. If this happens again, report this message.",
+      "retry_authorization": "Sign-in could not be verified. Select Submit again with the same address, without repeating sign-in."
     },
     "abort": {
       "already_configured": "This account is already configured.",
@@ -64,18 +41,96 @@
       "reauth_successful": "Authorization renewed."
     }
   },
-  "options": {"step": {"init": {"title": "Updates", "data": {"interval_hours": "Update interval (hours)"}}}},
+  "options": {
+    "step": {
+      "init": {
+        "title": "Updates",
+        "data": {
+          "interval_hours": "Update interval (hours)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
-      "supply_status": {"name": "Supply status", "state": {"active": "Active", "unknown": "Unknown"}},
-      "data_status": {"name": "Consumption data", "state": {"available": "Available", "no_data": "No measurements", "unsupported": "Not supported in this beta", "error": "Update failed"}},
-      "last_day": {"name": "Last available daily consumption"},
-      "last_day_date": {"name": "Last consumption day"},
-      "month": {"name": "Last available monthly consumption"},
-      "year": {"name": "Last available annual consumption"},
-      "last_data_update": {"name": "Data updated through"},
-      "last_sync": {"name": "Last successful synchronization"}
+      "supply_status": {
+        "name": "Supply status",
+        "state": {
+          "active": "Active",
+          "unknown": "Unknown"
+        }
+      },
+      "data_status": {
+        "name": "Consumption data",
+        "state": {
+          "available": "Available",
+          "no_data": "No measurements",
+          "unsupported": "Not supported in this beta",
+          "error": "Update failed"
+        }
+      },
+      "last_day": {
+        "name": "Last available daily consumption"
+      },
+      "last_day_date": {
+        "name": "Last consumption day"
+      },
+      "month": {
+        "name": "Last available monthly consumption"
+      },
+      "year": {
+        "name": "Last available annual consumption"
+      },
+      "last_data_update": {
+        "name": "Data updated through"
+      },
+      "last_sync": {
+        "name": "Last successful synchronization"
+      },
+      "invoice_data_status": {
+        "name": "Invoice data",
+        "state": {
+          "available": "Available",
+          "no_invoices": "No invoices",
+          "incomplete": "Incomplete data",
+          "error": "Update failed"
+        }
+      },
+      "invoices_count": {
+        "name": "Available invoices"
+      },
+      "open_invoices": {
+        "name": "Open invoices"
+      },
+      "outstanding_amount": {
+        "name": "Outstanding amount"
+      },
+      "overdue_invoices": {
+        "name": "Overdue invoices"
+      },
+      "latest_invoice": {
+        "name": "Latest invoice"
+      },
+      "latest_invoice_amount": {
+        "name": "Latest invoice amount"
+      },
+      "latest_invoice_date": {
+        "name": "Latest invoice date"
+      },
+      "latest_invoice_due_date": {
+        "name": "Latest invoice due date"
+      },
+      "earliest_invoice_due_date": {
+        "name": "Earliest open invoice due date"
+      },
+      "invoices_last_sync": {
+        "name": "Last successful invoice sync"
+      }
     },
-    "button": {"refresh": {"name": "Refresh data"}}
+    "button": {
+      "refresh": {
+        "name": "Refresh data"
+      }
+    }
   }
 }

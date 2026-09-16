@@ -14,7 +14,13 @@ from engie_italia.auth import (
     AuthorizationAttempt,
     async_complete_authorization,
 )
-from engie_italia.errors import AuthenticationError, PayloadError, TransportError
+from engie_italia.errors import (
+    AuthenticationError,
+    AuthorizationError,
+    AuthorizationFailure,
+    PayloadError,
+    TransportError,
+)
 from engie_italia.session import SessionTokens
 
 
@@ -109,6 +115,64 @@ class AuthorizationTests(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(AuthenticationError):
             attempt.consume_callback(callback(attempt))
+
+    async def test_callback_errors_preserve_the_current_attempt(self):
+        attempt = AuthorizationAttempt("synthetic-client")
+        link = attempt.authorization_url
+        for value, reason in (
+            ("https://example.invalid/", AuthorizationFailure.INVALID_CALLBACK),
+            (
+                callback(attempt, state="other-attempt"),
+                AuthorizationFailure.STATE_MISMATCH,
+            ),
+            (callback(attempt) + "&code=", AuthorizationFailure.INVALID_CALLBACK),
+            (callback(attempt) + "&state=", AuthorizationFailure.INVALID_CALLBACK),
+            (callback(attempt, error="private-error"), AuthorizationFailure.DENIED),
+            ("x" * 8193, AuthorizationFailure.INVALID_CALLBACK),
+        ):
+            with self.subTest(reason=reason):
+                with self.assertRaises(AuthorizationError) as error:
+                    attempt.consume_callback(value)
+                self.assertEqual(error.exception.reason, reason)
+                self.assertEqual(str(error.exception), reason.value)
+                self.assertFalse(attempt.consumed)
+                self.assertEqual(attempt.authorization_url, link)
+        self.assertEqual(attempt.consume_callback(callback(attempt)), "synthetic-code")
+
+    async def test_key_fetch_failure_can_retry_same_authorization(self):
+        attempt = AuthorizationAttempt("synthetic-client")
+        returned = callback(attempt)
+        with self.assertRaises(TransportError):
+            await async_complete_authorization(
+                Session(TimeoutError()), attempt, returned
+            )
+        self.assertFalse(attempt.consumed)
+        self.assertTrue(attempt.verifier)
+        session = Session(
+            Response(payload={"keys": [self.jwk]}), self.response(attempt)
+        )
+        await async_complete_authorization(session, attempt, returned)
+        self.assertTrue(attempt.consumed)
+
+    async def test_rejected_code_has_distinct_failure_and_clears_verifier(self):
+        attempt = AuthorizationAttempt("synthetic-client")
+        session = Session(Response(payload={"keys": [self.jwk]}), Response(403))
+        with self.assertRaises(AuthorizationError) as error:
+            await async_complete_authorization(session, attempt, callback(attempt))
+        self.assertEqual(error.exception.reason, AuthorizationFailure.TOKEN_EXCHANGE)
+        self.assertTrue(attempt.consumed)
+        self.assertEqual(attempt.verifier, "")
+
+    async def test_uncertain_exchange_is_not_replayed(self):
+        attempt = AuthorizationAttempt("synthetic-client")
+        session = Session(Response(payload={"keys": [self.jwk]}), TimeoutError())
+        with self.assertRaises(TransportError):
+            await async_complete_authorization(session, attempt, callback(attempt))
+        self.assertTrue(attempt.consumed)
+        self.assertEqual(attempt.verifier, "")
+        with self.assertRaises(AuthorizationError) as error:
+            await async_complete_authorization(Session(), attempt, callback(attempt))
+        self.assertEqual(error.exception.reason, AuthorizationFailure.USED)
 
     async def test_wrong_claims_rejected(self):
         for claims in (

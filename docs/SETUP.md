@@ -1,59 +1,66 @@
 # Primo collegamento
 
-Questa guida parte da una installazione senza alcun account ENGIE configurato.
-L'integrazione e' non ufficiale, in sola lettura e ancora in beta assistita.
-
-## Cosa serve
-
-- Un account ENGIE Italia con forniture visibili e accesso all'eventuale OTP.
-- Una chiave API ottenuta per la prova assistita.
-- Un browser per aprire il sito ENGIE e copiare l'indirizzo finale.
-
-La chiave API identifica la connessione tecnica al servizio: **non e' la
-password ENGIE, il codice OTP o un token Home Assistant**. HA non la genera.
-Password e OTP si inseriscono esclusivamente sul sito ENGIE.
-
-## Non ho la chiave
-
-Nel popup scegliere **Non ho la chiave**. Se si partecipa a una prova assistita,
-chiedere la configurazione tecnica a chi segue la prova. Altrimenti consultare
-lo [stato dell'accesso e l'assistenza](https://github.com/GabboPenna/ha-engie-italia/issues/1).
-
-Non abbiamo ancora una procedura pubblica verificata per ottenere e distribuire
-la configurazione API. Non promettiamo che una richiesta di assistenza dia accesso
-alla beta. Senza la chiave non si puo' completare il collegamento: non provare
-password o token alternativi. Non condividere dati riservati nelle issue.
+La beta b7 usa direttamente i parametri comuni del client mobile ENGIE Italia.
+**Non servono APK, chiavi API da inserire, Android o account gia' presenti in HA.**
+L'integrazione rimane non ufficiale e in sola lettura.
 
 ## Procedura
 
-1. In **Impostazioni > Dispositivi e servizi > Aggiungi integrazione**, selezionare
-   **ENGIE Italia**. Nel popup leggere i requisiti e scegliere **Ho la chiave: inizia**.
-2. Incollare la sola chiave API e premere **Invia**. Lasciare chiusa la sezione
-   OAuth: il Client ID predefinito non richiede modifiche nella prova ordinaria.
-3. Aprire il collegamento ENGIE mostrato dal popup. Completare login ed eventuale
-   OTP sul sito ENGIE, mantenendo aperta anche la configurazione HA.
-4. Copiare tutto l'indirizzo finale dalla barra del browser. Il ritorno previsto
+1. In **Impostazioni > Dispositivi e servizi > Aggiungi integrazione**, scegli
+   **ENGIE Italia**. Compare direttamente la schermata di accesso.
+2. Apri **Accedi al tuo account ENGIE** e completa login ed eventuale OTP sul sito
+   ufficiale, mantenendo aperta anche la configurazione HA.
+3. Copia tutto l'indirizzo finale dalla barra del browser. Il ritorno previsto
    e' `https://login.engie.it/android/it.engie.appengie/callback` con i parametri
-   `code` e `state`. Una pagina finale vuota o con errore non esclude un indirizzo
-   utilizzabile; non copiare invece il testo della pagina, l'OTP o l'URL iniziale.
-5. Tornare a HA, incollare l'indirizzo completo e premere **Invia** entro 10 minuti
-   dall'apertura del passaggio di accesso. L'indirizzo contiene un codice temporaneo:
-   non inviarlo al manutentore o in una issue.
+   `code` e `state`. La pagina puo' essere vuota o mostrare un errore: serve
+   l'indirizzo, non il testo della pagina, l'OTP o il link iniziale.
+4. Torna a HA, incolla l'indirizzo completo e premi **Invia** entro 10 minuti.
+   Non condividere questo indirizzo: contiene un codice temporaneo.
 
-HA verifica il ritorno e salva la sessione privatamente. I successivi rinnovi
-sono automatici finche' ENGIE li consente; dopo una revoca puo' servire un nuovo login.
+HA verifica il codice con PKCE e l'identita' con firma, issuer, audience e nonce.
+Salva privatamente la sessione e la rinnova; normalmente riavvii e aggiornamenti
+non richiedono un nuovo login. Revoca o scadenza definitiva possono richiederlo.
+Ogni nuovo account richiede una propria autorizzazione, anche se altri account
+ENGIE sono gia' configurati. Un account rimosso non viene ripristinato da backup.
 
-## Problemi durante il login
+## Perche' copiare ancora un indirizzo?
 
-- **Il telefono apre l'app invece del browser:** ricominciare la configurazione
-  da HA in un browser su computer, senza riutilizzare il vecchio link.
-- **Indirizzo non valido o tentativo scaduto:** aprire nuovamente il link del popup,
-  completare un nuovo accesso e copiare il nuovo indirizzo. Non riprovare quello vecchio.
-- **ENGIE non risponde:** riprovare piu' tardi con un nuovo accesso, senza cambiare
-  credenziali per tentativi.
-- **Salvataggio della sessione non riuscito:** riprovare il salvataggio dal popup;
-  non e' necessario rifare subito il login. Verificare spazio e permessi su HA.
+Il client dell'app ENGIE accetta il suo callback, non quello di Home Assistant.
+Il server rifiuta sia il callback HA sia i grant per device code e accesso diretto
+con password. I parametri applicativi inclusi risolvono la preparazione della
+connessione, **non eliminano questi vincoli OAuth**.
 
-Il client ENGIE attuale non accetta un ritorno OAuth diretto a Home Assistant.
-Il passaggio manuale e la chiave iniziale sono limiti della beta, non opzioni
-che l'utente deve cercare o abilitare nel proprio account.
+Non chiediamo password o OTP a HA e non usiamo proxy per intercettarli.
+Un ritorno automatico standard richiede un client con callback HA autorizzato
+dal provider. Questo passaggio manuale resta un limite della beta.
+
+## Smartphone e problemi comuni
+
+- **Il telefono apre l'app ENGIE:** completa il primo collegamento da un browser
+  su computer, dove puoi copiare l'indirizzo finale.
+- **Indirizzo incompleto:** ricopia l'intero indirizzo, senza testo aggiuntivo.
+  Questo errore non cambia il tentativo: il collegamento attuale resta valido.
+- **Tentativo diverso:** usa il link dello stesso popup HA in cui incolli il
+  ritorno e tienilo aperto. Non mescolare schede o link di tentativi precedenti.
+- **Tentativo scaduto o gia' utilizzato:** usa il nuovo link nel popup e completa
+  un nuovo accesso. I codici gia' inviati a ENGIE non vengono ritentati.
+- **Errore recupero chiavi:** il codice non e' ancora stato inviato. Puoi
+  riprovare con lo stesso indirizzo, entro la durata del tentativo.
+- **Codice rifiutato, identita' o sessione non valida:** il messaggio identifica
+  il passaggio fallito. Segnalalo senza includere indirizzo, codice o token.
+- **Pagina finale vuota o con errore:** controlla l'indirizzo, non il contenuto.
+  Deve essere il callback indicato sopra con `code` e `state`.
+- **Problemi di salvataggio:** controlla spazio e permessi di HA; ritenta il
+  salvataggio dal popup senza ripetere subito il login.
+- **Vecchia schermata con APK o chiavi:** aggiorna l'integrazione, riavvia HA,
+  ricarica completamente il browser e riapri la configurazione.
+- **ENGIE cambia o revoca i parametri del client:** puo' servire un aggiornamento
+  dell'integrazione. Non si tratta necessariamente di una password errata.
+
+## Dati e dipendenze
+
+I parametri applicativi sono comuni al client, non credenziali personali:
+da soli non consentono di leggere forniture o consumi. Il componente non
+scarica, interpreta o installa APK e non contatta mirror o server del manutentore.
+I token personali restano nel deposito privato HA, non cifrato: proteggi
+host e backup e non allegare file `.storage` a issue pubbliche.

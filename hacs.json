@@ -1,4 +1,5 @@
 {
   "name": "ENGIE Italia",
+  "country": "IT",
   "homeassistant": "2026.9.0"
 }

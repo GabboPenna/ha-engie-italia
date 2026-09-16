@@ -1,6 +1,7 @@
 """Errors contain only fixed messages and allowlisted numeric metadata."""
 
 from decimal import Decimal
+from enum import StrEnum
 
 
 class EngieError(Exception):
@@ -13,6 +14,25 @@ class PayloadError(EngieError, ValueError):
 
 class AuthenticationError(EngieError):
     """An interactive login is required."""
+
+
+class AuthorizationFailure(StrEnum):
+    INVALID_CALLBACK = "invalid_callback"
+    STATE_MISMATCH = "callback_mismatch"
+    EXPIRED = "authorization_expired"
+    USED = "authorization_used"
+    DENIED = "authorization_denied"
+    TOKEN_EXCHANGE = "token_exchange_failed"
+    IDENTITY = "invalid_identity"
+    SESSION = "invalid_session"
+
+
+class AuthorizationError(AuthenticationError):
+    """A fixed, translatable OAuth failure; never includes provider payloads."""
+
+    def __init__(self, reason: AuthorizationFailure):
+        self.reason = AuthorizationFailure(reason)
+        super().__init__(self.reason.value)
 
 
 class TransportError(EngieError):

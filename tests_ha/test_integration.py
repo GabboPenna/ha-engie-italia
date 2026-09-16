@@ -9,6 +9,7 @@ import time
 import unittest
 from dataclasses import replace
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -18,12 +19,21 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
+from invoice_fixtures import invoice, invoices  # noqa: E402
 from mobile_fixtures import daily, supplies  # noqa: E402
 
 from custom_components.engie_italia.api.client import EngieMobileClient  # noqa: E402
 from custom_components.engie_italia.api.errors import (  # noqa: E402
     AuthenticationError,
+    AuthorizationError,
+    AuthorizationFailure,
+    ServiceError,
+    TokenPersistenceError,
     TransportError,
+)
+from custom_components.engie_italia.api.invoices import (  # noqa: E402
+    InvoiceSnapshot,
+    parse_invoices,
 )
 from custom_components.engie_italia.api.mobile import (  # noqa: E402
     parse_daily_electricity,
@@ -42,6 +52,8 @@ from custom_components.engie_italia.diagnostics import (  # noqa: E402
 from custom_components.engie_italia.sensor import (  # noqa: E402
     COMMON,
     ELECTRICITY,
+    INVOICES,
+    EngieInvoiceSensor,
     EngieSensor,
 )
 from custom_components.engie_italia.sensor import (
@@ -85,6 +97,9 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.client.async_supplies = AsyncMock(return_value=(self.power, self.gas))
         self.client.async_commissioning_date = AsyncMock(return_value=date(2025, 3, 1))
         self.client.async_daily_electricity = AsyncMock(return_value=self.readings)
+        self.client.async_invoices = AsyncMock(
+            return_value=InvoiceSnapshot((), datetime(2025, 3, 11, tzinfo=UTC))
+        )
         self.client.lower_bound = EngieMobileClient.lower_bound
         self.coordinator = EngieCoordinator(self.hass, self.entry, self.client)
         self.entry.runtime_data = self.coordinator
@@ -93,9 +108,14 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             return_value=datetime(2025, 3, 11, tzinfo=UTC),
         )
         self.clock.start()
+        self.app_profile = patch(
+            MODULE + "config_flow.DEFAULT_API_KEY", "synthetic-app-key"
+        )
+        self.app_profile.start()
 
     async def asyncTearDown(self):
         self.clock.stop()
+        self.app_profile.stop()
         await self.coordinator.async_shutdown()
         await self.hass.async_stop(force=True)
         self.directory.cleanup()
@@ -112,6 +132,130 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.power.utility,
             description,
         )
+
+    def invoice_sensor(self, key):
+        description = next(d for d in INVOICES if d.key == key)
+        return EngieInvoiceSensor(self.coordinator, self.entry, description)
+
+    async def test_account_invoice_sensors_expose_residual_dates_and_stable_reference(
+        self,
+    ):
+        self.client.async_invoices.return_value = InvoiceSnapshot(
+            parse_invoices(
+                invoices(
+                    invoice(),
+                    invoice(
+                        fiscalNumber="SYNTHETIC-PARTIAL",
+                        emissionDate="2025-02-01",
+                        invoiceStatus="PARTIALLY_PAID",
+                        unpaidRemainingAmount=20.25,
+                        expiryDate="2025-03-10",
+                    ),
+                )
+            ),
+            datetime(2025, 3, 11, tzinfo=UTC),
+        )
+        await self.refresh()
+        expected = {
+            "invoice_data_status": "available",
+            "invoices_count": 2,
+            "open_invoices": 2,
+            "outstanding_amount": Decimal("121.00"),
+            "overdue_invoices": 1,
+            "latest_invoice": "SYNTHETIC-2025-002",
+            "latest_invoice_amount": Decimal("100.75"),
+            "latest_invoice_date": date(2025, 3, 1),
+            "latest_invoice_due_date": date(2025, 3, 20),
+            "earliest_invoice_due_date": date(2025, 3, 10),
+            "invoices_last_sync": datetime(2025, 3, 11, tzinfo=UTC),
+        }
+        for key, value in expected.items():
+            sensor = self.invoice_sensor(key)
+            self.assertEqual(sensor.native_value, value, key)
+            self.assertTrue(sensor.available, key)
+            self.assertIsNone(sensor.state_class)
+            self.assertEqual(
+                sensor.device_info["identifiers"], {("engie_italia", ACCOUNT)}
+            )
+        self.assertEqual(
+            self.invoice_sensor("outstanding_amount").native_unit_of_measurement, "EUR"
+        )
+        self.client.async_invoices.assert_awaited_once()
+        diagnostics = json.dumps(
+            await async_get_config_entry_diagnostics(self.hass, self.entry)
+        )
+        self.assertNotIn("SYNTHETIC", diagnostics)
+        self.assertNotIn("121.00", diagnostics)
+        self.assertNotIn("100.75", diagnostics)
+
+    async def test_invoice_outage_preserves_consumption_and_never_reports_zero_debt(
+        self,
+    ):
+        await self.refresh()
+        last_sync = self.invoice_sensor("invoices_last_sync").native_value
+        self.client.async_invoices.side_effect = ServiceError(200, 9, Decimal("9.91"))
+        await self.refresh()
+        self.assertTrue(self.sensor("last_day").available)
+        self.assertEqual(
+            self.invoice_sensor("invoice_data_status").native_value, "error"
+        )
+        self.assertEqual(
+            self.invoice_sensor("invoice_data_status").extra_state_attributes,
+            {"error_code": 9, "detailed_error_code": "9.91"},
+        )
+        for description in INVOICES:
+            if description.key not in ("invoice_data_status", "invoices_last_sync"):
+                sensor = self.invoice_sensor(description.key)
+                self.assertFalse(sensor.available, description.key)
+                self.assertIsNone(sensor.native_value, description.key)
+        self.assertEqual(
+            self.invoice_sensor("invoices_last_sync").native_value, last_sync
+        )
+        self.client.async_invoices.side_effect = None
+        await self.refresh()
+        self.assertEqual(
+            self.invoice_sensor("invoice_data_status").native_value, "no_invoices"
+        )
+        self.assertEqual(
+            self.invoice_sensor("outstanding_amount").native_value, Decimal(0)
+        )
+        self.assertTrue(self.invoice_sensor("outstanding_amount").available)
+        self.assertIsNone(
+            self.invoice_sensor("invoice_data_status").extra_state_attributes[
+                "error_code"
+            ]
+        )
+
+    async def test_incomplete_invoice_data_leaves_known_fields_usable(self):
+        self.client.async_invoices.return_value = InvoiceSnapshot(
+            parse_invoices(
+                invoices(
+                    invoice(unpaidRemainingAmount=None),
+                )
+            ),
+            datetime.now(UTC),
+        )
+        await self.refresh()
+        self.assertEqual(
+            self.invoice_sensor("invoice_data_status").native_value, "incomplete"
+        )
+        self.assertTrue(self.invoice_sensor("outstanding_amount").available)
+        self.assertIsNone(self.invoice_sensor("outstanding_amount").native_value)
+        self.assertEqual(self.invoice_sensor("open_invoices").native_value, 1)
+        self.assertEqual(
+            self.invoice_sensor("latest_invoice").native_value, "SYNTHETIC-2025-002"
+        )
+
+    async def test_billing_auth_and_storage_failures_propagate_to_coordinator(self):
+        from homeassistant.helpers.update_coordinator import UpdateFailed
+
+        for source, target in (
+            (AuthenticationError("expired"), ConfigEntryAuthFailed),
+            (TokenPersistenceError("disk"), UpdateFailed),
+        ):
+            self.client.async_invoices.side_effect = source
+            with self.assertRaises(target):
+                await self.refresh()
 
     async def test_gas_is_metadata_only_and_power_totals_are_dated(self):
         await self.refresh()
@@ -179,6 +323,8 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(self.coordinator.last_update_success)
         self.assertFalse(self.sensor("supply_status").available)
         self.assertFalse(self.sensor("last_day").available)
+        self.assertFalse(self.invoice_sensor("outstanding_amount").available)
+        self.assertFalse(self.invoice_sensor("invoice_data_status").available)
 
     async def test_commissioning_cached_and_ids_stable_across_contract_changes(self):
         await self.refresh()
@@ -188,6 +334,58 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             supply_key(self.power),
             supply_key(replace(self.power, contract_id="replacement")),
         )
+
+    async def test_contract_change_invalidates_cached_start_date_without_new_entity(
+        self,
+    ):
+        await self.refresh()
+        unique_id = self.sensor("last_day").unique_id
+        replacement = replace(
+            self.power, contract_id="replacement", activation_date=date(2025, 3, 5)
+        )
+        self.client.async_supplies.return_value = (replacement, self.gas)
+        self.client.async_commissioning_date.return_value = date(2025, 3, 5)
+        await self.refresh()
+        self.assertEqual(self.client.async_commissioning_date.await_count, 2)
+        self.assertEqual(
+            self.client.async_daily_electricity.await_args.kwargs["lower_bound"],
+            date(2025, 3, 5),
+        )
+        self.assertEqual(self.sensor("last_day").unique_id, unique_id)
+        self.assertEqual(len(self.coordinator._commissioning), 1)
+
+    async def test_commissioning_cache_expires_next_day_and_prunes_removed_supplies(
+        self,
+    ):
+        await self.refresh()
+        with patch(
+            MODULE + "coordinator.dt_util.now",
+            return_value=datetime(2025, 3, 12, tzinfo=UTC),
+        ):
+            await self.refresh()
+        self.assertEqual(self.client.async_commissioning_date.await_count, 2)
+        self.client.async_supplies.return_value = (self.gas,)
+        await self.refresh()
+        self.assertFalse(self.coordinator._commissioning)
+        self.assertFalse(self.sensor("last_day").available)
+
+    async def test_corrected_consumption_replaces_old_snapshot_without_accumulation(
+        self,
+    ):
+        await self.refresh()
+        corrected = daily()
+        period = corrected["consumptionsList"]["years"][0]
+        period["totalValue"] = 10
+        period["months"][0]["totalValue"] = 5
+        period["months"][0]["days"][0]["totalValue"] = 0.75
+        self.client.async_daily_electricity.return_value = parse_daily_electricity(
+            corrected, supply_id="synthetic-power", fetched_at=datetime.now(UTC)
+        )
+        await self.refresh()
+        self.assertEqual(self.sensor("last_day").native_value, Decimal("0.75"))
+        self.assertEqual(self.sensor("month").native_value, Decimal(5))
+        self.assertEqual(self.sensor("year").native_value, Decimal(10))
+        self.assertEqual(self.sensor("last_day_date").native_value, date(2025, 3, 10))
 
     async def test_missing_measurement_is_not_zero(self):
         self.client.async_daily_electricity.return_value = parse_daily_electricity(
@@ -201,7 +399,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         await self.refresh()
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
-        self.assertEqual(len(add.call_args.args[0]), 10)
+        self.assertEqual(len(add.call_args.args[0]), 10 + len(INVOICES))
         self.coordinator.async_update_listeners()
         self.assertEqual(add.call_count, 1)
         other = replace(self.power, point_id="synthetic-other")
@@ -265,49 +463,33 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         flow.context = {"source": "user", **context}
         return flow
 
-    async def test_fresh_install_starts_with_key_or_help_without_existing_account(self):
-        result = await self.config_flow().async_step_user()
-        self.assertEqual(result["type"], "menu")
-        self.assertEqual(result["menu_options"], ["api_setup", "api_help"])
-        self.assertEqual(
-            {str(k) for k in result["data_schema"].schema}, {"next_step_id"}
-        )
-
-    async def test_existing_connection_is_secondary_and_only_shown_when_present(self):
-        with patch.object(
-            self.hass.config_entries, "async_entries", return_value=[self.entry]
-        ):
-            result = await self.config_flow().async_step_user()
-        self.assertEqual(result["menu_options"], ["api_setup", "api_help", "connect"])
-
-    async def test_missing_key_help_has_navigation_without_starting_login(self):
+    async def test_fresh_install_needs_only_official_login_callback(self):
         flow = self.config_flow()
         with patch(MODULE + "config_flow.async_load_credentials", AsyncMock()) as load:
-            result = await flow.async_step_api_help()
-            self.assertEqual(result["menu_options"], ["user", "api_setup"])
-            self.assertEqual((await flow.async_step_user())["step_id"], "user")
-            self.assertEqual(
-                (await flow.async_step_api_setup())["step_id"], "api_setup"
-            )
+            result = await flow.async_step_user()
         load.assert_not_awaited()
-        self.assertIsNone(flow._attempt)
-        self.assertIsNone(flow._api_key)
+        self.assertEqual(result["type"], "form")
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(
+            {str(k) for k in result["data_schema"].schema}, {"callback_url"}
+        )
+        self.assertEqual(
+            result["data_schema"].schema["callback_url"].config["autocomplete"], "off"
+        )
+        self.assertEqual(flow._api_key, "synthetic-app-key")
+        self.assertEqual(flow._client_id, DEFAULT_CLIENT_ID)
+        self.assertIsNone(flow._authorized)
+        self.assertNotIn("synthetic-app-key", str(result))
         self.assertFalse(Path(self.directory.name, ".storage").exists())
 
-    async def test_first_setup_completes_with_only_synthetic_credentials(self):
+    async def test_first_setup_completes_without_files_or_manual_app_parameters(self):
         flow = self.config_flow()
         flow.async_set_unique_id = AsyncMock()
         flow._abort_if_unique_id_configured = MagicMock()
         tokens = SessionTokens(
             "synthetic-access", "synthetic-refresh", time.time() + 300
         )
-        self.assertEqual((await flow.async_step_user())["step_id"], "user")
-        self.assertEqual((await flow.async_step_api_setup())["step_id"], "api_setup")
-        result = await flow.async_step_api_setup({"api_key": "synthetic-key"})
-        self.assertEqual(result["step_id"], "authorize")
-        self.assertEqual(
-            result["data_schema"].schema["callback_url"].config["autocomplete"], "off"
-        )
+        await flow.async_step_user()
         with (
             patch(
                 MODULE + "config_flow.async_get_clientsession", return_value=object()
@@ -323,16 +505,51 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         authorize.assert_awaited_once()
         self.assertEqual(result["type"], "create_entry")
         self.assertEqual(result["data"], {"account_key": ACCOUNT})
-        stored = await async_load_credentials(self.hass, ACCOUNT)
         self.assertEqual(
-            stored, credentials("synthetic-key", DEFAULT_CLIENT_ID, tokens)
+            await async_load_credentials(self.hass, ACCOUNT),
+            credentials("synthetic-app-key", DEFAULT_CLIENT_ID, tokens),
         )
         self.assertIsNone(flow._attempt)
         self.assertIsNone(flow._authorized)
+        self.assertIsNone(flow._api_key)
+
+    async def test_new_account_never_reads_another_account_profile_or_tokens(self):
+        flow = self.config_flow()
+        with (
+            patch.object(
+                self.hass.config_entries, "async_entries", return_value=[self.entry]
+            ),
+            patch(MODULE + "config_flow.async_load_credentials", AsyncMock()) as load,
+        ):
+            result = await flow.async_step_user()
+        load.assert_not_awaited()
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(flow._client_id, DEFAULT_CLIENT_ID)
+        self.assertIsNone(flow._authorized)
+
+    async def test_restart_flow_discards_old_authorization_and_issues_new_attempt(self):
+        flow = self.config_flow()
+        first = await flow.async_step_user()
+        flow._authorized = (ACCOUNT, {"tokens": "old-session"})
+        second = await flow.async_step_user()
+        self.assertNotEqual(
+            first["description_placeholders"], second["description_placeholders"]
+        )
+        self.assertIsNone(flow._authorized)
+        self.assertFalse(Path(self.directory.name, ".storage").exists())
+
+    async def test_authorize_without_attempt_starts_fresh_login(self):
+        result = await self.config_flow().async_step_authorize()
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertIn("authorization_url", result["description_placeholders"])
+        self.assertEqual(
+            result["description_placeholders"]["setup_url"],
+            "https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md",
+        )
 
     async def test_invalid_or_expired_callback_issues_a_fresh_link_without_echo(self):
         flow = self.config_flow()
-        first = await flow.async_step_api_setup({"api_key": "synthetic-key"})
+        first = await flow.async_step_user()
         with (
             patch(
                 MODULE + "config_flow.async_get_clientsession", return_value=object()
@@ -350,97 +567,86 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             first["description_placeholders"], result["description_placeholders"]
         )
         self.assertNotIn("private-callback", str(result))
-        self.assertNotIn("synthetic-key", str(result))
+        self.assertNotIn("synthetic-app-key", str(result))
 
-    async def test_first_install_requires_key_but_hides_client_id(self):
+    async def test_transport_error_does_not_expose_provider_response(self):
         flow = self.config_flow()
-        result = await flow.async_step_connect()
-        self.assertEqual(result["step_id"], "api_setup")
-        self.assertEqual(
-            {str(k) for k in result["data_schema"].schema}, {"api_key", "oauth"}
-        )
-        self.assertTrue(result["data_schema"].schema["oauth"].options["collapsed"])
-        result = await flow.async_step_api_setup({"api_key": "synthetic-key"})
-        self.assertEqual(result["step_id"], "authorize")
-        self.assertEqual(flow._client_id, DEFAULT_CLIENT_ID)
-        self.assertEqual(
-            {str(k) for k in result["data_schema"].schema}, {"callback_url"}
-        )
-        self.assertNotIn("synthetic-key", str(result))
-
-    async def test_advanced_client_override_and_invalid_key(self):
-        flow = self.config_flow()
-        result = await flow.async_step_api_setup()
-        self.assertIn(
-            "client_id",
-            {str(k) for k in result["data_schema"].schema["oauth"].schema.schema},
-        )
-        result = await flow.async_step_api_setup({"api_key": ""})
-        self.assertEqual(result["errors"], {"base": "invalid_config"})
-        result = await flow.async_step_api_setup(
-            {"api_key": "synthetic-key", "oauth": {"client_id": "custom-client"}}
-        )
-        self.assertEqual(result["step_id"], "authorize")
-        self.assertEqual(flow._client_id, "custom-client")
-
-    async def test_reuse_only_api_profile_with_new_authorization(self):
-        data = credentials(
-            "synthetic-key",
-            "synthetic-client",
-            SessionTokens("old-access", "old-refresh", time.time() + 300),
-        )
-        flow = self.config_flow()
+        await flow.async_step_user()
         with (
-            patch.object(
-                self.hass.config_entries, "async_entries", return_value=[self.entry]
+            patch(
+                MODULE + "config_flow.async_get_clientsession", return_value=object()
             ),
             patch(
-                MODULE + "config_flow.async_load_credentials",
-                AsyncMock(return_value=data),
+                MODULE + "config_flow.async_complete_authorization",
+                AsyncMock(side_effect=TransportError("private-provider-details")),
             ),
         ):
-            result = await flow.async_step_connect()
-        self.assertEqual(result["step_id"], "authorize")
-        self.assertEqual(flow._api_key, "synthetic-key")
-        self.assertEqual(flow._client_id, "synthetic-client")
-        self.assertIsNone(flow._authorized)
-        self.assertIsNotNone(flow._attempt)
-        for secret in ("synthetic-key", "old-access", "old-refresh"):
-            self.assertNotIn(secret, str(result))
-        for token in ("old-access", "old-refresh"):
-            self.assertNotIn(token, str(vars(flow)))
-
-    async def test_damaged_or_ambiguous_profiles_require_explicit_setup(self):
-        def profile(key):
-            return credentials(
-                key, "client", SessionTokens("a", "r", time.time() + 300)
+            result = await flow.async_step_authorize(
+                {"callback_url": "private-callback"}
             )
+        self.assertEqual(result["errors"], {"base": "retry_authorization"})
+        self.assertNotIn("private-", str(result))
+        self.assertIsNone(flow._authorized)
 
-        cases = [
-            ([ValueError("missing")], "api_setup"),
-            ([OSError("unreadable")], "api_setup"),
-            ([profile("first"), profile("second")], "api_setup"),
-            ([profile("same"), profile("same")], "authorize"),
-            ([ValueError("missing"), profile("valid")], "authorize"),
-        ]
-        for responses, step in cases:
+    async def test_local_callback_error_preserves_link_and_has_specific_message(self):
+        for reason in (
+            AuthorizationFailure.INVALID_CALLBACK,
+            AuthorizationFailure.STATE_MISMATCH,
+        ):
+            flow = self.config_flow()
+            first = await flow.async_step_user()
             with (
-                self.subTest(step=step, profiles=len(responses)),
-                patch.object(
-                    self.hass.config_entries,
-                    "async_entries",
-                    return_value=[self.entry] * len(responses),
+                patch(
+                    MODULE + "config_flow.async_get_clientsession",
+                    return_value=object(),
                 ),
                 patch(
-                    MODULE + "config_flow.async_load_credentials",
-                    AsyncMock(side_effect=responses),
+                    MODULE + "config_flow.async_complete_authorization",
+                    AsyncMock(side_effect=AuthorizationError(reason)),
                 ),
             ):
-                self.assertEqual(
-                    (await self.config_flow().async_step_connect())["step_id"], step
+                result = await flow.async_step_authorize(
+                    {"callback_url": "private-callback"}
                 )
+            self.assertEqual(result["errors"], {"base": reason.value})
+            self.assertEqual(
+                first["description_placeholders"], result["description_placeholders"]
+            )
+            self.assertNotIn("private-callback", str(result))
 
-    async def test_reauth_uses_own_profile_or_requests_repair(self):
+    async def test_expired_or_consumed_attempt_is_replaced(self):
+        for reason in (
+            AuthorizationFailure.EXPIRED,
+            AuthorizationFailure.USED,
+            AuthorizationFailure.TOKEN_EXCHANGE,
+            AuthorizationFailure.IDENTITY,
+            AuthorizationFailure.SESSION,
+        ):
+            flow = self.config_flow()
+            first = await flow.async_step_user()
+            flow._attempt.consumed = reason not in {
+                AuthorizationFailure.EXPIRED,
+                AuthorizationFailure.USED,
+            }
+            with (
+                patch(
+                    MODULE + "config_flow.async_get_clientsession",
+                    return_value=object(),
+                ),
+                patch(
+                    MODULE + "config_flow.async_complete_authorization",
+                    AsyncMock(side_effect=AuthorizationError(reason)),
+                ),
+            ):
+                result = await flow.async_step_authorize(
+                    {"callback_url": "private-callback"}
+                )
+            self.assertEqual(result["errors"], {"base": reason.value})
+            self.assertNotEqual(
+                first["description_placeholders"], result["description_placeholders"]
+            )
+
+    async def test_reauth_preserves_own_profile_and_requires_same_account(self):
         data = credentials(
             "own-key", "own-client", SessionTokens("a", "r", time.time() + 300)
         )
@@ -454,14 +660,44 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             (await flow.async_step_reauth_confirm({}))["step_id"], "authorize"
         )
         self.assertEqual(flow._api_key, "own-key")
+        self.assertEqual(flow._client_id, "own-client")
+        self.assertIsNone(flow._authorized)
+
+    async def test_missing_reauth_store_uses_builtin_profile_without_account_restore(
+        self,
+    ):
+        flow = self.config_flow(source="reauth")
         with patch(
             MODULE + "config_flow.async_load_credentials",
             AsyncMock(side_effect=ValueError),
         ):
-            result = await self.config_flow(source="reauth").async_step_reauth(
-                self.entry.data
-            )
-        self.assertEqual(result["step_id"], "api_setup")
+            result = await flow.async_step_reauth(self.entry.data)
+        self.assertEqual(result["step_id"], "authorize")
+        self.assertEqual(flow._api_key, "synthetic-app-key")
+        self.assertIsNone(flow._authorized)
+        self.assertEqual(flow.context["source"], "reauth")
+        self.assertFalse(Path(self.directory.name, ".storage").exists())
+
+    async def test_finish_storage_retry_does_not_repeat_provider_login(self):
+        flow = self.config_flow()
+        flow.async_set_unique_id = AsyncMock()
+        flow._abort_if_unique_id_configured = MagicMock()
+        data = credentials(
+            "synthetic-app-key",
+            DEFAULT_CLIENT_ID,
+            SessionTokens("a", "r", time.time() + 300),
+        )
+        flow._authorized = (ACCOUNT, data)
+        with patch(
+            MODULE + "config_flow.async_save_credentials",
+            AsyncMock(side_effect=OSError),
+        ):
+            result = await flow.async_step_finish()
+        self.assertEqual(result["errors"], {"base": "storage_error"})
+        self.assertIsNotNone(flow._authorized)
+        result = await flow.async_step_finish({})
+        self.assertEqual(result["type"], "create_entry")
+        self.assertIsNone(flow._authorized)
 
     async def test_reauth_cannot_replace_another_account(self):
         flow = EngieConfigFlow()
@@ -505,28 +741,50 @@ class MetadataTests(unittest.TestCase):
         self.assertEqual(
             source["config"]["step"].keys(), italian["config"]["step"].keys()
         )
+        self.assertNotIn("file_upload", manifest.get("dependencies", []))
+        self.assertFalse(any("pyaxmlparser" in r for r in manifest["requirements"]))
         for language in (source, italian):
-            menu = language["config"]["step"]["user"]["menu_options"]
-            self.assertEqual(set(menu), {"connect", "api_setup", "api_help"})
+            for reason in AuthorizationFailure:
+                self.assertIn(reason.value, language["config"]["error"])
             self.assertEqual(
-                set(language["config"]["step"]["api_help"]["menu_options"]),
-                {"user", "api_setup"},
+                set(language["config"]["step"]),
+                {"authorize", "finish", "reauth_confirm"},
             )
-            self.assertIn(
-                "https://github.com/GabboPenna/ha-engie-italia/issues/1",
-                language["config"]["step"]["api_help"]["description"],
+            authorize = language["config"]["step"]["authorize"]
+            self.assertEqual(set(authorize["data"]), {"callback_url"})
+            self.assertIn("callback_url", authorize["data_description"])
+            self.assertIn("{authorization_url}", authorize["description"])
+            self.assertIn("{setup_url}", authorize["description"])
+
+    def test_setup_copy_describes_user_actions_without_implementation_details(self):
+        root = Path(__file__).resolve().parents[1] / "custom_components/engie_italia"
+
+        def text_values(value):
+            if isinstance(value, dict):
+                for child in value.values():
+                    yield from text_values(child)
+            elif isinstance(value, str):
+                yield value
+
+        for filename in (
+            "strings.json",
+            "translations/en.json",
+            "translations/it.json",
+        ):
+            config = json.loads((root / filename).read_text())["config"]
+            visible = " ".join(text_values(config)).lower()
+            for term in ("apk", "api", "oauth", "pkce", "token", "code=", "state="):
+                self.assertNotIn(term, visible)
+            description = config["step"]["authorize"]["description"]
+            self.assertEqual(
+                [
+                    line[:2]
+                    for line in description.splitlines()
+                    if line[:2] in {"1.", "2.", "3."}
+                ],
+                ["1.", "2.", "3."],
             )
-            for step, field in (
-                ("api_setup", "api_key"),
-                ("authorize", "callback_url"),
-            ):
-                self.assertIn(
-                    field, language["config"]["step"][step]["data_description"]
-                )
-            self.assertIn(
-                "{authorization_url}",
-                language["config"]["step"]["authorize"]["description"],
-            )
+            self.assertIn("10 minut", description)
 
     def test_local_brand_images_and_retina_dimensions(self):
         folder = (
