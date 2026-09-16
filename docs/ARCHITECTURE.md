@@ -1,13 +1,14 @@
-# Architettura prevista
+# Architettura
 
 ## Confini
 
 Modelli, diagnostica e parser restano indipendenti da HTTP e Home Assistant.
 `mobile.py` interpreta forniture e consumi elettrici del servizio dell'app;
 `portal.py` conserva il parser del portale. `client.py` aggiunge il trasporto
-asincrono `aiohttp`, con credenziali fornite dal chiamante e nessuna persistenza.
+asincrono `aiohttp`, con credenziali e callback di persistenza forniti dal chiamante.
 Il probe pubblico usa il portale con login manuale; non e' il meccanismo di
-autenticazione della futura integrazione mobile.
+autenticazione dell'integrazione mobile. Il codice client vive in
+`custom_components/engie_italia/api` ed e' anche installabile come `engie_italia`.
 
 `PortalSupply` rappresenta soltanto l'identita', il tipo e lo stato osservato
 di una fornitura. Rimane distinto da `SupplySnapshot`, che descrive intervalli
@@ -17,7 +18,7 @@ Il client attuale serializza letture e rinnovi, applica timeout e limiti sulle
 risposte, vieta redirect e gestisce un solo rinnovo/retry dopo 401. Rispetta
 `Retry-After` e non riprova rete/5xx in ciclo. Verifica gli errori applicativi
 anche con HTTP 200. Cache, deduplicazione delle richieste identiche e pianificazione
-restano responsabilita' del futuro coordinatore: nessun polling implicito per entita'.
+sono responsabilita' del coordinatore: nessun polling implicito per entita'.
 
 Le sole operazioni ammesse sono rinnovo e lettura dei dati
 verificati. Il verbo HTTP non e' una garanzia: una lettura Salesforce puo'
@@ -41,15 +42,20 @@ ma non presume completezza delle serie. Conserva i riepiloghi ENGIE separati
 dai campioni: non usare la loro somma come totale fatturabile.
 Dettaglio di autenticazione, errori, arrotondamenti e DST in [CLIENT.md](CLIENT.md).
 
-## Integrazione Home Assistant futura
+## Integrazione Home Assistant
 
 Un solo `DataUpdateCoordinator` per account coordina gli aggiornamenti dei
 sensori, evitando una richiesta separata per entita'. Un dispositivo per
 fornitura e identificativi stabili evitano duplicati dopo una riconfigurazione.
-La configurazione deve gestire autenticazione, riautenticazione e rimozione
-senza file YAML contenenti credenziali. Il metodo dipende dal login verificato.
+L'identita' usa hash di account e punto di fornitura, indipendenti dal contratto.
+Il config flow gestisce PKCE, riautenticazione dello stesso account e rimozione
+senza YAML. Chiave e token sono in un deposito HA privato, non nella config entry.
+Il primo accesso e' assistito per il vincolo sul callback del client nativo.
+Aggiornamento ogni 6 ore, configurabile 1-24, e un pulsante condiviso di refresh.
+La data di commissioning e' memorizzata per un giorno. Le forniture aggiunte
+vengono rilevate al refresh; quelle rimosse diventano indisponibili.
 
-La diagnostica HA dovra' usare solo metadati approvati. Non includere payload
+La diagnostica HA usa solo metadati approvati. Non includere payload
 grezzi, identificativi, nomi, indirizzi o dati delle bollette nei log.
 Il riepilogo attuale e' una allowlist per i modelli, non un filtro universale.
 

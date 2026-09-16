@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ha-engie-italia"
-version = "0.0.1.dev0"
-description = "Read-only ENGIE Italia integration research and data models for Home Assistant"
+version = "0.1.0b1"
+description = "Read-only ENGIE Italia integration and client for Home Assistant"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [{name = "Gabriele Pennacchia"}]
-dependencies = ["aiohttp>=3.14.3,<4", "tzdata>=2026.4; sys_platform == 'win32'"]
+dependencies = ["aiohttp>=3.14.3,<4", "PyJWT[crypto]>=2.13.0,<3", "tzdata>=2026.4; sys_platform == 'win32'"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
@@ -26,8 +26,9 @@ browser = ["playwright==1.61.0"]
 Repository = "https://github.com/GabboPenna/ha-engie-italia"
 Issues = "https://github.com/GabboPenna/ha-engie-italia/issues"
 
-[tool.setuptools.packages.find]
-include = ["engie_italia*"]
+[tool.setuptools]
+packages = ["engie_italia"]
+package-dir = {engie_italia = "custom_components/engie_italia/api"}
 
 [tool.ruff]
 target-version = "py312"

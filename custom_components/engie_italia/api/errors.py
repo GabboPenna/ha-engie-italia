@@ -19,6 +19,10 @@ class TransportError(EngieError):
     """The service could not be reached."""
 
 
+class TokenPersistenceError(EngieError):
+    """A rotated session must be saved before any further network requests."""
+
+
 class ServiceError(EngieError):
     def __init__(
         self,

@@ -16,6 +16,8 @@ git diff --check
 ```
 
 I test devono essere offline; i dati devono essere interamente sintetici.
+Per modifiche all'integrazione eseguire anche `tests_ha` in un ambiente isolato
+Python 3.14 con Home Assistant 2026.9.2, come descritto nel README.
 Non usare credenziali in CI, non eseguire test contro account reali e non
 allegare acquisizioni di rete. Consultare [SECURITY.md](SECURITY.md).
 

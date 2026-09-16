@@ -1,4 +1,4 @@
-# Client di ricerca
+# Client e autenticazione
 
 `EngieMobileClient` usa una `aiohttp.ClientSession` fornita dal chiamante.
 Il chiamante resta responsabile della chiusura della sessione. Le richieste
@@ -29,27 +29,30 @@ Il costruttore richiede `api_key` e `access_token`. Per il rinnovo richiede anch
 Questi valori non devono comparire in codice, issue, log, comandi shell o commit.
 Non viene richiesto di inserire password nel client Python.
 
-Le prove del primo login mobile usano OAuth Authorization Code con PKCE S256,
-login manuale ed eventuale challenge nel browser. Il futuro config flow deve
-includere state/nonce, validazione dell'ID token e gestione della revoca.
-Il flusso sperimentale non e' incluso fra i tool pubblici: i tool browser
-esistenti riguardano solo il portale web.
+Il config flow usa OAuth Authorization Code con PKCE S256, state/nonce e
+validazione dell'ID token RS256 tramite le chiavi dell'issuer. Login ed eventuale
+challenge rimangono nel browser ENGIE. `auth.py` verifica un callback esatto,
+con tentativo a uso singolo e scadenza di 10 minuti. I tool browser di ricerca
+esistenti riguardano invece il portale web e non configurano la sessione HA.
 
 Le richieste di lettura sono serializzate per account. Un 401 causa al massimo
 un rinnovo e una ripetizione; un secondo rifiuto richiede login interattivo.
 Token prossimi alla scadenza vengono rinnovati prima della lettura. Un rinnovo
 malformato non provoca il riutilizzo continuo di un possibile token gia' ruotato.
 
-Il client conserva eventuali refresh token ruotati **solo in memoria**. Non e'
-quindi ancora adatto a un'integrazione persistente: servono archiviazione protetta,
-aggiornamento atomico dei token e recupero dopo un riavvio. La sostenibilita' della
-configurazione API e le condizioni di distribuzione restano da verificare.
+Il callback opzionale `token_updated(SessionTokens)` viene atteso dopo ogni
+rinnovo e prima di ulteriori letture. HA lo collega al deposito privato atomico.
+Un salvataggio fallito causa `TokenPersistenceError`; il token nuovo rimane in
+memoria e il salvataggio viene ritentato prima della successiva richiesta.
+`SessionTokens` include scadenza assoluta e serializzazione esplicitamente privata
+per riprendere la sessione dopo un riavvio. Senza callback il client resta in RAM.
+Distribuzione della chiave API e condizioni d'uso restano da verificare.
 
 I 429 rispettano `Retry-After` e bloccano altre richieste fino alla scadenza,
 senza attese occupate o login ripetuti. Rete/5xx non vengono riprovati in ciclo;
-un futuro coordinatore dovra' applicare frequenza prudente e backoff. Gli errori
-non cancellano implicitamente l'ultimo dato valido: la UI HA dovra' distinguerlo
-da un aggiornamento riuscito, indicando indisponibilita' o dato non recente.
+il coordinatore HA usa 6 ore di default e il recupero standard di HA. Gli errori
+di una fornitura non bloccano le altre: i vecchi dati possono restare in memoria,
+ma i relativi sensori diventano indisponibili fino al recupero.
 
 ## Significato dei dati
 

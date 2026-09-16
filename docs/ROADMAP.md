@@ -13,7 +13,8 @@
 - [x] Parser forniture e probe interattivo con riepilogo privo di identificativi.
 - [x] Identificazione e lettura del backend dell'app, distinto dal portale.
 - [x] Login interattivo PKCE e rinnovo della sessione in memoria verificati.
-- [ ] Configurazione API distribuibile, persistenza sicura e riautenticazione HA.
+- [x] Persistenza privata atomica dei token e riautenticazione dello stesso account.
+- [ ] Configurazione API distribuibile senza provisioning privato.
 - [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
 - [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
 - [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
@@ -28,16 +29,18 @@ documentare il limite prima di procedere con un'integrazione installabile.
 - [x] Client asincrono per forniture e consumi elettrici, provato sull'account.
 - [x] Test per scadenza/rinnovo, errori rete, 429, dati mancanti e duplicati.
 - [ ] Schema gas di successo e relativo client/parser.
-- [ ] Politica di aggiornamento, cache e gestione delle rettifiche.
-- [ ] Config flow/reauth e coordinatore condiviso per account.
-- [ ] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
+- [x] Polling condiviso prudente, refresh manuale e cache commissioning giornaliera.
+- [ ] Importazione storica con gestione delle rettifiche.
+- [x] Config flow/reauth e coordinatore condiviso per account.
+- [x] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
 - [ ] Bollette/letture aggiunte solo dopo verifica dei dati disponibili.
-- [ ] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
+- [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 
 ## Fase 3: distribuzione
 
-- [ ] Manifest, traduzioni, asset di integrazione e documentazione di installazione.
-- [ ] Validazione Home Assistant e HACS; prima versione utilizzabile.
+- [x] Manifest, traduzioni italiano/inglese e installazione assistita documentata.
+- [x] Test isolati sul framework Home Assistant e beta installata.
+- [ ] Asset di integrazione e validazione completa HACS.
 - [ ] Repository personalizzato HACS.
 - [ ] Eventuale richiesta di inclusione nel catalogo HACS, separata dal punto precedente.
 

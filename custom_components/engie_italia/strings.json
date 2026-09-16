@@ -1,0 +1,37 @@
+{
+  "title": "ENGIE Italia",
+  "config": {
+    "step": {
+      "user": {"title": "ENGIE API access", "data": {"api_key": "API key", "client_id": "OAuth client ID"}},
+      "authorize": {"title": "ENGIE authorization", "description": "[Sign in to ENGIE]({authorization_url})", "data": {"callback_url": "Return address after sign-in"}},
+      "finish": {"title": "Save authorization"},
+      "reauth_confirm": {"title": "Renew ENGIE authorization"}
+    },
+    "error": {
+      "invalid_config": "The API configuration is invalid.",
+      "invalid_auth": "Authorization failed or expired. A new sign-in is required.",
+      "cannot_connect": "ENGIE is unavailable. Try signing in again later.",
+      "storage_error": "The session could not be saved. Retry saving without signing in again."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "wrong_account": "The selected account does not match the existing integration.",
+      "authorization_expired": "The authorization attempt has expired.",
+      "reauth_successful": "Authorization renewed."
+    }
+  },
+  "options": {"step": {"init": {"title": "Updates", "data": {"interval_hours": "Update interval (hours)"}}}},
+  "entity": {
+    "sensor": {
+      "supply_status": {"name": "Supply status", "state": {"active": "Active", "unknown": "Unknown"}},
+      "data_status": {"name": "Consumption data", "state": {"available": "Available", "no_data": "No measurements", "unsupported": "Not supported in this beta", "error": "Update failed"}},
+      "last_day": {"name": "Last available daily consumption"},
+      "last_day_date": {"name": "Last consumption day"},
+      "month": {"name": "Last available monthly consumption"},
+      "year": {"name": "Last available annual consumption"},
+      "last_data_update": {"name": "Data updated through"},
+      "last_sync": {"name": "Last successful synchronization"}
+    },
+    "button": {"refresh": {"name": "Refresh data"}}
+  }
+}

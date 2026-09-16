@@ -124,8 +124,9 @@ distribuita in questo repository. Non e' un'API pubblica documentata per terze p
 
 Il rinnovo con `refresh_token` su `/oauth/token` e una successiva lettura sono
 riusciti sia nel probe privato sia nel client asincrono del progetto.
-Questo verifica il rinnovo in una sessione, non ancora la persistenza HA,
-la durata massima del consenso o il recupero da revoche e challenge future.
+La beta successiva ha verificato anche rinnovo con salvataggio e ricaricamento
+in HA. Durata massima del consenso e challenge future restano da osservare;
+la riautenticazione e' coperta da test offline, non da una revoca live forzata.
 
 ### Forniture mobile
 
@@ -203,7 +204,7 @@ verificare il payload di successo, compresi periodi e stime.
 ## Verifiche ancora necessarie
 
 1. Rendere login e configurazione API distribuibili senza pubblicare chiavi dell'app.
-2. Persistenza sicura, riavvii, revoca del consenso e gestione delle challenge in HA.
+2. Osservare la sessione nel tempo e verificare revoca/challenge reali in HA.
 3. Consumi gas riusciti, rettifiche e dettaglio elettrico durante il cambio d'ora.
 4. Verificare limiti e condizioni d'uso prima della distribuzione.
 5. Ampliare solo con fixture inventate e test offline, mai risposte dell'account.

@@ -4,13 +4,20 @@ import asyncio
 import json
 import math
 import time
+from collections.abc import Awaitable, Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from email.utils import parsedate_to_datetime
 
 import aiohttp
 
-from .errors import AuthenticationError, PayloadError, RateLimitError, TransportError
+from .errors import (
+    AuthenticationError,
+    PayloadError,
+    RateLimitError,
+    TokenPersistenceError,
+    TransportError,
+)
 from .mobile import (
     ROME,
     ElectricityReadings,
@@ -23,6 +30,7 @@ from .mobile import (
     successful_payload,
 )
 from .models import Utility
+from .session import SessionTokens, credential
 
 API = "https://api-mobileapp2022-prod.aws.engie.it/"
 TOKEN_URL = "https://login.engie.it/oauth/token"
@@ -38,13 +46,7 @@ READ_PATHS = frozenset(
 
 
 def _secret(value: object) -> str:
-    if (
-        not isinstance(value, str)
-        or not value.strip()
-        or any(ord(c) < 33 or ord(c) == 127 for c in value)
-    ):
-        raise ValueError("Invalid credential configuration")
-    return value
+    return credential(value)
 
 
 def _retry_seconds(value: str | None) -> float:
@@ -63,8 +65,7 @@ def _retry_seconds(value: str | None) -> float:
 class EngieMobileClient:
     """Reuse a caller-owned session, with no logging or credential persistence.
 
-    Initial OAuth/PKCE login and secure refresh-token persistence belong to the
-    future config flow. This research client only refreshes its in-memory session.
+    Persist rotated credentials through token_updated before further reads.
     """
 
     def __init__(
@@ -76,6 +77,7 @@ class EngieMobileClient:
         client_id: str | None = None,
         refresh_token: str | None = None,
         expires_in: int | None = None,
+        token_updated: Callable[[SessionTokens], Awaitable[None]] | None = None,
     ) -> None:
         self._session = session
         self._api_key = _secret(api_key)
@@ -96,6 +98,8 @@ class EngieMobileClient:
         self._lock = asyncio.Lock()
         self._retry_at = 0.0
         self._auth_failed = False
+        self._token_updated = token_updated
+        self._pending_tokens: SessionTokens | None = None
 
     def clear_credentials(self) -> None:
         """Forget in-memory credentials; close the caller's session separately."""
@@ -104,6 +108,16 @@ class EngieMobileClient:
         self._api_key = ""
         self._client_id = None
         self._auth_failed = True
+        self._pending_tokens = None
+
+    async def _save_pending_tokens(self) -> None:
+        if self._pending_tokens is None or self._token_updated is None:
+            return
+        try:
+            await self._token_updated(self._pending_tokens)
+        except Exception:
+            raise TokenPersistenceError("Cannot persist the renewed session") from None
+        self._pending_tokens = None
 
     def _ready(self) -> None:
         if self._auth_failed:
@@ -177,27 +191,26 @@ class EngieMobileClient:
                 "Invalid token response; login required"
             ) from None
         try:
-            token = _secret(payload.get("access_token"))
-            refresh = _secret(payload.get("refresh_token", self._refresh_token))
-            lifetime = payload.get("expires_in")
-            if (
-                payload.get("token_type", "").lower() != "bearer"
-                or type(lifetime) is not int
-                or lifetime <= 0
-            ):
-                raise ValueError("Invalid token response")
+            tokens = SessionTokens.from_response(payload, self._refresh_token)
         except (ValueError, AttributeError):
             # A rotating refresh token might already have been consumed.
             self._auth_failed = True
             raise AuthenticationError(
                 "Invalid token response; login required"
             ) from None
-        self._access_token, self._refresh_token = token, refresh
-        self._expires_at = time.monotonic() + lifetime
+        self._access_token, self._refresh_token = (
+            tokens.access_token,
+            tokens.refresh_token,
+        )
+        self._expires_at = time.monotonic() + tokens.remaining_seconds
+        if self._token_updated is not None:
+            self._pending_tokens = tokens
+            await self._save_pending_tokens()
 
     async def async_refresh(self) -> None:
         async with self._lock:
             self._ready()
+            await self._save_pending_tokens()
             await self._refresh()
 
     async def _get(self, path: str, params: dict | None = None) -> dict:
@@ -205,6 +218,7 @@ class EngieMobileClient:
             raise ValueError("Operation is not an approved read")
         async with self._lock:
             self._ready()
+            await self._save_pending_tokens()
             refreshed = False
             if time.monotonic() >= self._expires_at - 30:
                 await self._refresh()
@@ -220,7 +234,7 @@ class EngieMobileClient:
                             "x-api-key": self._api_key,
                             "locale": "IT",
                             "Accept": "application/json",
-                            "User-Agent": "ha-engie-italia/0.0.1 (read-only research)",
+                            "User-Agent": "ha-engie-italia/0.1.0b1 (read-only)",
                         },
                     )
                     return successful_payload(payload)

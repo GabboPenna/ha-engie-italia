@@ -1,0 +1,12 @@
+{
+  "domain": "engie_italia",
+  "name": "ENGIE Italia",
+  "codeowners": ["@GabboPenna"],
+  "config_flow": true,
+  "documentation": "https://github.com/GabboPenna/ha-engie-italia",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/GabboPenna/ha-engie-italia/issues",
+  "requirements": ["PyJWT==2.13.0"],
+  "version": "0.1.0b1"
+}

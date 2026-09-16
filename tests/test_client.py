@@ -8,17 +8,17 @@ from email.utils import format_datetime
 from unittest.mock import patch
 
 import aiohttp
-from mobile_fixtures import daily, hourly, supplies
-
 from engie_italia.client import API, TOKEN_URL, EngieMobileClient, _retry_seconds
 from engie_italia.errors import (
     AuthenticationError,
     PayloadError,
     RateLimitError,
     ServiceError,
+    TokenPersistenceError,
     TransportError,
 )
 from engie_italia.mobile import parse_mobile_supplies
+from mobile_fixtures import daily, hourly, supplies
 
 
 class Response:
@@ -72,6 +72,36 @@ def client(session, **kwargs):
 
 
 class ClientTests(unittest.IsolatedAsyncioTestCase):
+    async def test_rotated_token_persisted_before_next_read(self):
+        saved = []
+
+        async def persist(tokens):
+            self.assertEqual(len(session.calls), 1)
+            saved.append(tokens)
+
+        session = Session(token(), Response(payload=supplies()))
+        reader = client(session, expires_in=1, token_updated=persist)
+        await reader.async_supplies()
+        self.assertEqual(saved[0].refresh_token, "synthetic-new-refresh")
+
+    async def test_storage_failure_retries_save_without_reusing_old_token(self):
+        attempts = []
+
+        async def persist(tokens):
+            attempts.append(tokens)
+            if len(attempts) == 1:
+                raise OSError("synthetic-private-disk-error")
+
+        session = Session(token(), Response(payload=supplies()))
+        reader = client(session, expires_in=1, token_updated=persist)
+        with self.assertRaises(TokenPersistenceError) as error:
+            await reader.async_supplies()
+        self.assertNotIn("synthetic", str(error.exception))
+        self.assertEqual(len(session.calls), 1)
+        await reader.async_supplies()
+        self.assertEqual(attempts[0], attempts[1])
+        self.assertEqual([call[0] for call in session.calls], ["POST", "GET"])
+
     async def test_supplies_use_only_verified_read_and_headers(self):
         session = Session(Response(payload=supplies()))
         reader = client(session)

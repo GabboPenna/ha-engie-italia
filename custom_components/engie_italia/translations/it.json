@@ -1,0 +1,37 @@
+{
+  "title": "ENGIE Italia",
+  "config": {
+    "step": {
+      "user": {"title": "Accesso API ENGIE", "data": {"api_key": "Chiave API", "client_id": "Client ID OAuth"}},
+      "authorize": {"title": "Autorizzazione ENGIE", "description": "[Accedi a ENGIE]({authorization_url})", "data": {"callback_url": "Indirizzo di ritorno dopo l'accesso"}},
+      "finish": {"title": "Salva autorizzazione"},
+      "reauth_confirm": {"title": "Rinnova autorizzazione ENGIE"}
+    },
+    "error": {
+      "invalid_config": "La configurazione API non e' valida.",
+      "invalid_auth": "Autorizzazione non valida o scaduta. Occorre un nuovo accesso.",
+      "cannot_connect": "ENGIE non e' raggiungibile. Riprova l'accesso piu' tardi.",
+      "storage_error": "Impossibile salvare la sessione. Riprova il salvataggio senza effettuare un nuovo accesso."
+    },
+    "abort": {
+      "already_configured": "Questo account e' gia' configurato.",
+      "wrong_account": "L'account selezionato non corrisponde a quello dell'integrazione.",
+      "authorization_expired": "Il tentativo di autorizzazione e' scaduto.",
+      "reauth_successful": "Autorizzazione rinnovata."
+    }
+  },
+  "options": {"step": {"init": {"title": "Aggiornamenti", "data": {"interval_hours": "Intervallo di aggiornamento (ore)"}}}},
+  "entity": {
+    "sensor": {
+      "supply_status": {"name": "Stato fornitura", "state": {"active": "Attiva", "unknown": "Sconosciuto"}},
+      "data_status": {"name": "Dati di consumo", "state": {"available": "Disponibili", "no_data": "Nessuna misura", "unsupported": "Non supportati in questa beta", "error": "Aggiornamento non riuscito"}},
+      "last_day": {"name": "Consumo ultimo giorno disponibile"},
+      "last_day_date": {"name": "Ultimo giorno di consumo"},
+      "month": {"name": "Consumo ultimo mese disponibile"},
+      "year": {"name": "Consumo ultimo anno disponibile"},
+      "last_data_update": {"name": "Dati aggiornati al"},
+      "last_sync": {"name": "Ultima sincronizzazione riuscita"}
+    },
+    "button": {"refresh": {"name": "Aggiorna dati"}}
+  }
+}
