@@ -89,6 +89,8 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
+- [ ] Logo nella ricerca HACS: immagini locali verificate; in attesa del supporto
+  nel pannello HACS. [Diagnosi e correzioni proposte](HACS.md#logo-assente-nella-ricerca-hacs).
 
 L'importazione storica nella dashboard Energy e' successiva alla corretta
 gestione dei dati: nessuna promessa di tempo reale o di calcolo completo bolletta.

@@ -35,6 +35,27 @@ la stessa: `custom_components/engie_italia`. Conserva la config entry dell'accou
 la sessione risiede nel deposito privato HA, esterno alla cartella del componente.
 Un aggiornamento non richiede intenzionalmente la cancellazione dell'account.
 
+## Logo assente nella ricerca HACS
+
+Con **HACS 2.0.5** la ricerca può mostrare **icon not available** per ENGIE Italia.
+È un limite noto del pannello HACS: legge le icone dal vecchio archivio online
+Home Assistant Brands, mentre questa integrazione include le immagini nella
+cartella locale `custom_components/engie_italia/brand/`, secondo i requisiti attuali.
+
+Verifica del **16 settembre 2026**, con la b9 su HA 2026.9.2: l'API locale di
+Home Assistant restituisce icona e logo, chiari e scuri, con HTTP 200 e contenuto
+identico ai file installati. L'URL usato da HACS restituisce invece il segnaposto
+"icon not available". Il componente è installato correttamente; reinstallarlo
+o essere accettati nel catalogo HACS non cambia l'origine delle immagini.
+
+La correzione della ricerca è proposta in
+[hacs/frontend #945](https://github.com/hacs/frontend/pull/945) insieme a
+[hacs/integration #5388](https://github.com/hacs/integration/pull/5388): alla data
+della verifica sono aperte e non incluse in una release HACS.
+Il repository Home Assistant Brands
+[non accetta nuovi marchi per integrazioni personalizzate](https://github.com/home-assistant/brands/blob/master/.github/workflows/close-new-custom-integrations.yml).
+Il logo locale resta utilizzabile nell'interfaccia nativa di Home Assistant.
+
 ## Comparire nella ricerca di HACS
 
 Un repository personalizzato compare solo nell'HACS di chi lo ha aggiunto.

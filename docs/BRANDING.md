@@ -22,6 +22,10 @@ Home Assistant serve questi file direttamente dall'integrazione, anche senza
 una registrazione nel repository Brands. Riferimento:
 [immagini locali HA](https://developers.home-assistant.io/docs/core/integration/brand_images/).
 
+La ricerca HACS 2.0.5 usa ancora l'archivio online e può mostrare un segnaposto,
+anche quando Home Assistant serve correttamente queste immagini.
+[Diagnosi verificata e correzioni HACS in attesa](HACS.md#logo-assente-nella-ricerca-hacs).
+
 ## Fonti
 
 Scaricate il 16 settembre 2026 dal distributore ufficiale:
