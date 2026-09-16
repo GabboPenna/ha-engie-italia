@@ -1,7 +1,7 @@
 # Repository personalizzato HACS
 
 Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
-La b9 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
+La b10 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
 Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
@@ -9,8 +9,19 @@ con HACS 2.0.5 e Home Assistant 2026.9.2, partendo da una copia manuale della b8
 Dopo il riavvio l'account è rimasto caricato, con le stesse 22 entità e gli stessi
 valori dei consumi. Le fatture hanno mantenuto l'indisponibilità dovuta a 9/9.91.
 La prova non conferma i dati che il servizio non ha restituito.
-HACS riconosce la versione installata e disponibile come `v0.1.0b9`, senza
-aggiornamenti o riavvii pendenti dopo la verifica.
+Nella prova della b9 HACS riconosceva versione installata e disponibile come
+`v0.1.0b9`, senza aggiornamenti o riavvii pendenti.
+
+Anche il successivo aggiornamento **b9 → b10** è stato verificato tramite HACS:
+account caricato, 26 entità, quattro nuovi sensori tariffari disponibili e
+consumi precedenti conservati. I 32 file del componente corrispondono alla
+release; controllo configurazione e riavvio riusciti, nessun errore ENGIE nei
+log. La lettura fatture conserva il limite 9/9.91 già documentato.
+
+Nella verifica HACS 2.0.5 elenca entrambe le beta ma indica ancora b9 come
+versione disponibile: **selezionare esplicitamente v0.1.0b10** nel download.
+Il download della b10 riesce e HACS la riconosce installata dopo il riavvio.
+Questo dettaglio del selettore non impedisce il funzionamento dell'integrazione.
 
 ## Installare la beta
 

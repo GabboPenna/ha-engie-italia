@@ -75,6 +75,8 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] b10: prezzi della componente energia e quote fisse da CTE pubbliche,
   con abbinamento esatto `PUMD#00016`, prima decorrenza e scadenza automatiche.
   [Copertura e limiti](TARIFFS.md).
+- [x] b10 installata tramite HACS su HA 2026.9.2: quattro sensori tariffari
+  disponibili, 26 entità complessive, consumi conservati e nessun errore ENGIE.
 - [ ] Ampliare le versioni verificate; verificare rinnovi e offerte indicizzate.
 - [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 
@@ -89,6 +91,9 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   con passaggio dalla copia manuale e account conservato dopo il riavvio.
 - [x] [Beta pubblica v0.1.0b9](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9)
   pubblicata come pre-release dopo i controlli sul commit della release.
+- [x] [Beta pubblica v0.1.0b10](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b10)
+  con prezzi verificati; 129 test client, 39 test HA e validatori ufficiali
+  superati sul commit `6c54b94` della release.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
