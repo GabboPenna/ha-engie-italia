@@ -81,6 +81,9 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   di 16 versioni di Energia PuntoFisso Mono 12 mesi. Prezzi, quote annue,
   finestre di sottoscrizione e SHA-256 nel [registro delle fonti](TARIFF_SOURCES.md).
 - [ ] Ampliare le versioni verificate; verificare rinnovi e offerte indicizzate.
+- [x] b12: catalogo in `api/data/tariffs.json`, separato dall'abbinamento;
+  validazione offline di codici, importi, unità, date e fonti e controllo
+  del file incluso nel pacchetto distribuito. [Aggiornare il catalogo](TARIFFS.md#catalogo-json-e-aggiornamenti).
 - [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
 
 ## Fase 3: distribuzione
