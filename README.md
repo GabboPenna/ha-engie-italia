@@ -10,7 +10,7 @@
   <p>Forniture, consumi elettrici, prezzi verificati e fatture, dentro Home Assistant.</p>
 
   <p>
-    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b11"><img alt="Stato: beta 0.1.0b11" src="https://img.shields.io/badge/beta-0.1.0b11-f59e0b?style=flat-square"></a>
+    <a href="https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b12"><img alt="Stato: beta 0.1.0b12" src="https://img.shields.io/badge/beta-0.1.0b12-f59e0b?style=flat-square"></a>
     <a href="#installazione"><img alt="Home Assistant 2026.9.0 o successivo" src="https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&amp;logo=homeassistant&amp;logoColor=white"></a>
     <a href="SECURITY.md"><img alt="Accesso in sola lettura" src="https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square"></a>
     <a href="LICENSE"><img alt="Licenza del codice: MIT" src="https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square"></a>
@@ -86,6 +86,10 @@ La b11 include **16 versioni di Energia PuntoFisso Mono 12 mesi**:
 [elenco e prezzi](docs/TARIFFS.md#catalogo-verificato-nella-b11). Rinnovi e prezzi
 indicizzati restano in ricerca. Nessun prezzo viene dedotto dal nome dell'offerta
 o richiesto manualmente. I valori escludono tasse e altri oneri della bolletta.
+
+Dalla b12 le offerte sono raccolte in un [catalogo JSON dedicato](custom_components/engie_italia/api/data/tariffs.json),
+per aggiungere versioni verificate senza modificare la logica di abbinamento.
+[Come aggiornare il catalogo](docs/TARIFFS.md#catalogo-json-e-aggiornamenti).
 
 I totali di consumo sono quelli del provider, non somme dei campioni arrotondati.
 Non è prevista l'importazione nella dashboard Energy o la creazione di falsi

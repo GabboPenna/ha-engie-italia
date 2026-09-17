@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ha-engie-italia"
-version = "0.1.0b11"
+version = "0.1.0b12"
 description = "Read-only ENGIE Italia integration and client for Home Assistant"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -29,6 +29,9 @@ Issues = "https://github.com/GabboPenna/ha-engie-italia/issues"
 [tool.setuptools]
 packages = ["engie_italia"]
 package-dir = {engie_italia = "custom_components/engie_italia/api"}
+
+[tool.setuptools.package-data]
+engie_italia = ["data/*.json"]
 
 [tool.ruff]
 target-version = "py312"

@@ -104,11 +104,62 @@ consumi o fatture; un errore nel recupero delle forniture li rende indisponibili
 Gli identificativi delle entità restano stabili al cambio d'offerta.
 La diagnostica esportata non include codici offerta, date economiche o prezzi.
 
+## Catalogo JSON e aggiornamenti
+
+Dalla b12 i dati risiedono in
+[`api/data/tariffs.json`](../custom_components/engie_italia/api/data/tariffs.json).
+È il catalogo usato dal componente e dal client Python: una voce per ogni
+codice completo, con prezzi luce/gas, quote annue, unità, perdite, PCS, date
+di sottoscrizione, URL e SHA-256 del documento pubblico. Le 16 versioni della
+b11 sono state trasferite senza modificare prezzi o regole di abbinamento.
+
+`schema_version` identifica il formato del file; `offers` contiene le offerte.
+Gli importi vanno scritti come **stringhe decimali con il punto**, per esempio
+`"0.11670"` e `"72.00"`, per conservarne la precisione. Le date usano
+`YYYY-MM-DD`. Non aggiungere campi arbitrari o duplicare codici.
+
+Per aggiungere una versione con condizioni già supportate è sufficiente
+aggiornare il JSON e la documentazione delle fonti. Nuove famiglie, fasce,
+durate o regole contrattuali richiedono anche una verifica della logica:
+inserire un codice nel file non rende supportate condizioni diverse.
+
+Il catalogo è incluso nella release, letto localmente una sola volta e
+aggiornato insieme all'integrazione tramite HACS, con riavvio di Home Assistant.
+Non è un database remoto e non scarica nuove tariffe da Internet.
+Le modifiche manuali nella cartella installata vengono sostituite al prossimo
+aggiornamento: proporle nel repository per distribuirle a tutti.
+
 ## Aggiungere altre versioni
 
 Aprire una issue con il collegamento al documento **pubblico** ENGIE. Verificare
 codice completo, uso domestico, durata, componente energia, perdite, PCS,
-quote fisse, sconti e regole di rinnovo prima di ampliare il catalogo in
-`api/tariffs.py`. La somiglianza del nome o del percorso URL non è una verifica.
+quote fisse, sconti e regole di rinnovo prima di ampliare `api/data/tariffs.json`.
+Aggiornare la tabella sopra e il [registro delle fonti](TARIFF_SOURCES.md).
+La somiglianza del nome o del percorso URL non è una verifica.
 Non allegare contratti personali, fatture, POD/PDR, token o risposte dell'account.
 I test devono usare offerte, prezzi e account interamente sintetici.
+
+Dopo l'installazione dell'ambiente di sviluppo (`pip install -e ".[dev]"`),
+verificare il catalogo incluso:
+
+```sh
+python -m engie_italia.tariff_catalog
+```
+
+Per controllare un file proposto senza installarlo:
+
+```sh
+python -m engie_italia.tariff_catalog percorso/tariffs.json
+```
+
+Il comando termina con errore per JSON malformato, campi mancanti o inattesi,
+codici duplicati, formato non supportato, date incoerenti, prezzi ambigui,
+unità errate o riferimenti incompleti. Controlla la struttura: la correttezza
+dei valori rispetto al PDF richiede sempre la revisione della fonte.
+La CI verifica anche il catalogo contenuto nel pacchetto Python distribuito.
+
+Se il file installato manca o non è valido, il componente registra un errore
+e lascia indisponibili i sensori tariffari; forniture, consumi e fatture
+continuano a funzionare secondo la disponibilità del servizio. Nessun prezzo
+parziale o valore di ripiego viene usato. Riscaricare la release corretta e
+riavviare Home Assistant ripristina il catalogo incluso.

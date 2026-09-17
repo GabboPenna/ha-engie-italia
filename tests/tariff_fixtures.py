@@ -42,3 +42,30 @@ def catalog(api):
             ),
         )
     }
+
+
+def catalog_data():
+    """Invented editable catalogue, with no account or real contract data."""
+    return {
+        "schema_version": 1,
+        "offers": {
+            "SYNTHETIC#00123": {
+                "source_url": "https://example.invalid/synthetic-terms.pdf",
+                "source_sha256": "b" * 64,
+                "offered_from": "2025-01-01",
+                "offered_until": "2025-01-08",
+                "electricity": {
+                    "unit_price": "0.12345",
+                    "annual_fee": "65.00",
+                    "unit": "EUR/kWh",
+                    "network_losses_included": True,
+                },
+                "gas": {
+                    "unit_price": "0.56789",
+                    "annual_fee": "75.00",
+                    "unit": "EUR/Smc",
+                    "reference_pcs_gj_smc": "0.03999",
+                },
+            }
+        },
+    }
