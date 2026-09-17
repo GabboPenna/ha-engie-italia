@@ -1,7 +1,7 @@
 # Repository personalizzato HACS
 
 Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
-La b12 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
+La b13 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
 Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
@@ -75,6 +75,14 @@ correzione occorre aggiornare alla b13 e riaprire la scheda del repository.
 La sola modifica del README sul ramo `main` non aggiorna la scheda della b12.
 Il limite di rendering dei tag è documentato anche in
 [hacs/integration #4440](https://github.com/hacs/integration/issues/4440).
+
+Verifica del **17 settembre 2026**, dopo l'aggiornamento **b12 → b13** tramite
+HACS: tutte le 7 immagini del README (logo, due schermate e quattro badge)
+caricate nella scheda reale, su desktop, mobile e tema scuro, senza tag
+`picture`/`source` visibili. Verificati logo e schermate anche su GitHub.
+I 34 file installati corrispondono alla release; configurazione e riavvio
+riusciti, account caricato, 26 entità conservate e nessun errore ENGIE nei log.
+HACS indica b13 installata e disponibile, senza riavvio pendente.
 
 Per futuri aggiornamenti mantenere URL pubblici completi e verificare la resa
 nel pannello HACS, oltre all'anteprima GitHub. Evitare layout con tabelle HTML

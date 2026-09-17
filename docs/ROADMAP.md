@@ -109,6 +109,11 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   ufficiali superati sul commit `b7e4ec3`. Installazione HACS verificata il
   17 settembre: 34 file corrispondenti, 26 entità conservate, prezzi invariati,
   nessun errore ENGIE e nessun riavvio pendente.
+- [x] [Beta pubblica v0.1.0b13](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b13)
+  con README compatibile con HACS: URL assoluti, schermate in sequenza e
+  rimozione dei tag `picture`/`source`. Controlli CI superati sul commit
+  `b08f487`; installazione HACS e caricamento delle sette immagini verificati
+  su desktop, mobile e tema scuro, con 26 entità conservate.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
