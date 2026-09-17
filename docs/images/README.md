@@ -13,8 +13,10 @@ dell'indirizzo finale è vuoto; le immagini non includono dati dell'account,
 credenziali, codici di accesso o dettagli della casa. I PNG sono stati
 riesportati senza metadati.
 
-Il README seleziona automaticamente la vista desktop chiara o scura in base
-al tema del lettore. Se cambia il flusso di configurazione, aggiornare immagini
-e versione indicata insieme.
+Il README mostra la vista chiara e collega separatamente quella scura.
+Usa URL assoluti alle immagini pubbliche e non usa `<picture>`/`<source>`,
+che HACS 2.0.5 visualizza come testo. Le schermate sono disposte in sequenza
+per adattarsi anche ai pannelli stretti. Se cambia il flusso di configurazione,
+aggiornare immagini e versione indicata insieme.
 
 Per i marchi e i loghi valgono le [note di attribuzione](../BRANDING.md).

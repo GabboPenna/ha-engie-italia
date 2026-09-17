@@ -46,9 +46,9 @@ Occorrono HACS già configurato e Home Assistant 2026.9.0 o successivo.
 2. Inserisci `https://github.com/GabboPenna/ha-engie-italia`, scegli la categoria
    **Integrazione** e aggiungi il repository.
 3. Apri **ENGIE Italia** e abilita la visualizzazione delle versioni beta del
-   repository. Scegli **v0.1.0b12** nel selettore della versione e scaricala.
+   repository. Scegli **v0.1.0b13** nel selettore della versione e scaricala.
    Se è già installata, usa **Riscarica / Redownload**. Controlla le
-   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b12):
+   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b13):
    consumi gas e lettura di fatture reali restano da confermare; i
    [prezzi della componente energia](TARIFFS.md) supportano solo le versioni verificate.
 4. Riavvia Home Assistant e segui la [guida al collegamento](SETUP.md).
@@ -61,6 +61,24 @@ Per passare da una copia manuale a HACS, la cartella del componente deve essere
 la stessa: `custom_components/engie_italia`. Conserva la config entry dell'account;
 la sessione risiede nel deposito privato HA, esterno alla cartella del componente.
 Un aggiornamento non richiede intenzionalmente la cancellazione dell'account.
+
+## Immagini nel README della scheda HACS
+
+La b13 corregge logo e schermate nella pagina del repository. Il README usa
+URL assoluti per immagini e documentazione, senza i tag `<picture>`/`<source>`
+che HACS 2.0.5 mostra come testo. Le schermate sono disposte in sequenza per
+adattarsi anche a un pannello stretto; la vista scura resta accessibile tramite
+un collegamento separato.
+
+HACS 2.0.5 legge il README della **versione installata**: per ricevere questa
+correzione occorre aggiornare alla b13 e riaprire la scheda del repository.
+La sola modifica del README sul ramo `main` non aggiorna la scheda della b12.
+Il limite di rendering dei tag è documentato anche in
+[hacs/integration #4440](https://github.com/hacs/integration/issues/4440).
+
+Per futuri aggiornamenti mantenere URL pubblici completi e verificare la resa
+nel pannello HACS, oltre all'anteprima GitHub. Evitare layout con tabelle HTML
+per affiancare screenshot: possono richiedere troppo spazio sui telefoni.
 
 ## Logo assente nella ricerca HACS
 
