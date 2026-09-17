@@ -1,7 +1,7 @@
 # Repository personalizzato HACS
 
 Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
-La b11 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
+La b12 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
 I controlli automatici di struttura non confermano il funzionamento delle API
 ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
 Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
@@ -29,6 +29,14 @@ e nessun errore ENGIE nei log. I 32 file installati corrispondono alla release;
 controllo configurazione e riavvio riusciti. Le 15 versioni aggiuntive sono
 verificate sui documenti pubblici; la prova live usa la versione già supportata.
 Anche per b11 è stata necessaria la selezione esplicita della versione nel download.
+
+Il successivo passaggio **b11 → b12**, verificato nella stessa giornata, conserva
+le 26 entità e i quattro valori tariffari, ora letti dal catalogo JSON incluso.
+I 34 file installati corrispondono alla release; controllo configurazione,
+riavvio e caricamento dell'account riusciti, nessun errore ENGIE nei log.
+L'unico stato precedente cambiato è la data dell'ultima sincronizzazione luce.
+HACS riconosce **v0.1.0b12** sia come installata sia come disponibile, senza
+riavvio pendente. Le fatture mantengono l'indisponibilità già documentata.
 
 ## Installare la beta
 

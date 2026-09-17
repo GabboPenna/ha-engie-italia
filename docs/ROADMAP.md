@@ -104,6 +104,11 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   con catalogo ampliato a 16 versioni; stessi 168 test e validatori ufficiali
   superati sul commit `fb4997f`. Installazione HACS verificata il 17 settembre,
   con 26 entità conservate e prezzi precedenti invariati.
+- [x] [Beta pubblica v0.1.0b12](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b12)
+  con catalogo JSON: 139 test client, 39 test HA, verifica del wheel e validatori
+  ufficiali superati sul commit `b7e4ec3`. Installazione HACS verificata il
+  17 settembre: 34 file corrispondenti, 26 entità conservate, prezzi invariati,
+  nessun errore ENGIE e nessun riavvio pendente.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
