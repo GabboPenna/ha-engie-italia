@@ -860,7 +860,9 @@ class MetadataTests(unittest.TestCase):
             source["config"]["step"].keys(), italian["config"]["step"].keys()
         )
         self.assertNotIn("file_upload", manifest.get("dependencies", []))
-        self.assertFalse(any("pyaxmlparser" in r for r in manifest["requirements"]))
+        requirements = manifest.get("requirements", [])
+        self.assertFalse(any("pyaxmlparser" in r for r in requirements))
+        self.assertFalse(any(r.lower().startswith("pyjwt") for r in requirements))
         for language in (source, italian):
             for reason in AuthorizationFailure:
                 self.assertIn(reason.value, language["config"]["error"])

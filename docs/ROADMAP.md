@@ -114,6 +114,9 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   rimozione dei tag `picture`/`source`. Controlli CI superati sul commit
   `b08f487`; installazione HACS e caricamento delle sette immagini verificati
   su desktop, mobile e tema scuro, con 26 entità conservate.
+- [x] [Beta pubblica v0.1.0b14](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b14)
+  per Home Assistant 2026.10: rimosso il vincolo PyJWT duplicato dal manifest,
+  evitando il conflitto con la versione gestita direttamente da Home Assistant.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.

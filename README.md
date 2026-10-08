@@ -4,7 +4,7 @@
 
 Forniture, consumi elettrici, prezzi verificati e fatture, dentro Home Assistant.
 
-[![Stato: beta 0.1.0b13](https://img.shields.io/badge/beta-0.1.0b13-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b13)
+[![Stato: beta 0.1.0b14](https://img.shields.io/badge/beta-0.1.0b14-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b14)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#installazione)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
