@@ -4,7 +4,7 @@
 
 Forniture, consumi luce e gas, prezzi verificati e fatture, dentro Home Assistant.
 
-[![Stato: beta 0.1.0b15](https://img.shields.io/badge/beta-0.1.0b15-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b15)
+[![Stato: beta 0.1.0b16](https://img.shields.io/badge/beta-0.1.0b16-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#installazione)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
@@ -42,7 +42,7 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 | Funzione | Disponibile nella beta |
 | :--- | :--- |
 | **Forniture** | Rilevamento automatico, un dispositivo per fornitura, stato e disponibilità dei dati. |
-| **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità e data dell'ultimo dato ENGIE. |
+| **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità, data dell'ultimo dato e storico giornaliero a lungo termine. |
 | **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato ENGIE. |
 | **Fatture · sperimentale** | Ultima fattura, importo, fatture aperte, residuo da pagare e scadenze sul dispositivo Account. [Sensori e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md). |
 | **Prezzi · sperimentale** | Componente energia in €/kWh e €/Smc e quota fissa annua, per le versioni di offerta verificate. [Copertura e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md). |
@@ -70,10 +70,13 @@ Dalla b12 le offerte sono raccolte in un [catalogo JSON dedicato](https://github
 per aggiungere versioni verificate senza modificare la logica di abbinamento.
 [Come aggiornare il catalogo](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md#catalogo-json-e-aggiornamenti).
 
-I totali di consumo sono quelli del provider, non somme dei campioni arrotondati.
-Non è prevista l'importazione nella dashboard Energy o la creazione di falsi
-contatori cumulativi. I misuratori locali e le altre integrazioni energetiche
-restano intatti.
+I totali mensili e annuali restano quelli del provider, non somme dei campioni
+arrotondati. Dalla b16 i soli campioni elettrici giornalieri alimentano la
+statistica **ENGIE Luce - Consumo giornaliero**, disponibile nei grafici
+statistici e come sorgente differita nella dashboard Energia. Il sensore
+**Consumo ultimo giorno disponibile** conserva inoltre il proprio grafico per
+gli aggiornamenti successivi. I misuratori locali e le altre integrazioni
+energetiche restano fonti distinte e non vengono modificati.
 
 ### Fatture e automazioni
 

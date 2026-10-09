@@ -22,6 +22,7 @@ from .api.mobile import ElectricityReadings, GasReadings, MobileSupply
 from .api.models import Utility
 from .api.portal import SupplyStatus
 from .const import CONF_INTERVAL, DEFAULT_INTERVAL_HOURS, DOMAIN
+from .statistics import async_import_electricity_statistics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,6 +159,16 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
                         else "no_data"
                     )
                     result[key] = SupplyData(supply, readings, status)
+                    if supply.utility is Utility.ELECTRICITY:
+                        try:
+                            await async_import_electricity_statistics(
+                                self.hass, key, readings
+                            )
+                        except Exception:
+                            # Recorder history is optional and must not hide live data.
+                            _LOGGER.exception(
+                                "Unable to import ENGIE electricity statistics"
+                            )
                 except (AuthenticationError, TokenPersistenceError):
                     raise
                 except (EngieError, ValueError):

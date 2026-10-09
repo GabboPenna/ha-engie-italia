@@ -14,6 +14,7 @@ from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -38,6 +39,7 @@ from custom_components.engie_italia.api.invoices import (  # noqa: E402
     parse_invoices,
 )
 from custom_components.engie_italia.api.mobile import (  # noqa: E402
+    ROME,
     parse_daily_electricity,
     parse_mobile_supplies,
     parse_monthly_gas,
@@ -401,7 +403,8 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         sensor = self.sensor("last_day")
         self.assertEqual(float(sensor.native_value), 1.25)
         self.assertTrue(sensor.available)
-        self.assertIsNone(sensor.state_class)
+        self.assertIs(sensor.state_class, SensorStateClass.TOTAL)
+        self.assertEqual(sensor.last_reset, datetime(2025, 3, 10, tzinfo=ROME))
         self.assertEqual(
             sensor.extra_state_attributes["period_start"][:10], "2025-03-10"
         )

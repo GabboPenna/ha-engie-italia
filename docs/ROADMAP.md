@@ -120,11 +120,15 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] [Beta pubblica v0.1.0b15](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b15)
   con consumi gas mensili e annuali, qualita', data ultimo dato e
   sincronizzazione; schema verificato su una risposta reale.
+- [x] [Beta pubblica v0.1.0b16](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16)
+  con backfill delle letture elettriche giornaliere, statistiche a lungo termine
+  e grafico del sensore ultimo giorno.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
 - [ ] Logo nella ricerca HACS: immagini locali verificate; in attesa del supporto
   nel pannello HACS. [Diagnosi e correzioni proposte](HACS.md#logo-assente-nella-ricerca-hacs).
 
-L'importazione storica nella dashboard Energy e' successiva alla corretta
-gestione dei dati: nessuna promessa di tempo reale o di calcolo completo bolletta.
+Lo storico elettrico giornaliero e' importato dalla b16 con periodi e timezone
+espliciti. Resta una fonte differita: nessuna promessa di tempo reale o di
+calcolo completo della bolletta.

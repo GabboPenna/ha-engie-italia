@@ -73,9 +73,13 @@ La diagnostica HA usa solo metadati approvati. Non includere payload
 grezzi, identificativi, nomi, indirizzi o dati delle bollette nei log.
 Il riepilogo attuale e' una allowlist per i modelli, non un filtro universale.
 
-Per Energy non si usera' un totale mensile come se fosse un contatore cumulativo.
-Importazione di statistiche storiche, timezone, rettifiche e doppio conteggio
-con misuratori locali saranno verificati prima di attivare quella funzione.
+Lo storico elettrico usa esclusivamente i campioni giornalieri datati, mai il
+totale mensile come se fosse un contatore. Le statistiche esterne mantengono una
+somma progressiva in kWh, conservano punti omessi da risposte parziali e
+ricalcolano il tratto disponibile quando ENGIE rettifica un valore. Il sensore
+ultimo giorno usa un ciclo coerente con il suo periodo e produce il proprio
+grafico per gli aggiornamenti successivi. Un eventuale misuratore locale resta
+una fonte distinta e non deve essere sommato allo storico ENGIE.
 
 Riferimenti:
 - [Coordinamento dati HA](https://developers.home-assistant.io/docs/integration_fetching_data/)

@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import EntityCategory, UnitOfEnergy
 from homeassistant.core import callback
@@ -39,6 +40,7 @@ ELECTRICITY = (
         translation_key="last_day",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="last_day_date",
@@ -354,6 +356,16 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
         if period is None:
             return None
         return period.start.date() if key == "last_day_date" else period.value
+
+    @property
+    def last_reset(self):
+        if self.entity_description.key != "last_day":
+            return None
+        data = self.supply_data
+        if data is None or data.status == "error":
+            return None
+        period = self._period()
+        return period.start if period is not None else None
 
     @property
     def extra_state_attributes(self):
