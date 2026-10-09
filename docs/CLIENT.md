@@ -7,7 +7,8 @@ Non configurare trace HTTP che esportino header, URL completi o payload.
 
 ## Operazioni disponibili
 
-- `async_supplies()`: forniture luce/gas senza anagrafica e dati di pagamento.
+- `async_supplies()`: forniture luce/gas e metadati contrattuali selezionati,
+  senza anagrafica, coordinate bancarie o indirizzi.
 - `async_invoices()`: riepilogo fatture dei contratti dell'account, sperimentale;
   restituisce `InvoiceSnapshot` con documenti normalizzati e data di lettura.
 - `async_commissioning_date(supply)`: data di disponibilita' del servizio elettrico.
@@ -100,8 +101,9 @@ autunnale viene rifiutata come ambigua, non attribuita arbitrariamente a un fuso
 Un'ora inesistente viene rifiutata. Serie sparse rimangono sparse; duplicati,
 periodi incoerenti e valori non finiti/negativi sono errori.
 
-Nessuna importazione automatica nella dashboard Energy in questa fase:
-rettifiche, arrotondamenti e doppio conteggio con misure locali vanno gestiti prima.
+Dalla b16 i campioni elettrici giornalieri alimentano una statistica esterna
+rettificabile. Resta separata dai totali mensili/annuali e non va sommata a un
+misuratore locale della stessa fornitura nella dashboard Energy.
 
 ### Cache e rettifiche della situazione corrente
 
@@ -117,8 +119,8 @@ la combinazione POD, contratto e data di attivazione. Un cambio di contratto
 o attivazione invalida la cache; le forniture rimosse vengono eliminate dalla
 cache. Gli identificativi dei sensori restano legati al punto di fornitura.
 
-Questa politica copre i riepiloghi correnti. L'eventuale importazione e
-rettifica retroattiva delle statistiche Energy resta un lavoro separato.
+Questa politica copre i riepiloghi correnti; le statistiche giornaliere esterne
+ricalcolano invece il tratto disponibile quando ENGIE corregge un campione.
 
 `InvoiceSnapshot` usa il numero fiscale per distinguere i documenti; conserva
 solo importo, residuo, emissione, scadenza e stato di pagamento. Importi in EUR

@@ -40,6 +40,8 @@ from custom_components.engie_italia.api.invoices import (  # noqa: E402
 )
 from custom_components.engie_italia.api.mobile import (  # noqa: E402
     ROME,
+    AccountMetadata,
+    ServiceStatus,
     parse_daily_electricity,
     parse_mobile_supplies,
     parse_monthly_gas,
@@ -55,13 +57,21 @@ from custom_components.engie_italia.diagnostics import (  # noqa: E402
     async_get_config_entry_diagnostics,
 )
 from custom_components.engie_italia.sensor import (  # noqa: E402
+    ACCOUNT as ACCOUNT_SENSORS,
+)
+from custom_components.engie_italia.sensor import (
     COMMON,
     ELECTRICITY,
+    ELECTRICITY_DETAILS,
     GAS,
+    GAS_DETAILS,
     INVOICES,
+    SUPPLY_DETAILS,
     TARIFFS,
+    EngieAccountSensor,
     EngieInvoiceSensor,
     EngieSensor,
+    EngieSupplyDetailSensor,
     EngieTariffSensor,
 )
 from custom_components.engie_italia.sensor import (
@@ -118,6 +128,11 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.client.async_invoices = AsyncMock(
             return_value=InvoiceSnapshot((), datetime(2025, 3, 11, tzinfo=UTC))
         )
+        self.client.account_metadata = AccountMetadata(
+            date(2025, 4, 15),
+            ServiceStatus.ACTIVE,
+            ServiceStatus.ACTIVE,
+        )
         self.client.lower_bound = EngieMobileClient.lower_bound
         self.client.gas_lower_bound = EngieMobileClient.gas_lower_bound
         self.coordinator = EngieCoordinator(self.hass, self.entry, self.client)
@@ -159,6 +174,26 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     def invoice_sensor(self, key):
         description = next(d for d in INVOICES if d.key == key)
         return EngieInvoiceSensor(self.coordinator, self.entry, description)
+
+    def account_sensor(self, key):
+        description = next(d for d in ACCOUNT_SENSORS if d.key == key)
+        return EngieAccountSensor(self.coordinator, self.entry, description)
+
+    def detail_sensor(self, key, supply=None):
+        supply = self.power if supply is None else supply
+        descriptions = SUPPLY_DETAILS + (
+            ELECTRICITY_DETAILS
+            if supply.utility.value == "electricity"
+            else GAS_DETAILS
+        )
+        description = next(d for d in descriptions if d.key == key)
+        return EngieSupplyDetailSensor(
+            self.coordinator,
+            self.entry,
+            supply_key(supply),
+            supply.utility,
+            description,
+        )
 
     def tariff_sensor(self, supply, key="energy_unit_price"):
         description = next(d for d in TARIFFS if d.key == key)
@@ -420,6 +455,34 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             date(2025, 3, 20),
         )
 
+    async def test_account_and_contract_metadata_do_not_depend_on_invoices(self):
+        self.client.async_invoices.side_effect = ServiceError(200, 9, Decimal("9.91"))
+        await self.refresh()
+        self.assertEqual(
+            self.account_sensor("next_bill_date").native_value,
+            date(2025, 4, 15),
+        )
+        self.assertEqual(self.account_sensor("direct_debit").native_value, "active")
+        self.assertEqual(self.account_sensor("digital_bill").native_value, "active")
+        self.assertEqual(
+            self.detail_sensor("contracted_power").native_value, Decimal("3")
+        )
+        self.assertEqual(
+            self.detail_sensor("available_power").native_value, Decimal("3.3")
+        )
+        deadline = self.detail_sensor("self_reading_deadline", self.gas)
+        self.assertEqual(deadline.native_value, date(2025, 4, 20))
+        self.assertEqual(
+            deadline.extra_state_attributes, {"window_start": "2025-04-10"}
+        )
+        self.assertTrue(deadline.available)
+        self.assertFalse(self.detail_sensor("economic_terms_end").available)
+        diagnostics = json.dumps(
+            await async_get_config_entry_diagnostics(self.hass, self.entry)
+        )
+        for private_value in ("2025-04-15", "2025-04-10", "2025-04-20", "3.3"):
+            self.assertNotIn(private_value, diagnostics)
+
     async def test_per_supply_failure_does_not_hide_gas_or_report_old_value_as_live(
         self,
     ):
@@ -584,7 +647,14 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
         self.assertEqual(
-            len(add.call_args.args[0]), 14 + len(INVOICES) + 2 * len(TARIFFS)
+            len(add.call_args.args[0]),
+            14
+            + len(ACCOUNT_SENSORS)
+            + len(INVOICES)
+            + 2 * len(SUPPLY_DETAILS)
+            + len(ELECTRICITY_DETAILS)
+            + len(GAS_DETAILS)
+            + 2 * len(TARIFFS),
         )
         self.coordinator.async_update_listeners()
         self.assertEqual(add.call_count, 1)
@@ -592,7 +662,10 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.client.async_supplies.return_value = (self.power, self.gas, other)
         await self.refresh()
         self.coordinator.async_update_listeners()
-        self.assertEqual(len(add.call_args.args[0]), 8 + len(TARIFFS))
+        self.assertEqual(
+            len(add.call_args.args[0]),
+            8 + len(SUPPLY_DETAILS) + len(ELECTRICITY_DETAILS) + len(TARIFFS),
+        )
 
     async def test_private_atomic_storage_reload_and_remove(self):
         data = credentials(

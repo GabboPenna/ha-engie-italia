@@ -69,6 +69,13 @@ il riepilogo fatture separato dai consumi, senza pubblicare importi vecchi o
 somme parziali dopo un errore. Valori correnti in EUR e conteggi non hanno
 `state_class` cumulativa. Non ci sono notifiche o automazioni incorporate.
 
+Il riepilogo contrattuale alimenta separatamente prossima bolletta, stato di
+addebito e bolletta digitale. Questi dati non dipendono dall'endpoint fatture.
+Potenze, fine condizioni economiche e finestra di autolettura appartengono al
+dispositivo fornitura; valori opzionali malformati vengono ignorati senza
+rendere indisponibili consumi e autenticazione. IBAN, email e letture grezze non
+entrano nei modelli.
+
 La diagnostica HA usa solo metadati approvati. Non includere payload
 grezzi, identificativi, nomi, indirizzi o dati delle bollette nei log.
 Il riepilogo attuale e' una allowlist per i modelli, non un filtro universale.

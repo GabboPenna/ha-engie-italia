@@ -64,14 +64,24 @@ def supplies():
             {
                 "id": "synthetic-crm-id-not-the-contract-code",
                 "codContr": "synthetic-contract",
-                "sdd": {"iban": "synthetic-private-bank-data"},
+                "dataProxBol": ["2025-04-15"],
+                "sdd": {
+                    "stato": "y",
+                    "attesaDoc": "n",
+                    "iban": "synthetic-private-bank-data",
+                },
+                "bol": {"statoBOL": "y", "email": "private@example.invalid"},
                 "forniture": [
                     {
                         "id": "synthetic-power",
                         "commodity": "Luce",
                         "attiva": "y",
                         "dataAttivazione": "2025-03-01",
-                        "punto": {"pod": "synthetic-pod"},
+                        "punto": {
+                            "pod": "synthetic-pod",
+                            "potenzaImpegnata": 3,
+                            "potenzaConsumo": 3.3,
+                        },
                     },
                     {
                         "id": "synthetic-gas",
@@ -79,6 +89,11 @@ def supplies():
                         "attiva": "y",
                         "dataAttivazione": "2025-03-01",
                         "punto": {"pdr": "synthetic-pdr"},
+                        "autolettura": {
+                            "inizioFinestra": "2025-04-10",
+                            "fineFinestra": "2025-04-20",
+                            "ultimaLetturaValidata": "1000",
+                        },
                     },
                 ],
             }

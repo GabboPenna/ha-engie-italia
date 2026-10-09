@@ -6,8 +6,8 @@ Gli aggiornamenti seguono l'intervallo dell'integrazione, 6 ore per impostazione
 predefinita, e il pulsante **Aggiorna dati**.
 
 **Funzione sperimentale:** endpoint, parametri, campi e stati sono stati verificati
-nel codice dell'app ENGIE 10.1.0 e coperti con dati sintetici. Nella prova del
-16 settembre 2026 il servizio ha restituito HTTP 200, `code: OK`, nessuna fattura
+nel codice dell'app ENGIE 10.1.0 e coperti con dati sintetici. Nelle prove del
+16 settembre e 9 ottobre 2026 il servizio ha restituito HTTP 200, `code: OK`, nessuna fattura
 e codici ENGIE `9` / `9.91`. Il significato preciso di `9.91` non è confermato:
 questa risposta non dimostra l'assenza di fatture o debiti. Una risposta con
 fatture reali resta da verificare; in presenza di questo codice i sensori dei
@@ -31,6 +31,14 @@ Assistant. La chiave è il suffisso stabile dell'identificativo interno.
 | Scadenza ultima fattura | `latest_invoice_due_date` | Scadenza dell'ultima fattura, anche se già pagata. |
 | Prima scadenza aperta | `earliest_invoice_due_date` | Prima scadenza fra le fatture aperte; può essere già trascorsa. |
 | Ultima sincronizzazione fatture | `invoices_last_sync` | Ultima lettura delle fatture completata senza errori; categoria diagnostica. |
+| Prossima bolletta prevista | `next_bill_date` | Prima data comunicata nel riepilogo contrattuale, indipendente dalla cronologia documenti. |
+| Addebito diretto | `direct_debit` | Stato aggregato del servizio sui contratti dell'account. |
+| Bolletta digitale | `digital_bill` | Stato aggregato del servizio sui contratti dell'account. |
+
+Gli ultimi tre sensori provengono dal riepilogo contrattuale e restano disponibili
+anche quando l'endpoint della cronologia fatture restituisce un errore. Se piu'
+contratti hanno stati diversi viene mostrato `mixed`; dati mancanti o non
+riconosciuti restano `unknown`. Non vengono conservati IBAN, email o anagrafica.
 
 ## Come vengono calcolati i valori
 

@@ -18,7 +18,7 @@ from .api.errors import (
     TokenPersistenceError,
 )
 from .api.invoices import InvoiceSnapshot
-from .api.mobile import ElectricityReadings, GasReadings, MobileSupply
+from .api.mobile import AccountMetadata, ElectricityReadings, GasReadings, MobileSupply
 from .api.models import Utility
 from .api.portal import SupplyStatus
 from .const import CONF_INTERVAL, DEFAULT_INTERVAL_HOURS, DOMAIN
@@ -64,6 +64,7 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
         self._commissioning_checked = {}
         self.last_success: datetime | None = None
         self.billing = BillingData()
+        self.account = AccountMetadata()
 
     async def _async_update_billing(self, today):
         try:
@@ -87,6 +88,7 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
     async def _async_update_data(self):
         try:
             supplies = await self.client.async_supplies()
+            self.account = self.client.account_metadata
             today = dt_util.now().date()
             cache_keys = {
                 (s.point_id, s.contract_id, s.activation_date) for s in supplies

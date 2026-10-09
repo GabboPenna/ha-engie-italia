@@ -284,6 +284,24 @@ Ulteriori letture dell'app, verificate staticamente e provate in sola lettura:
 
 Queste tre letture sono ricerca e non sono state aggiunte al client installato.
 
+### Metadati contrattuali verificati il 9 ottobre 2026
+
+Un nuovo audit redatto di `GET contracts/v2/user` ha confermato campi valorizzati
+e stabili senza effettuare operazioni di scrittura:
+
+- `dataProxBol`, con una data futura per la prossima bolletta prevista;
+- `sdd.stato` e `bol.statoBOL`, per addebito diretto e bolletta digitale;
+- `punto.potenzaImpegnata` e `punto.potenzaConsumo` sulla fornitura elettrica;
+- `inizioCE`/`fineCE` per il periodo delle condizioni economiche;
+- `autolettura.inizioFinestra`/`fineFinestra` sulla fornitura gas.
+
+La b17 normalizza solo questi dati selezionati. IBAN, email, anagrafica,
+indirizzi, matricole e letture grezze non entrano nei modelli o nella diagnostica.
+Nello stesso audit `contracts/v2/invoices` e `contracts/v2/invoicesCosts` hanno
+continuato a restituire lista vuota e codici `9`/`9.91`: i sensori degli importi
+restano quindi correttamente indisponibili. `user/v4/dashboard` contiene quasi
+esclusivamente anagrafica e preferenze personali e non viene integrato.
+
 ## Verifiche ancora necessarie
 
 ### Primo collegamento senza configurazione preesistente

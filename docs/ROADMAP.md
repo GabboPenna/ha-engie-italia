@@ -63,7 +63,7 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   isolati e cache commissioning invalidata al cambio contratto/attivazione.
 - [x] Rettifiche dei riepiloghi correnti sostituiscono la lettura precedente,
   anche a parità di data e con importi/consumi in diminuzione; test sintetici.
-- [ ] Importazione storica con gestione delle rettifiche.
+- [x] b16: importazione storica giornaliera con gestione delle rettifiche.
 - [x] Config flow/reauth e coordinatore condiviso per account.
 - [x] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
 - [x] Endpoint fatture, parametri e DTO verificati staticamente nell'app.
@@ -71,6 +71,8 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
   deduplicazione, pagamenti parziali e indisponibilità coperti da test sintetici.
 - [ ] Confermare una risposta con fatture reali: prova attuale vuota con
   codici ENGIE 9/9.91 nonostante `OK`; nessuna conferma di zero da pagare.
+- [x] b17: prossima bolletta, servizi di pagamento/digitali, potenze, fine
+  condizioni economiche e finestra di autolettura da risposta reale verificata.
 - [ ] Eventuali ulteriori letture aggiunte solo dopo verifica dei dati disponibili.
 - [x] b10: prezzi della componente energia e quote fisse da CTE pubbliche,
   con abbinamento esatto `PUMD#00016`, prima decorrenza e scadenza automatiche.
@@ -123,6 +125,8 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] [Beta pubblica v0.1.0b16](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16)
   con backfill delle letture elettriche giornaliere, statistiche a lungo termine
   e grafico del sensore ultimo giorno.
+- [x] [Beta pubblica v0.1.0b17](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17)
+  con metadati contrattuali e servizi account verificati su risposta reale.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.

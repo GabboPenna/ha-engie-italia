@@ -4,7 +4,7 @@
 
 Forniture, consumi luce e gas, prezzi verificati e fatture, dentro Home Assistant.
 
-[![Stato: beta 0.1.0b16](https://img.shields.io/badge/beta-0.1.0b16-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16)
+[![Stato: beta 0.1.0b17](https://img.shields.io/badge/beta-0.1.0b17-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#installazione)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
@@ -45,6 +45,7 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 | **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità, data dell'ultimo dato e storico giornaliero a lungo termine. |
 | **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato ENGIE. |
 | **Fatture · sperimentale** | Ultima fattura, importo, fatture aperte, residuo da pagare e scadenze sul dispositivo Account. [Sensori e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md). |
+| **Contratto e servizi** | Prossima bolletta prevista, addebito diretto, bolletta digitale, scadenza delle condizioni economiche, potenze elettriche e finestra di autolettura gas. |
 | **Prezzi · sperimentale** | Componente energia in €/kWh e €/Smc e quota fissa annua, per le versioni di offerta verificate. [Copertura e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md). |
 | **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo da 1 a 24 ore, pulsante manuale e data dell'ultima sincronizzazione. |
 | **Accesso** | Login e OTP sul sito ENGIE, rinnovo della sessione e riautenticazione quando richiesta. |
@@ -53,8 +54,8 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 
 > [!IMPORTANT]
 > **I consumi gas sono riepiloghi mensili differiti, disponibili solo quando
-> ENGIE li pubblica per la fornitura.** Download PDF, pagamenti e autoletture
-> non sono implementati. I dati non rappresentano misure in tempo reale.
+> ENGIE li pubblica per la fornitura.** Download PDF, pagamenti e invio di
+> autoletture non sono implementati. I dati non rappresentano misure in tempo reale.
 
 La b15 aggiunge i consumi gas dopo la verifica di una risposta reale completa:
 mesi, totale annuale, qualità e data di aggiornamento restano distinti. Un
@@ -90,9 +91,14 @@ Il cambiamento di **Ultima fattura** può essere usato nelle proprie automazioni
 insieme a **Fatture disponibili**. L'integrazione espone i sensori; notifiche e
 automazioni restano una scelta dell'utente. [Significato e uso dei sensori](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md).
 
+La b17 aggiunge tre dati che restano utili anche quando la cronologia fatture
+non e' ancora pubblicata: **Prossima bolletta prevista**, **Addebito diretto** e
+**Bolletta digitale**. Sui dispositivi fornitura espone inoltre potenza impegnata
+e disponibile, scadenza delle condizioni economiche e termine dell'autolettura gas.
+
 > [!NOTE]
 > **La lettura di una fattura reale resta da confermare.** Schema e chiamata sono
-> verificati nell'app; l'account di prova restituisce una lista vuota con codice
+> verificati nell'app; la verifica reale piu' recente restituisce una lista vuota con codice
 > ENGIE `9.91`, nonostante `OK`. In questo caso gli importi risultano indisponibili:
 > la risposta non viene interpretata come conferma di zero da pagare.
 

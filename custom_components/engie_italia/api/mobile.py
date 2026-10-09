@@ -93,6 +93,10 @@ class MobileSupply:
     status: SupplyStatus
     activation_date: date | None = field(repr=False)
     offer: SupplyOffer | None = field(default=None, repr=False)
+    contracted_power: Decimal | None = field(default=None, repr=False)
+    available_power: Decimal | None = field(default=None, repr=False)
+    self_reading_window_start: date | None = field(default=None, repr=False)
+    self_reading_window_end: date | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         for value in (self.supply_id, self.contract_id, self.point_id):
@@ -103,6 +107,82 @@ class MobileSupply:
             raise PayloadError("Normalized utility and status are required")
         if self.activation_date is not None and type(self.activation_date) is not date:
             raise PayloadError("A calendar activation date is required")
+
+
+class ServiceStatus(StrEnum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    MIXED = "mixed"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True, slots=True)
+class AccountMetadata:
+    next_bill_date: date | None = None
+    direct_debit: ServiceStatus = ServiceStatus.UNKNOWN
+    digital_bill: ServiceStatus = ServiceStatus.UNKNOWN
+
+
+def _optional_decimal(value: object) -> Decimal | None:
+    try:
+        return consumption_value(value)
+    except ValueError:
+        return None
+
+
+def _optional_date(value: object) -> date | None:
+    try:
+        return iso_date(value)
+    except PayloadError:
+        return None
+
+
+def _service_status(value: object) -> ServiceStatus:
+    return {
+        "y": ServiceStatus.ACTIVE,
+        "n": ServiceStatus.INACTIVE,
+    }.get(value, ServiceStatus.UNKNOWN)
+
+
+def _aggregate_status(values: list[ServiceStatus]) -> ServiceStatus:
+    if not values or ServiceStatus.UNKNOWN in values:
+        return ServiceStatus.UNKNOWN
+    unique = set(values)
+    return next(iter(unique)) if len(unique) == 1 else ServiceStatus.MIXED
+
+
+def parse_account_metadata(payload: object) -> AccountMetadata:
+    """Normalize optional contract services without retaining account details."""
+    data = successful_payload(payload)
+    next_bills = []
+    direct_debit = []
+    digital_bill = []
+    for raw_contract in list_value(data.get("listaContratti")):
+        contract = object_value(raw_contract)
+        raw_dates = contract.get("dataProxBol")
+        if isinstance(raw_dates, list):
+            next_bills.extend(
+                parsed
+                for value in raw_dates
+                if (parsed := _optional_date(value)) is not None
+            )
+        sdd = contract.get("sdd")
+        bol = contract.get("bol")
+        direct_debit.append(
+            _service_status(sdd.get("stato"))
+            if isinstance(sdd, dict)
+            else ServiceStatus.UNKNOWN
+        )
+        digital_bill.append(
+            _service_status(bol.get("statoBOL"))
+            if isinstance(bol, dict)
+            else ServiceStatus.UNKNOWN
+        )
+    return AccountMetadata(
+        min(next_bills) if next_bills else None,
+        _aggregate_status(direct_debit),
+        _aggregate_status(digital_bill),
+    )
 
 
 def parse_mobile_supplies(payload: object) -> tuple[MobileSupply, ...]:
@@ -126,6 +206,12 @@ def parse_mobile_supplies(payload: object) -> tuple[MobileSupply, ...]:
                 raise PayloadError("Unrecognized supply commodity")
             utility = Utility.ELECTRICITY if commodity == "Luce" else Utility.GAS
             point = object_value(supply.get("punto"))
+            self_reading = supply.get("autolettura")
+            self_reading = self_reading if isinstance(self_reading, dict) else {}
+            window_start = _optional_date(self_reading.get("inizioFinestra"))
+            window_end = _optional_date(self_reading.get("fineFinestra"))
+            if window_start is None or window_end is None or window_end < window_start:
+                window_start = window_end = None
             supply_id = identifier(supply.get("id"))
             if supply_id in seen:
                 raise PayloadError("Duplicate supply identifier")
@@ -144,6 +230,10 @@ def parse_mobile_supplies(payload: object) -> tuple[MobileSupply, ...]:
                     else SupplyStatus.UNKNOWN,
                     iso_date(activation) if activation is not None else None,
                     parse_supply_offer(supply, first_activation),
+                    _optional_decimal(point.get("potenzaImpegnata")),
+                    _optional_decimal(point.get("potenzaConsumo")),
+                    window_start,
+                    window_end,
                 )
             )
     return tuple(result)

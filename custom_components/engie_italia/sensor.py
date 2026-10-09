@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy
+from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -159,6 +159,62 @@ INVOICES = (
     ),
 )
 
+ACCOUNT = (
+    SensorEntityDescription(
+        key="next_bill_date",
+        translation_key="next_bill_date",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    SensorEntityDescription(
+        key="direct_debit",
+        translation_key="direct_debit",
+        device_class=SensorDeviceClass.ENUM,
+        options=["active", "inactive", "mixed", "unknown"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="digital_bill",
+        translation_key="digital_bill",
+        device_class=SensorDeviceClass.ENUM,
+        options=["active", "inactive", "mixed", "unknown"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+SUPPLY_DETAILS = (
+    SensorEntityDescription(
+        key="economic_terms_end",
+        translation_key="economic_terms_end",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+ELECTRICITY_DETAILS = (
+    SensorEntityDescription(
+        key="contracted_power",
+        translation_key="contracted_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="available_power",
+        translation_key="available_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+GAS_DETAILS = (
+    SensorEntityDescription(
+        key="self_reading_deadline",
+        translation_key="self_reading_deadline",
+        device_class=SensorDeviceClass.DATE,
+    ),
+)
+
 TARIFFS = (
     SensorEntityDescription(
         key="energy_unit_price",
@@ -179,18 +235,22 @@ TARIFFS = (
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = entry.runtime_data
     seen = set()
-    billing_added = False
+    account_added = False
 
     @callback
     def add_new():
-        nonlocal billing_added
+        nonlocal account_added
         entities = []
-        if not billing_added:
+        if not account_added:
+            entities.extend(
+                EngieAccountSensor(coordinator, entry, description)
+                for description in ACCOUNT
+            )
             entities.extend(
                 EngieInvoiceSensor(coordinator, entry, description)
                 for description in INVOICES
             )
-            billing_added = True
+            account_added = True
         for key, data in (coordinator.data or {}).items():
             if key in seen:
                 continue
@@ -201,6 +261,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.extend(
                 EngieSensor(coordinator, entry, key, data.supply.utility, description)
                 for description in descriptions
+            )
+            detail_descriptions = SUPPLY_DETAILS + (
+                ELECTRICITY_DETAILS
+                if data.supply.utility is Utility.ELECTRICITY
+                else GAS_DETAILS
+            )
+            entities.extend(
+                EngieSupplyDetailSensor(
+                    coordinator, entry, key, data.supply.utility, description
+                )
+                for description in detail_descriptions
             )
             entities.extend(
                 EngieTariffSensor(
@@ -213,6 +284,40 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     add_new()
     entry.async_on_unload(coordinator.async_add_listener(add_new))
+
+
+class EngieAccountSensor(CoordinatorEntity, SensorEntity):
+    """Account-level contract services independent of invoice availability."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator, entry, description):
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.unique_id)},
+            name="ENGIE Italia",
+            manufacturer="ENGIE",
+            model="Account",
+        )
+
+    @property
+    def available(self):
+        if not super().available:
+            return False
+        if self.entity_description.key == "next_bill_date":
+            return self.coordinator.account.next_bill_date is not None
+        return True
+
+    @property
+    def native_value(self):
+        account = self.coordinator.account
+        return {
+            "next_bill_date": account.next_bill_date,
+            "direct_debit": account.direct_debit.value,
+            "digital_bill": account.digital_bill.value,
+        }[self.entity_description.key]
 
 
 class EngieInvoiceSensor(CoordinatorEntity, SensorEntity):
@@ -384,6 +489,39 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
             if self.supply_data.readings.last_update
             else None,
         }
+
+
+class EngieSupplyDetailSensor(EngieSensor):
+    """Contract metadata that remains useful without consumption readings."""
+
+    def _value(self):
+        data = self.supply_data
+        if data is None:
+            return None
+        supply = data.supply
+        return {
+            "economic_terms_end": supply.offer.valid_until if supply.offer else None,
+            "contracted_power": supply.contracted_power,
+            "available_power": supply.available_power,
+            "self_reading_deadline": supply.self_reading_window_end,
+        }[self.entity_description.key]
+
+    @property
+    def available(self):
+        return self.coordinator.last_update_success and self._value() is not None
+
+    @property
+    def native_value(self):
+        return self._value()
+
+    @property
+    def extra_state_attributes(self):
+        if self.entity_description.key != "self_reading_deadline":
+            return None
+        data = self.supply_data
+        if data is None or data.supply.self_reading_window_start is None:
+            return None
+        return {"window_start": data.supply.self_reading_window_start.isoformat()}
 
 
 class EngieTariffSensor(EngieSensor):

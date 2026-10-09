@@ -287,6 +287,7 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         reader = client(session)
         result = await reader.async_supplies()
         self.assertEqual(len(result), 2)
+        self.assertEqual(reader.account_metadata.next_bill_date, date(2025, 4, 15))
         method, url, options = session.calls[0]
         self.assertEqual((method, url), ("GET", API + "contracts/v2/user"))
         self.assertFalse(options["allow_redirects"])

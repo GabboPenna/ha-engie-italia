@@ -126,6 +126,39 @@
       "invoices_last_sync": {
         "name": "Last successful invoice sync"
       },
+      "next_bill_date": {
+        "name": "Next expected bill"
+      },
+      "direct_debit": {
+        "name": "Direct debit",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "mixed": "Mixed",
+          "unknown": "Unknown"
+        }
+      },
+      "digital_bill": {
+        "name": "Digital bill",
+        "state": {
+          "active": "Active",
+          "inactive": "Inactive",
+          "mixed": "Mixed",
+          "unknown": "Unknown"
+        }
+      },
+      "economic_terms_end": {
+        "name": "Economic terms end"
+      },
+      "contracted_power": {
+        "name": "Contracted power"
+      },
+      "available_power": {
+        "name": "Available power"
+      },
+      "self_reading_deadline": {
+        "name": "Self-reading deadline"
+      },
       "energy_unit_price": {
         "name": "Energy component price"
       },

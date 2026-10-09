@@ -22,11 +22,13 @@ from .errors import (
 from .invoices import InvoiceSnapshot, merge_invoices, parse_invoices
 from .mobile import (
     ROME,
+    AccountMetadata,
     ElectricityReadings,
     GasReadings,
     MobileSupply,
     identifier,
     iso_date,
+    parse_account_metadata,
     parse_daily_electricity,
     parse_gas_last_update,
     parse_hourly_electricity,
@@ -117,6 +119,11 @@ class EngieMobileClient:
         self._pending_tokens: SessionTokens | None = None
         self._invoice_contract_ids: tuple[str, ...] | None = None
         self._reads: dict[tuple, _SharedRead] = {}
+        self._account_metadata = AccountMetadata()
+
+    @property
+    def account_metadata(self) -> AccountMetadata:
+        return self._account_metadata
 
     def clear_credentials(self) -> None:
         """Forget in-memory credentials; close the caller's session separately."""
@@ -290,6 +297,7 @@ class EngieMobileClient:
     async def async_supplies(self) -> tuple[MobileSupply, ...]:
         data = await self._get("contracts/v2/user")
         supplies = parse_mobile_supplies(data)
+        account_metadata = parse_account_metadata(data)
         # Retain contracts even if they no longer have a supply in the response.
         self._invoice_contract_ids = tuple(
             dict.fromkeys(
@@ -297,6 +305,7 @@ class EngieMobileClient:
                 for contract in data["listaContratti"]
             )
         )
+        self._account_metadata = account_metadata
         return supplies
 
     async def async_invoices(self) -> InvoiceSnapshot:

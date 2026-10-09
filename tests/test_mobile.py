@@ -10,6 +10,8 @@ from engie_italia.diagnostics import diagnostic_summary
 from engie_italia.errors import PayloadError, ServiceError
 from engie_italia.mobile import (
     Granularity,
+    ServiceStatus,
+    parse_account_metadata,
     parse_daily_electricity,
     parse_gas_last_update,
     parse_hourly_electricity,
@@ -35,6 +37,45 @@ class MobileSuppliesTests(unittest.TestCase):
         self.assertEqual(power.point_id, "synthetic-pod")
         self.assertEqual(gas.point_id, "synthetic-pdr")
         self.assertIs(power.status, SupplyStatus.ACTIVE)
+        self.assertEqual(power.contracted_power, Decimal("3"))
+        self.assertEqual(power.available_power, Decimal("3.3"))
+        self.assertEqual(gas.self_reading_window_start, date(2025, 4, 10))
+        self.assertEqual(gas.self_reading_window_end, date(2025, 4, 20))
+
+    def test_optional_account_services_are_normalized_without_private_fields(self):
+        result = parse_account_metadata(supplies())
+        self.assertEqual(result.next_bill_date, date(2025, 4, 15))
+        self.assertIs(result.direct_debit, ServiceStatus.ACTIVE)
+        self.assertIs(result.digital_bill, ServiceStatus.ACTIVE)
+        self.assertNotIn("private", repr(result))
+
+    def test_mixed_and_malformed_optional_metadata_stays_safe(self):
+        data = supplies()
+        second = copy.deepcopy(data["listaContratti"][0])
+        second["codContr"] = "synthetic-contract-2"
+        second["dataProxBol"] = ["not-a-date"]
+        second["sdd"]["stato"] = "n"
+        second["bol"] = None
+        second["forniture"] = []
+        data["listaContratti"].append(second)
+        result = parse_account_metadata(data)
+        self.assertEqual(result.next_bill_date, date(2025, 4, 15))
+        self.assertIs(result.direct_debit, ServiceStatus.MIXED)
+        self.assertIs(result.digital_bill, ServiceStatus.UNKNOWN)
+
+        data["listaContratti"][0]["forniture"][0]["punto"].update(
+            potenzaImpegnata=True,
+            potenzaConsumo=-1,
+        )
+        data["listaContratti"][0]["forniture"][1]["autolettura"].update(
+            inizioFinestra="2025-04-30",
+            fineFinestra="2025-04-01",
+        )
+        power, gas = parse_mobile_supplies(data)
+        self.assertIsNone(power.contracted_power)
+        self.assertIsNone(power.available_power)
+        self.assertIsNone(gas.self_reading_window_start)
+        self.assertIsNone(gas.self_reading_window_end)
 
     def test_identifiers_are_not_in_repr_and_unneeded_data_is_dropped(self):
         result = parse_mobile_supplies(supplies())

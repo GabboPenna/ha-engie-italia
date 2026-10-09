@@ -46,9 +46,9 @@ Occorrono HACS già configurato e Home Assistant 2026.9.0 o successivo.
 2. Inserisci `https://github.com/GabboPenna/ha-engie-italia`, scegli la categoria
    **Integrazione** e aggiungi il repository.
 3. Apri **ENGIE Italia** e abilita la visualizzazione delle versioni beta del
-   repository. Scegli **v0.1.0b16** nel selettore della versione e scaricala.
+   repository. Scegli **v0.1.0b17** nel selettore della versione e scaricala.
    Se è già installata, usa **Riscarica / Redownload**. Controlla le
-   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16):
+   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17):
    la lettura di fatture reali resta da confermare; i consumi gas mensili sono
    disponibili quando ENGIE li pubblica per la fornitura e i
    [prezzi della componente energia](TARIFFS.md) supportano solo le versioni verificate.
