@@ -230,7 +230,7 @@ fatture `error`, codici 9/9.91 e valori indisponibili; i sensori di consumo
 precedenti restano disponibili. Verificati 113 test del client e 33 test HA
 isolati, oltre al controllo della configurazione e alla corrispondenza dei file.
 
-### Gas ancora non verificato con successo
+### Gas verificato con successo il 9 ottobre 2026
 
 Nell'app sono presenti queste letture, provate privatamente:
 
@@ -238,14 +238,19 @@ Nell'app sono presenti queste letture, provate privatamente:
 - `consumptions/v2/gas/monthly`, con `contractId`, `pdr`, `lowerBoundDate`,
   `supplyActivationDate`, `startYear`, `endYear`.
 
-`contractId` deriva da `codContr` del contratto, non dall'ID Salesforce.
-La data di aggiornamento ha restituito HTTP 404, `code: KO`, codici 9/9.53,
-descrizione "Pdr non trovato". La lettura mensile ha restituito HTTP 422,
-codici 9/9.54, descrizione "Input non valido". Questi errori **non dimostrano
-che il consumo sia zero**, ne' spiegano da soli il motivo del grafico vuoto.
-Non e' stata recuperata una risposta gas con misure: nessun parser o sensore gas
-viene dichiarato funzionante. Le unita' Smc compaiono nell'app, ma resta da
-verificare il payload di successo, compresi periodi e stime.
+`contractId` deriva da `codContr` del contratto, non dall'ID Salesforce. Dopo la
+prima disponibilita' dei dati sullo stesso account, entrambe le letture hanno
+restituito HTTP 200 e `code: OK`. La prima espone `lastUpdateDate` come data ISO;
+la seconda usa `consumptionsList.startYear/endYear/years`, con anni e mesi
+identificati da `timeReference`, `totalValue` e `totalType`. La risposta reale
+osservata contiene un mese `REAL`, un totale annuale e valori in Smc.
+
+La b15 implementa parser, client e quattro sensori gas: ultimo mese, ultimo anno,
+data ultimo dato e sincronizzazione. Mesi e totale annuale restano distinti;
+`NOT_PROVIDED` rimane assente e non diventa zero. Le precedenti risposte 404
+9/9.53 e 422 9/9.54 restano documentate come stato precedente alla pubblicazione
+dei dati da parte di ENGIE, non come consumo nullo. Non e' stato verificato un
+dettaglio gas giornaliero.
 
 ### Prezzi e condizioni economiche: verifica del 16 settembre 2026
 

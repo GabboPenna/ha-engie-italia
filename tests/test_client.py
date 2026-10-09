@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import aiohttp
 from invoice_fixtures import invoice, invoices
-from mobile_fixtures import daily, hourly, supplies
+from mobile_fixtures import daily, gas_update, hourly, monthly_gas, supplies
 
 from engie_italia.client import API, TOKEN_URL, EngieMobileClient, _retry_seconds
 from engie_italia.errors import (
@@ -320,6 +320,35 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(session.calls[1][2]["params"]["day"], "2025-03-10")
 
+    async def test_gas_update_and_monthly_parameters_and_results(self):
+        session = Session(
+            Response(payload=gas_update()), Response(payload=monthly_gas())
+        )
+        reader = client(session)
+        gas = parse_mobile_supplies(supplies())[1]
+        lower = reader.gas_lower_bound(gas, today=date(2025, 4, 1))
+        updated = await reader.async_gas_last_update_date(gas)
+        result = await reader.async_monthly_gas(
+            gas, lower_bound=lower, year=2025, last_update=updated
+        )
+        self.assertEqual(result.last_update, date(2025, 3, 20))
+        self.assertEqual(result.snapshot.intervals[0].value, Decimal(7))
+        self.assertEqual(
+            session.calls[0][2]["params"],
+            {"contractId": "synthetic-contract", "pdr": "synthetic-pdr"},
+        )
+        self.assertEqual(
+            session.calls[1][2]["params"],
+            {
+                "contractId": "synthetic-contract",
+                "pdr": "synthetic-pdr",
+                "lowerBoundDate": "2025-03-01",
+                "supplyActivationDate": "2025-03-01",
+                "startYear": "2025",
+                "endYear": "2025",
+            },
+        )
+
     async def test_commissioning_date_and_activation_fallback(self):
         session = Session(
             Response(payload={"code": "OK", "commissioningDate": "2025-03-02"}),
@@ -540,11 +569,31 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
             await reader.async_hourly_electricity(
                 power, lower_bound=date(2025, 3, 1), day=date(2025, 2, 1)
             )
+        with self.assertRaises(ValueError):
+            reader.gas_lower_bound(power, today=date(2025, 4, 1))
+        for year, lower, updated in (
+            (True, date(2025, 3, 1), date(2025, 3, 20)),
+            (2025, date(2025, 2, 1), date(2025, 3, 20)),
+            (2025, date(2025, 3, 1), True),
+        ):
+            with self.assertRaises(ValueError):
+                await reader.async_monthly_gas(
+                    gas,
+                    lower_bound=lower,
+                    year=year,
+                    last_update=updated,
+                )
         self.assertEqual(session.calls, [])
 
     async def test_response_for_wrong_requested_period_rejected(self):
-        reader = client(Session(Response(payload=daily()), Response(payload=hourly())))
-        power = parse_mobile_supplies(supplies())[0]
+        reader = client(
+            Session(
+                Response(payload=daily()),
+                Response(payload=hourly()),
+                Response(payload=monthly_gas()),
+            )
+        )
+        power, gas = parse_mobile_supplies(supplies())
         with self.assertRaises(PayloadError):
             await reader.async_daily_electricity(
                 power, lower_bound=date(2025, 3, 1), year=2026
@@ -552,6 +601,13 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PayloadError):
             await reader.async_hourly_electricity(
                 power, lower_bound=date(2025, 3, 1), day=date(2025, 3, 11)
+            )
+        with self.assertRaises(PayloadError):
+            await reader.async_monthly_gas(
+                gas,
+                lower_bound=date(2025, 3, 1),
+                year=2026,
+                last_update=date(2025, 3, 20),
             )
 
 

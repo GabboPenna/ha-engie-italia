@@ -3,7 +3,7 @@
 ## Confini
 
 Modelli, diagnostica e parser restano indipendenti da HTTP e Home Assistant.
-`mobile.py` interpreta forniture e consumi elettrici del servizio dell'app;
+`mobile.py` interpreta forniture e consumi luce/gas del servizio dell'app;
 `invoices.py` normalizza i metadati delle fatture e calcola i residui aperti;
 `portal.py` conserva il parser del portale. `client.py` aggiunge il trasporto
 asincrono `aiohttp`, con credenziali e callback di persistenza forniti dal chiamante.
@@ -54,9 +54,13 @@ Il config flow gestisce PKCE, riautenticazione dello stesso account e rimozione
 senza YAML. Chiave e token sono in un deposito HA privato, non nella config entry.
 Il primo accesso e' assistito per il vincolo sul callback del client nativo.
 Aggiornamento ogni 6 ore, configurabile 1-24, e un pulsante condiviso di refresh.
-La data di commissioning e' memorizzata per un giorno, invalidata al cambio
+La data di commissioning elettrica e' memorizzata per un giorno, invalidata al cambio
 di contratto o attivazione e rimossa insieme alle forniture cessate. Le forniture aggiunte
 vengono rilevate al refresh; quelle rimosse diventano indisponibili.
+
+Il gas usa data di attivazione, data ultimo aggiornamento e riepilogo mensile.
+Mesi in Smc e totale annuale restano separati; un errore su una fornitura non
+rende indisponibili i dati riusciti dell'altra.
 
 Le fatture hanno sensori sul dispositivo Account e una lettura per contratto
 distinto. Il client conserva i codici dei contratti dell'ultima lettura delle

@@ -165,11 +165,22 @@ class ElectricityReadings:
     day_total: ConsumptionInterval | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class GasReadings:
+    snapshot: SupplySnapshot
+    last_update: date | None
+    # Provider totals remain independent from the monthly samples.
+    year_totals: tuple[ConsumptionInterval, ...] = ()
+    month_totals: tuple[ConsumptionInterval, ...] = ()
+
+
 def _midnight(day: date) -> datetime:
     return datetime(day.year, day.month, day.day, tzinfo=ROME)
 
 
-def _interval(item: dict, start: datetime, end: datetime) -> ConsumptionInterval:
+def _interval(
+    item: dict, start: datetime, end: datetime, unit: Unit = Unit.KWH
+) -> ConsumptionInterval:
     kind = item.get("totalType")
     if kind is not None and not isinstance(kind, str):
         raise PayloadError("Invalid measurement quality")
@@ -186,7 +197,7 @@ def _interval(item: dict, start: datetime, end: datetime) -> ConsumptionInterval
             value = consumption_value(item["totalValue"])
         except ValueError:
             raise PayloadError("Invalid measurement value") from None
-    return ConsumptionInterval(start, end, value, Unit.KWH, quality)
+    return ConsumptionInterval(start, end, value, unit, quality)
 
 
 def _daily_interval(item: dict, day: date) -> ConsumptionInterval:
@@ -268,6 +279,82 @@ def parse_daily_electricity(
         _last_update(data),
         _ordered(years),
         _ordered(months),
+    )
+
+
+def parse_gas_last_update(payload: object) -> date | None:
+    data = successful_payload(payload)
+    if "lastUpdateDate" not in data:
+        raise PayloadError("Missing gas data update field")
+    value = data["lastUpdateDate"]
+    return iso_date(value) if value is not None else None
+
+
+def parse_monthly_gas(
+    payload: object,
+    *,
+    supply_id: str,
+    fetched_at: datetime,
+    last_update: date | None,
+) -> GasReadings:
+    if last_update is not None and type(last_update) is not date:
+        raise PayloadError("A calendar gas update date is required")
+    data = successful_payload(payload)
+    if "lastUpdate" not in data:
+        raise PayloadError("Missing embedded gas data update field")
+    embedded = data["lastUpdate"]
+    if embedded not in (None, ""):
+        embedded = iso_date(embedded)
+        if last_update is not None and embedded != last_update:
+            raise PayloadError("Gas update dates do not match")
+        last_update = embedded
+    series = object_value(data.get("consumptionsList"))
+    start_year, end_year = _year(series.get("startYear")), _year(series.get("endYear"))
+    if end_year < start_year:
+        raise PayloadError("Reversed consumption year range")
+    months, years = [], []
+    for raw_year in list_value(series.get("years")):
+        year_item = object_value(raw_year)
+        year = _year(year_item.get("timeReference"))
+        if not start_year <= year <= end_year:
+            raise PayloadError("Consumption year outside requested range")
+        years.append(
+            _interval(
+                year_item,
+                _midnight(date(year, 1, 1)),
+                _midnight(date(year + 1, 1, 1)),
+                Unit.STANDARD_CUBIC_METERS,
+            )
+        )
+        for raw_month in list_value(year_item.get("months")):
+            month_item = object_value(raw_month)
+            reference = month_item.get("timeReference")
+            if not isinstance(reference, str) or not re.fullmatch(
+                r"[0-9]{4}-[0-9]{2}", reference
+            ):
+                raise PayloadError("Invalid consumption month")
+            month = iso_date(reference + "-01")
+            if month.year != year:
+                raise PayloadError("Month does not belong to its year")
+            next_month = (
+                date(year + 1, 1, 1)
+                if month.month == 12
+                else date(year, month.month + 1, 1)
+            )
+            months.append(
+                _interval(
+                    month_item,
+                    _midnight(month),
+                    _midnight(next_month),
+                    Unit.STANDARD_CUBIC_METERS,
+                )
+            )
+    ordered_months = _ordered(months)
+    return GasReadings(
+        SupplySnapshot(supply_id, Utility.GAS, ordered_months, fetched_at),
+        last_update,
+        _ordered(years),
+        ordered_months,
     )
 
 

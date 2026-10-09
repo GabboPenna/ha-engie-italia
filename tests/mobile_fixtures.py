@@ -39,6 +39,24 @@ def hourly(day="2025-03-10", rows=None):
     }
 
 
+def gas_update(day="2025-03-20"):
+    return {"code": "OK", "lastUpdateDate": day}
+
+
+def monthly_gas(month="2025-03", rows=None):
+    year = sample(month[:4], 21)
+    year["months"] = [sample(month, 7)] if rows is None else rows
+    return {
+        "code": "OK",
+        "lastUpdate": "",
+        "consumptionsList": {
+            "startYear": month[:4],
+            "endYear": month[:4],
+            "years": [year],
+        },
+    }
+
+
 def supplies():
     return {
         "code": "OK",

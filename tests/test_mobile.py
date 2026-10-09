@@ -1,18 +1,20 @@
 import copy
 import json
 import unittest
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from mobile_fixtures import daily, hourly, sample, supplies
+from mobile_fixtures import daily, gas_update, hourly, monthly_gas, sample, supplies
 
 from engie_italia.diagnostics import diagnostic_summary
 from engie_italia.errors import PayloadError, ServiceError
 from engie_italia.mobile import (
     Granularity,
     parse_daily_electricity,
+    parse_gas_last_update,
     parse_hourly_electricity,
     parse_mobile_supplies,
+    parse_monthly_gas,
     successful_payload,
 )
 from engie_italia.models import Quality, Unit, Utility
@@ -245,6 +247,65 @@ class ElectricityTests(unittest.TestCase):
         for payload in ({}, {"code": "new"}, {"code": []}):
             with self.assertRaises(PayloadError):
                 successful_payload(payload)
+
+
+class GasTests(unittest.TestCase):
+    def parse(self, payload=None, last_update=date(2025, 3, 20)):
+        return parse_monthly_gas(
+            monthly_gas() if payload is None else payload,
+            **CONTEXT,
+            last_update=last_update,
+        )
+
+    def test_monthly_values_totals_units_quality_and_update_date(self):
+        result = self.parse()
+        month = result.snapshot.intervals[0]
+        self.assertEqual(month.value, Decimal(7))
+        self.assertIs(month.unit, Unit.STANDARD_CUBIC_METERS)
+        self.assertIs(month.quality, Quality.ACTUAL)
+        self.assertEqual(month.start.isoformat(), "2025-03-01T00:00:00+01:00")
+        self.assertEqual(month.end.isoformat(), "2025-04-01T00:00:00+02:00")
+        self.assertEqual(result.month_totals, result.snapshot.intervals)
+        self.assertEqual(result.year_totals[0].value, Decimal(21))
+        self.assertEqual(result.last_update, date(2025, 3, 20))
+        self.assertEqual(parse_gas_last_update(gas_update()), date(2025, 3, 20))
+
+    def test_missing_zero_estimated_and_sparse_months_remain_distinct(self):
+        rows = [
+            sample("2025-01", 0),
+            sample("2025-03", 0, "NOT_PROVIDED"),
+            sample("2025-06", 2.5, "estimated"),
+        ]
+        result = self.parse(monthly_gas(rows=rows)).snapshot.intervals
+        self.assertEqual([item.start.month for item in result], [1, 3, 6])
+        self.assertEqual(result[0].value, Decimal(0))
+        self.assertIsNone(result[1].value)
+        self.assertIs(result[2].quality, Quality.ESTIMATED)
+
+    def test_empty_series_and_missing_update_are_not_fabricated(self):
+        data = monthly_gas()
+        data["consumptionsList"]["years"] = []
+        result = self.parse(data, last_update=None)
+        self.assertEqual(result.snapshot.intervals, ())
+        self.assertIsNone(result.last_update)
+        self.assertIsNone(parse_gas_last_update({"code": "OK", "lastUpdateDate": None}))
+
+    def test_dates_periods_and_duplicates_are_strict(self):
+        for value in ("", "2025-02-30", True, 1):
+            with self.subTest(value=value), self.assertRaises(PayloadError):
+                parse_gas_last_update({"code": "OK", "lastUpdateDate": value})
+        data = monthly_gas()
+        data["lastUpdate"] = "2025-03-19"
+        with self.assertRaisesRegex(PayloadError, "do not match"):
+            self.parse(data)
+        for reference in ("2025-00", "2025-13", "2026-03", "202503", False):
+            data = monthly_gas(rows=[sample(reference)])
+            with self.subTest(reference=reference), self.assertRaises(PayloadError):
+                self.parse(data)
+        data = monthly_gas()
+        data["consumptionsList"]["years"][0]["months"] *= 2
+        with self.assertRaises(PayloadError):
+            self.parse(data)
 
 
 if __name__ == "__main__":

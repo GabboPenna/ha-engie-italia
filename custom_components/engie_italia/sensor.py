@@ -69,6 +69,29 @@ ELECTRICITY = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
+GAS = (
+    SensorEntityDescription(
+        key="month",
+        translation_key="month",
+        native_unit_of_measurement="Smc",
+    ),
+    SensorEntityDescription(
+        key="year",
+        translation_key="year",
+        native_unit_of_measurement="Smc",
+    ),
+    SensorEntityDescription(
+        key="last_data_update",
+        translation_key="last_data_update",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    SensorEntityDescription(
+        key="last_sync",
+        translation_key="last_sync",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
 
 INVOICES = (
     SensorEntityDescription(
@@ -171,7 +194,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 continue
             seen.add(key)
             descriptions = COMMON + (
-                ELECTRICITY if data.supply.utility is Utility.ELECTRICITY else ()
+                ELECTRICITY if data.supply.utility is Utility.ELECTRICITY else GAS
             )
             entities.extend(
                 EngieSensor(coordinator, entry, key, data.supply.utility, description)
@@ -321,7 +344,7 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
             return data.supply.status.value
         if key == "data_status":
             return data.status
-        if data.readings is None:
+        if data.status == "error" or data.readings is None:
             return None
         if key == "last_data_update":
             return data.readings.last_update
@@ -335,6 +358,8 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         if self.entity_description.key not in ("last_day", "month", "year"):
+            return None
+        if self.supply_data is None or self.supply_data.status == "error":
             return None
         period = self._period()
         if period is None:

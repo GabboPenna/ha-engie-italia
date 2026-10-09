@@ -20,7 +20,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 from invoice_fixtures import invoice, invoices  # noqa: E402
-from mobile_fixtures import daily, supplies  # noqa: E402
+from mobile_fixtures import daily, monthly_gas, supplies  # noqa: E402
 from tariff_fixtures import catalog, tariff_supplies  # noqa: E402
 
 from custom_components.engie_italia.api import tariffs  # noqa: E402
@@ -40,6 +40,7 @@ from custom_components.engie_italia.api.invoices import (  # noqa: E402
 from custom_components.engie_italia.api.mobile import (  # noqa: E402
     parse_daily_electricity,
     parse_mobile_supplies,
+    parse_monthly_gas,
 )
 from custom_components.engie_italia.api.session import SessionTokens  # noqa: E402
 from custom_components.engie_italia.config_flow import EngieConfigFlow  # noqa: E402
@@ -54,6 +55,7 @@ from custom_components.engie_italia.diagnostics import (  # noqa: E402
 from custom_components.engie_italia.sensor import (  # noqa: E402
     COMMON,
     ELECTRICITY,
+    GAS,
     INVOICES,
     TARIFFS,
     EngieInvoiceSensor,
@@ -97,14 +99,25 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.readings = parse_daily_electricity(
             daily(), supply_id="synthetic-power", fetched_at=datetime.now(UTC)
         )
+        self.gas_readings = parse_monthly_gas(
+            monthly_gas(),
+            supply_id="synthetic-gas",
+            fetched_at=datetime.now(UTC),
+            last_update=date(2025, 3, 20),
+        )
         self.client = MagicMock(spec=EngieMobileClient)
         self.client.async_supplies = AsyncMock(return_value=(self.power, self.gas))
         self.client.async_commissioning_date = AsyncMock(return_value=date(2025, 3, 1))
         self.client.async_daily_electricity = AsyncMock(return_value=self.readings)
+        self.client.async_gas_last_update_date = AsyncMock(
+            return_value=date(2025, 3, 20)
+        )
+        self.client.async_monthly_gas = AsyncMock(return_value=self.gas_readings)
         self.client.async_invoices = AsyncMock(
             return_value=InvoiceSnapshot((), datetime(2025, 3, 11, tzinfo=UTC))
         )
         self.client.lower_bound = EngieMobileClient.lower_bound
+        self.client.gas_lower_bound = EngieMobileClient.gas_lower_bound
         self.coordinator = EngieCoordinator(self.hass, self.entry, self.client)
         self.entry.runtime_data = self.coordinator
         self.clock = patch(
@@ -127,13 +140,17 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     async def refresh(self):
         self.coordinator.data = await self.coordinator._async_update_data()
 
-    def sensor(self, key):
-        description = next(d for d in COMMON + ELECTRICITY if d.key == key)
+    def sensor(self, key, supply=None):
+        supply = self.power if supply is None else supply
+        descriptions = COMMON + (
+            ELECTRICITY if supply.utility.value == "electricity" else GAS
+        )
+        description = next(d for d in descriptions if d.key == key)
         return EngieSensor(
             self.coordinator,
             self.entry,
-            supply_key(self.power),
-            self.power.utility,
+            supply_key(supply),
+            supply.utility,
             description,
         )
 
@@ -373,12 +390,14 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             with self.assertRaises(target):
                 await self.refresh()
 
-    async def test_gas_is_metadata_only_and_power_totals_are_dated(self):
+    async def test_gas_and_power_totals_are_dated_and_keep_distinct_units(self):
         await self.refresh()
         self.assertEqual(
-            self.coordinator.data[supply_key(self.gas)].status, "unsupported"
+            self.coordinator.data[supply_key(self.gas)].status, "available"
         )
         self.client.async_daily_electricity.assert_awaited_once()
+        self.client.async_gas_last_update_date.assert_awaited_once_with(self.gas)
+        self.client.async_monthly_gas.assert_awaited_once()
         sensor = self.sensor("last_day")
         self.assertEqual(float(sensor.native_value), 1.25)
         self.assertTrue(sensor.available)
@@ -388,6 +407,15 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(float(self.sensor("month").native_value), 7.31)
         self.assertEqual(self.sensor("last_day_date").native_value, date(2025, 3, 10))
+        gas_month = self.sensor("month", self.gas)
+        self.assertEqual(gas_month.native_value, Decimal(7))
+        self.assertEqual(gas_month.native_unit_of_measurement, "Smc")
+        self.assertIsNone(gas_month.device_class)
+        self.assertEqual(self.sensor("year", self.gas).native_value, Decimal(21))
+        self.assertEqual(
+            self.sensor("last_data_update", self.gas).native_value,
+            date(2025, 3, 20),
+        )
 
     async def test_per_supply_failure_does_not_hide_gas_or_report_old_value_as_live(
         self,
@@ -396,10 +424,22 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.client.async_daily_electricity.side_effect = TransportError("offline")
         await self.refresh()
         self.assertFalse(self.sensor("last_day").available)
+        self.assertIsNone(self.sensor("last_day").native_value)
+        self.assertIsNone(self.sensor("last_day").extra_state_attributes)
         self.assertEqual(self.sensor("data_status").native_value, "error")
         self.assertEqual(
-            self.coordinator.data[supply_key(self.gas)].status, "unsupported"
+            self.coordinator.data[supply_key(self.gas)].status, "available"
         )
+        self.assertTrue(self.sensor("month", self.gas).available)
+
+    async def test_gas_failure_does_not_hide_power_or_publish_old_gas_value(self):
+        await self.refresh()
+        self.client.async_gas_last_update_date.side_effect = TransportError("offline")
+        await self.refresh()
+        self.assertTrue(self.sensor("last_day").available)
+        self.assertEqual(self.sensor("data_status", self.gas).native_value, "error")
+        self.assertFalse(self.sensor("month", self.gas).available)
+        self.assertIsNone(self.sensor("month", self.gas).native_value)
 
     async def test_auth_failure_requests_reauthentication(self):
         self.client.async_daily_electricity.side_effect = AuthenticationError("expired")
@@ -429,6 +469,31 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
                 c.kwargs["year"]
                 for c in self.client.async_daily_electricity.await_args_list
             ],
+            [2026, 2025],
+        )
+
+    async def test_gas_falls_back_to_last_available_year(self):
+        empty = parse_monthly_gas(
+            monthly_gas("2026-01", rows=[]),
+            supply_id="synthetic-gas",
+            fetched_at=datetime.now(UTC),
+            last_update=date(2025, 12, 20),
+        )
+        previous = parse_monthly_gas(
+            monthly_gas("2025-12"),
+            supply_id="synthetic-gas",
+            fetched_at=datetime.now(UTC),
+            last_update=date(2025, 12, 20),
+        )
+        self.client.async_monthly_gas.side_effect = [empty, previous]
+        with patch(
+            MODULE + "coordinator.dt_util.now",
+            return_value=datetime(2026, 1, 1, tzinfo=UTC),
+        ):
+            await self.refresh()
+        self.assertEqual(self.sensor("month", self.gas).native_value, Decimal(7))
+        self.assertEqual(
+            [c.kwargs["year"] for c in self.client.async_monthly_gas.await_args_list],
             [2026, 2025],
         )
 
@@ -516,7 +581,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
         self.assertEqual(
-            len(add.call_args.args[0]), 10 + len(INVOICES) + 2 * len(TARIFFS)
+            len(add.call_args.args[0]), 14 + len(INVOICES) + 2 * len(TARIFFS)
         )
         self.coordinator.async_update_listeners()
         self.assertEqual(add.call_count, 1)

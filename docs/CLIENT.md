@@ -15,13 +15,19 @@ Non configurare trace HTTP che esportino header, URL completi o payload.
   nell'app, basato su commissioning/attivazione e un massimo di due anni indietro.
 - `async_daily_electricity(supply, lower_bound=..., year=...)`: un anno alla volta.
 - `async_hourly_electricity(supply, lower_bound=..., day=...)`: un giorno alla volta.
+- `gas_lower_bound(supply, today=...)`: limite iniziale gas basato sulla data di
+  attivazione e un massimo di due anni indietro.
+- `async_gas_last_update_date(supply)`: data dell'ultimo dato gas comunicato.
+- `async_monthly_gas(supply, lower_bound=..., year=..., last_update=...)`:
+  mesi e totale annuale gas, un anno alla volta.
 - `async_refresh()`: rinnovo esplicito della sessione gia' autorizzata.
 - `clear_credentials()`: elimina i riferimenti alle credenziali dal client;
   non revoca il consenso presso il provider e non garantisce azzeramento della RAM.
 
-La lettura dei consumi gas non e' esposta finche' non e' disponibile uno schema
-di successo verificato. Il parser riconosce la fornitura gas, non inventa misure.
-Il client non effettua richieste periodiche in autonomia e non contiene funzioni
+I consumi gas sono esposti soltanto alla granularita' mensile verificata. Sono
+modellati in Smc e mantengono separati mesi, totale annuale e data dell'ultimo
+dato. Errori del servizio e serie vuote non diventano consumi zero. Il client
+non effettua richieste periodiche in autonomia e non contiene funzioni
 di pagamento, autolettura, profilo o modifica contrattuale.
 
 `async_invoices()` carica i contratti con `async_supplies()` se non sono già
@@ -78,6 +84,10 @@ o persistenza della sessione continuano a propagarsi all'intero coordinatore.
 alla granularita' richiesta. `year_totals`, `month_totals` e `day_total` sono
 riepiloghi indipendenti forniti da ENGIE. **Non sommarli ai campioni.** I totali
 possono differire dalla somma dei dettagli arrotondati: non vengono ricalcolati.
+
+`GasReadings.snapshot.intervals` contiene i mesi in Smc. `month_totals` conserva
+gli stessi campioni mensili e `year_totals` il riepilogo annuale indipendente
+fornito da ENGIE. Non e' disponibile un dettaglio gas giornaliero verificato.
 
 `last_update` e' la data comunicata da ENGIE, distinta da `fetched_at`.
 Non e' una misura in tempo reale e non sostituisce l'inverter o il contatore locale.

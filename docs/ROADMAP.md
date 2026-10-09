@@ -24,7 +24,7 @@
 - [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
 - [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
 - [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
-- [ ] Differenze e disponibilita' reali dei consumi gas verificate sul servizio.
+- [x] Disponibilita' reale dei consumi gas mensili verificata sul servizio.
 - [ ] Limiti e condizioni d'uso verificati, campioni esclusivamente sintetici.
 
 Se l'accesso richiede challenge incompatibili con un aggiornamento autonomo,
@@ -57,7 +57,7 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 
 - [x] Client asincrono per forniture e consumi elettrici, provato sull'account.
 - [x] Test per scadenza/rinnovo, errori rete, 429, dati mancanti e duplicati.
-- [ ] Schema gas di successo e relativo client/parser.
+- [x] Schema gas mensile di successo e relativo client/parser in Smc.
 - [x] Polling condiviso prudente, refresh manuale e cache commissioning giornaliera.
 - [x] b9: letture identiche contemporanee deduplicate per account; annullamenti
   isolati e cache commissioning invalidata al cambio contratto/attivazione.
@@ -117,6 +117,9 @@ due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
 - [x] [Beta pubblica v0.1.0b14](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b14)
   per Home Assistant 2026.10: rimosso il vincolo PyJWT duplicato dal manifest,
   evitando il conflitto con la versione gestita direttamente da Home Assistant.
+- [x] [Beta pubblica v0.1.0b15](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b15)
+  con consumi gas mensili e annuali, qualita', data ultimo dato e
+  sincronizzazione; schema verificato su una risposta reale.
 - [x] Richiesta di inclusione nel catalogo HACS:
   [hacs/default #11034](https://github.com/hacs/default/pull/11034).
 - [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.

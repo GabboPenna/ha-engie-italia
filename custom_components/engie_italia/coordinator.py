@@ -18,7 +18,7 @@ from .api.errors import (
     TokenPersistenceError,
 )
 from .api.invoices import InvoiceSnapshot
-from .api.mobile import ElectricityReadings, MobileSupply
+from .api.mobile import ElectricityReadings, GasReadings, MobileSupply
 from .api.models import Utility
 from .api.portal import SupplyStatus
 from .const import CONF_INTERVAL, DEFAULT_INTERVAL_HOURS, DOMAIN
@@ -35,7 +35,7 @@ def supply_key(supply: MobileSupply) -> str:
 @dataclass(frozen=True, slots=True)
 class SupplyData:
     supply: MobileSupply
-    readings: ElectricityReadings | None = None
+    readings: ElectricityReadings | GasReadings | None = None
     status: str = "no_data"
 
 
@@ -98,37 +98,55 @@ class EngieCoordinator(DataUpdateCoordinator[dict[str, SupplyData]]):
                 key = supply_key(supply)
                 if key in result:
                     raise UpdateFailed("ENGIE returned duplicate supply points")
-                if supply.utility is Utility.GAS:
-                    result[key] = SupplyData(supply, status="unsupported")
-                    continue
                 if supply.status is not SupplyStatus.ACTIVE:
                     result[key] = SupplyData(supply)
                     continue
                 try:
-                    cache_key = (
-                        supply.point_id,
-                        supply.contract_id,
-                        supply.activation_date,
-                    )
-                    if self._commissioning_checked.get(cache_key) != today:
-                        self._commissioning[
-                            cache_key
-                        ] = await self.client.async_commissioning_date(supply)
-                        self._commissioning_checked[cache_key] = today
-                    lower = self.client.lower_bound(
-                        supply, self._commissioning[cache_key], today=today
-                    )
-                    readings = await self.client.async_daily_electricity(
-                        supply, lower_bound=lower, year=today.year
-                    )
+                    if supply.utility is Utility.GAS:
+                        lower = self.client.gas_lower_bound(supply, today=today)
+                        last_update = await self.client.async_gas_last_update_date(
+                            supply
+                        )
+                        readings = await self.client.async_monthly_gas(
+                            supply,
+                            lower_bound=lower,
+                            year=today.year,
+                            last_update=last_update,
+                        )
+                    else:
+                        cache_key = (
+                            supply.point_id,
+                            supply.contract_id,
+                            supply.activation_date,
+                        )
+                        if self._commissioning_checked.get(cache_key) != today:
+                            self._commissioning[
+                                cache_key
+                            ] = await self.client.async_commissioning_date(supply)
+                            self._commissioning_checked[cache_key] = today
+                        lower = self.client.lower_bound(
+                            supply, self._commissioning[cache_key], today=today
+                        )
+                        readings = await self.client.async_daily_electricity(
+                            supply, lower_bound=lower, year=today.year
+                        )
                     if (
                         not any(
                             i.value is not None for i in readings.snapshot.intervals
                         )
                         and lower.year < today.year
                     ):
-                        previous = await self.client.async_daily_electricity(
-                            supply, lower_bound=lower, year=today.year - 1
+                        previous = (
+                            await self.client.async_monthly_gas(
+                                supply,
+                                lower_bound=lower,
+                                year=today.year - 1,
+                                last_update=last_update,
+                            )
+                            if supply.utility is Utility.GAS
+                            else await self.client.async_daily_electricity(
+                                supply, lower_bound=lower, year=today.year - 1
+                            )
                         )
                         if any(
                             i.value is not None for i in previous.snapshot.intervals

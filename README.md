@@ -2,9 +2,9 @@
 
 # ENGIE Italia per Home Assistant
 
-Forniture, consumi elettrici, prezzi verificati e fatture, dentro Home Assistant.
+Forniture, consumi luce e gas, prezzi verificati e fatture, dentro Home Assistant.
 
-[![Stato: beta 0.1.0b14](https://img.shields.io/badge/beta-0.1.0b14-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b14)
+[![Stato: beta 0.1.0b15](https://img.shields.io/badge/beta-0.1.0b15-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b15)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#installazione)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
@@ -43,6 +43,7 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 | :--- | :--- |
 | **Forniture** | Rilevamento automatico, un dispositivo per fornitura, stato e disponibilità dei dati. |
 | **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità e data dell'ultimo dato ENGIE. |
+| **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato ENGIE. |
 | **Fatture · sperimentale** | Ultima fattura, importo, fatture aperte, residuo da pagare e scadenze sul dispositivo Account. [Sensori e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md). |
 | **Prezzi · sperimentale** | Componente energia in €/kWh e €/Smc e quota fissa annua, per le versioni di offerta verificate. [Copertura e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md). |
 | **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo da 1 a 24 ore, pulsante manuale e data dell'ultima sincronizzazione. |
@@ -51,12 +52,14 @@ apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
 | **Interfaccia** | Configurazione guidata senza parametri tecnici e logo per tema chiaro e scuro. |
 
 > [!IMPORTANT]
-> **La beta rileva le forniture gas, ma non espone ancora i loro consumi.**
-> Download PDF, pagamenti e autoletture non sono implementati. I dati ENGIE sono
-> differiti: non rappresentano misure in tempo reale.
+> **I consumi gas sono riepiloghi mensili differiti, disponibili solo quando
+> ENGIE li pubblica per la fornitura.** Download PDF, pagamenti e autoletture
+> non sono implementati. I dati non rappresentano misure in tempo reale.
 
-Le risposte gas osservate sono errori del servizio, non consumi zero. Un account
-nuovo potrebbe non avere misure: la causa non è confermata. La b10 abbina il
+La b15 aggiunge i consumi gas dopo la verifica di una risposta reale completa:
+mesi, totale annuale, qualità e data di aggiornamento restano distinti. Un
+account nuovo o non ancora valorizzato può non avere misure; un errore del
+servizio non viene trasformato in consumo zero. La b10 abbina il
 codice completo dell'offerta alle condizioni economiche pubbliche verificate.
 La b11 include **16 versioni di Energia PuntoFisso Mono 12 mesi**:
 [elenco e prezzi](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md#catalogo-verificato-nella-b11). Rinnovi e prezzi

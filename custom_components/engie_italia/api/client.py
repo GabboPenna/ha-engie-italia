@@ -23,12 +23,15 @@ from .invoices import InvoiceSnapshot, merge_invoices, parse_invoices
 from .mobile import (
     ROME,
     ElectricityReadings,
+    GasReadings,
     MobileSupply,
     identifier,
     iso_date,
     parse_daily_electricity,
+    parse_gas_last_update,
     parse_hourly_electricity,
     parse_mobile_supplies,
+    parse_monthly_gas,
     service_error,
     successful_payload,
 )
@@ -45,6 +48,8 @@ READ_PATHS = frozenset(
         "consumptions/v2/power/getCommissioningDate",
         "consumptions/v3/power/daily",
         "consumptions/v3/power/hourly",
+        "consumptions/v2/gas/getLastUpdateDate",
+        "consumptions/v2/gas/monthly",
     }
 )
 
@@ -340,6 +345,69 @@ class EngieMobileClient:
         if source is None:
             raise PayloadError("No verified lower-bound date is available")
         return max(source, date(today.year - 2, 1, 1))
+
+    @staticmethod
+    def _gas(supply: MobileSupply) -> None:
+        if not isinstance(supply, MobileSupply) or supply.utility is not Utility.GAS:
+            raise ValueError("A gas supply is required")
+
+    @staticmethod
+    def gas_lower_bound(supply: MobileSupply, *, today: date) -> date:
+        """Match the observed app: activation date, at most two years back."""
+        EngieMobileClient._gas(supply)
+        if type(today) is not date or supply.activation_date is None:
+            raise ValueError("Gas activation and current calendar dates are required")
+        return max(supply.activation_date, date(today.year - 2, 1, 1))
+
+    async def async_gas_last_update_date(self, supply: MobileSupply) -> date | None:
+        self._gas(supply)
+        data = await self._get(
+            "consumptions/v2/gas/getLastUpdateDate",
+            {"contractId": supply.contract_id, "pdr": supply.point_id},
+        )
+        return parse_gas_last_update(data)
+
+    async def async_monthly_gas(
+        self,
+        supply: MobileSupply,
+        *,
+        lower_bound: date,
+        year: int,
+        last_update: date | None,
+    ) -> GasReadings:
+        self._gas(supply)
+        activation = supply.activation_date
+        if (
+            activation is None
+            or type(lower_bound) is not date
+            or lower_bound < activation
+            or type(year) is not int
+            or not 1 <= year < 9999
+            or year < lower_bound.year
+            or (last_update is not None and type(last_update) is not date)
+        ):
+            raise ValueError("Valid gas dates and year are required")
+        data = await self._get(
+            "consumptions/v2/gas/monthly",
+            {
+                "contractId": supply.contract_id,
+                "pdr": supply.point_id,
+                "lowerBoundDate": lower_bound.isoformat(),
+                "supplyActivationDate": activation.isoformat(),
+                "startYear": str(year),
+                "endYear": str(year),
+            },
+        )
+        result = parse_monthly_gas(
+            data,
+            supply_id=supply.supply_id,
+            fetched_at=datetime.now(UTC),
+            last_update=last_update,
+        )
+        bounds = data["consumptionsList"]
+        if bounds["startYear"] != str(year) or bounds["endYear"] != str(year):
+            raise PayloadError("Response does not match the requested year")
+        return result
 
     async def async_daily_electricity(
         self,
