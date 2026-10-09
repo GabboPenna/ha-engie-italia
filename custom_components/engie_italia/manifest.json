@@ -1,10 +1,10 @@
 {
   "domain": "engie_italia",
   "name": "ENGIE Italia",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@GabboPenna"],
   "config_flow": true,
   "documentation": "https://github.com/GabboPenna/ha-engie-italia",
-  "after_dependencies": ["recorder"],
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/GabboPenna/ha-engie-italia/issues",
