@@ -1,7 +1,7 @@
 # Fonti del catalogo tariffe
 
 Documenti pubblici ENGIE controllati il **17 settembre 2026**. I collegamenti
-ai PDF e i prezzi verificati sono nella [tabella del catalogo](TARIFFS.md#catalogo-verificato-nella-b11).
+ai PDF e i prezzi verificati sono nella [tabella del catalogo](TARIFFS.md#catalogo-verificato).
 Il codice/versione è stato riscontrato nel contenuto di ogni PDF. Le tabelle
 nelle schede sintetiche e nelle CTE sono coerenti; le condizioni sono uguali
 al netto di prezzi, identificativi dell'offerta e date di sottoscrizione.

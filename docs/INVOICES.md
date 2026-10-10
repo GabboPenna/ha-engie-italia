@@ -1,7 +1,7 @@
 # Fatture e scadenze
 
-Dalla beta **0.1.0b8** il dispositivo **Account / ENGIE Italia** espone il riepilogo
-delle fatture. Le entità sono condivise fra le forniture dello stesso account.
+Il dispositivo **Account / ENGIE Italia** espone il riepilogo delle fatture.
+Le entità sono condivise fra le forniture dello stesso account.
 Gli aggiornamenti seguono l'intervallo dell'integrazione, 6 ore per impostazione
 predefinita, e il pulsante **Aggiorna dati**.
 

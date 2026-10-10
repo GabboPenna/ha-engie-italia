@@ -22,7 +22,7 @@ da condizioni pubbliche verificate, la validazione del file non verifica la font
 
 I test devono essere offline; i dati devono essere interamente sintetici.
 Per modifiche all'integrazione eseguire anche `tests_ha` in un ambiente isolato
-Python 3.14 con Home Assistant 2026.9.2, come descritto nel README.
+Python 3.14 con la versione Home Assistant fissata nel workflow `tests.yml`.
 Non usare credenziali in CI, non eseguire test contro account reali e non
 allegare acquisizioni di rete. Consultare [SECURITY.md](SECURITY.md).
 

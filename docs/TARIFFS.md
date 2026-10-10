@@ -1,6 +1,6 @@
 # Prezzi della componente energia
 
-La b10 aggiunge due sensori per ogni fornitura, anche quando mancano i consumi:
+L'integrazione espone due sensori per ogni fornitura, anche quando mancano i consumi:
 
 | Sensore | Unità | Significato |
 | :--- | :--- | :--- |
@@ -22,10 +22,10 @@ L'integrazione non effettua queste conversioni e non calcola il costo completo
 della bolletta. I sensori sono utilizzabili nelle proprie automazioni; non
 configurano automaticamente il calcolo dei costi nella dashboard Energy.
 
-## Catalogo verificato nella b11
+## Catalogo verificato
 
 Il catalogo incluso nel componente contiene soltanto versioni controllate sui
-documenti pubblici ENGIE. La b11 aggiunge 15 versioni, portando il totale a
+documenti pubblici ENGIE. Attualmente comprende
 **16 versioni di Energia PuntoFisso Mono 12 mesi**: da `PUMD#00008` a
 `PUMD#00018`, e da `PUMD#00020` a `PUMD#00024`. La `PUMD#00019` non è
 verificata e resta esclusa. Non sono sedici famiglie commerciali diverse.
@@ -106,12 +106,11 @@ La diagnostica esportata non include codici offerta, date economiche o prezzi.
 
 ## Catalogo JSON e aggiornamenti
 
-Dalla b12 i dati risiedono in
+I dati risiedono in
 [`api/data/tariffs.json`](../custom_components/engie_italia/api/data/tariffs.json).
 È il catalogo usato dal componente e dal client Python: una voce per ogni
 codice completo, con prezzi luce/gas, quote annue, unità, perdite, PCS, date
-di sottoscrizione, URL e SHA-256 del documento pubblico. Le 16 versioni della
-b11 sono state trasferite senza modificare prezzi o regole di abbinamento.
+di sottoscrizione, URL e SHA-256 del documento pubblico.
 
 `schema_version` identifica il formato del file; `offers` contiene le offerte.
 Gli importi vanno scritti come **stringhe decimali con il punto**, per esempio

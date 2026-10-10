@@ -1,5 +1,10 @@
 # Ricerca API
 
+> [!NOTE]
+> Questo è un registro tecnico e storico delle verifiche svolte, non una guida
+> di installazione. Per collegare un account usa [SETUP.md](SETUP.md); per le
+> funzioni correnti consulta il [README](../README.md).
+
 ## Osservazioni pubbliche, 16 settembre 2026
 
 Il sito ufficiale collega lo Spazio Clienti a
@@ -106,7 +111,8 @@ ha identificato un backend REST distinto dal portale Salesforce:
 `https://api-mobileapp2022-prod.aws.engie.it/`.
 I DTO e le chiamate di lettura sono stati confrontati con risposte di un account
 autorizzato. Non sono state rimosse protezioni, installate app modificate o
-replicate operazioni di scrittura. Nessun APK o payload dell'account nel progetto.
+replicate operazioni di scrittura. Nessun pacchetto dell'app o payload
+dell'account è incluso nel progetto.
 
 ### Autenticazione
 
@@ -302,13 +308,13 @@ continuato a restituire lista vuota e codici `9`/`9.91`: i sensori degli importi
 restano quindi correttamente indisponibili. `user/v4/dashboard` contiene quasi
 esclusivamente anagrafica e preferenze personali e non viene integrato.
 
-## Verifiche ancora necessarie
+## Stato delle verifiche
 
-### Primo collegamento senza configurazione preesistente
+### Parametri del client e primo collegamento
 
 La chiave `x-api-key` e' una risorsa statica comune del client mobile,
-non una credenziale generata dal login del singolo account. La b5 la include
-nel profilo applicativo: non chiede APK e non esegue un recupero da mirror.
+non una credenziale generata dal login del singolo account. Il profilo
+applicativo è incluso nel componente e non richiede file o servizi esterni.
 Questo non costituisce un'approvazione del provider o una verifica delle
 condizioni di distribuzione.
 
@@ -331,19 +337,26 @@ La firma v3 e' stata verificata con Android `apksigner`; il certificato SHA-256
 `e2d2a82a217c536d7f5cd9ff809415da8dd581438b54d9265804e40d924a601d`
 corrisponde alla dichiarazione ENGIE in
 [assetlinks.json](https://login.engie.it/.well-known/assetlinks.json).
-La verifica e' ricerca statica: il componente HA non esegue o interpreta APK.
+La verifica e' ricerca statica: il componente HA non esegue né interpreta il
+pacchetto dell'app.
 
-Il prototipo b4 di importazione APK e' stato rimosso. La b5 risolve il
-provisioning dei parametri, non il callback OAuth: il ritorno manuale descritto
-in [SETUP.md](SETUP.md) rimane necessario.
+Un primo prototipo basato sull'importazione del pacchetto dell'app è stato
+abbandonato. Il profilo applicativo incluso risolve la configurazione del client,
+non il callback OAuth: il ritorno manuale descritto in [SETUP.md](SETUP.md)
+rimane necessario.
 
-### Criteri di completamento
+### Verifiche aperte
 
-1. Completare la verifica reale del primo login b5 e valutare un client dedicato.
-2. Osservare la sessione nel tempo e verificare revoca/challenge reali in HA.
-3. Consumi gas riusciti, rettifiche e dettaglio elettrico durante il cambio d'ora.
-4. Verificare limiti e condizioni d'uso prima della distribuzione.
-5. Ampliare solo con fixture inventate e test offline, mai risposte dell'account.
+- [x] Primo login reale da installazione priva di account configurati.
+- [x] Persistenza della sessione e rinnovo dopo riavvii e aggiornamenti.
+- [x] Consumi gas mensili e annuali su risposta reale valorizzata.
+- [ ] Revoca e challenge aggiuntive osservate nel tempo in Home Assistant.
+- [ ] Ore ripetute, rettifiche e serie parziali durante i cambi d'ora.
+- [ ] Risposta con fatture reali valorizzate.
+- [ ] Limiti e condizioni d'uso verificati prima di un utilizzo generalizzato.
+
+Le fixture pubblicate devono restare inventate e i test offline: non si
+aggiungono risposte reali dell'account al repository.
 
 Nessun aggiramento di autenticazione, challenge o controlli di accesso.
 Non assumere che un login riuscito una volta sia una soluzione mantenibile.

@@ -1,138 +1,77 @@
 # Roadmap
 
-## Fase 0: fondamenta
+La roadmap descrive il lavoro ancora utile per rendere l'integrazione più
+completa e affidabile. Lo storico dettagliato delle versioni è disponibile
+nelle [release GitHub](https://github.com/GabboPenna/ha-engie-italia/releases).
 
-- [x] Perimetro sola lettura e stato del progetto esplicito.
-- [x] Modelli per luce/gas e valori mancanti con test sintetici.
-- [x] Diagnostica selezionata, documentazione e CI.
-- [x] Strumento di verifica del percorso pubblico di login.
+Aggiornata all'**11 ottobre 2026**.
 
-## Fase 1: prova di fattibilita' autenticata
+## Stato attuale
 
-- [x] Accesso manuale autorizzato e prima lettura delle forniture del portale.
-- [x] Parser forniture e probe interattivo con riepilogo privo di identificativi.
-- [x] Identificazione e lettura del backend dell'app, distinto dal portale.
-- [x] Login interattivo PKCE e rinnovo della sessione in memoria verificati.
-- [x] Persistenza privata atomica dei token e riautenticazione dello stesso account.
-- [x] Profilo applicativo comune incluso, senza APK o inserimento manuale di chiavi.
-- [x] Nuovo consenso per ogni account, senza riutilizzare sessioni altrui.
-- [x] Istruzioni nel popup e test del flusso con credenziali sintetiche.
-- [x] Flusso da installazione vuota direttamente al login, test HA con account sintetico.
-- [x] Nuovo login reale nella UI b6: account verificato caricato in HA.
-- [x] Percorso con ritorno manuale accettato; istruzioni operative semplificate nella b7.
-- [ ] Eventuale ritorno automatico con callback HA autorizzato dal provider (non bloccante).
-- [x] Schema elettrico giornaliero/orario ordinario verificato: kWh, periodi e ritardo.
-- [ ] Verifica live delle ore ripetute e delle rettifiche storiche.
-- [x] Forniture senza serie di consumi distinte da consumi pari a zero nei modelli.
-- [x] Disponibilita' reale dei consumi gas mensili verificata sul servizio.
-- [ ] Limiti e condizioni d'uso verificati, campioni esclusivamente sintetici.
+- [x] Accesso guidato con login e OTP sul sito ENGIE.
+- [x] Sessione persistente, rinnovo e riautenticazione dello stesso account.
+- [x] Lettura separata delle forniture luce e gas.
+- [x] Consumi elettrici giornalieri, mensili e annuali.
+- [x] Importazione dello storico elettrico nelle statistiche a lungo termine.
+- [x] Consumi gas mensili e annuali in Smc.
+- [x] Stato, qualità e periodo dei dati senza valori zero inventati.
+- [x] Riepilogo sperimentale di fatture, importi e scadenze.
+- [x] Metadati contrattuali e servizi account selezionati.
+- [x] Catalogo locale di prezzi verificati su condizioni pubbliche.
+- [x] Configurazione, opzioni, diagnostica anonimizzata e immagini locali.
+- [x] Distribuzione tramite repository HACS personalizzato.
+- [x] Test client, test Home Assistant, hassfest e validazione HACS in CI.
 
-Se l'accesso richiede challenge incompatibili con un aggiornamento autonomo,
-documentare il limite prima di procedere con un'integrazione installabile.
+## Priorità
 
-### Primo collegamento
+### Affidabilità dei dati
 
-La prova con l'account rimosso ha confermato il limite della b3. Il prototipo
-b4 con upload APK e' stato abbandonato: la b5 include direttamente i parametri
-comuni del client mobile e rimuove caricamento, parser e dipendenze Android.
-Il bootstrap dell'app con tali parametri restituisce HTTP 200 senza una
-sessione personale; le letture dell'account richiedono sempre il suo token.
-Il percorso e' coperto con dati sintetici e il nuovo account risulta caricato
-in HA dopo il login b6. Nessun ripristino da backup usato per questa verifica.
+- [ ] Confermare il comportamento delle fatture con account che restituiscono
+  documenti reali. La risposta finora osservata può essere vuota con codice
+  applicativo ENGIE anche quando consumi e contratto funzionano.
+- [ ] Verificare rettifiche storiche, giorni con cambio d'ora e serie parziali
+  su più tipologie di account.
+- [ ] Ampliare le fixture sintetiche quando vengono osservate nuove strutture,
+  senza includere payload o identificativi reali nel repository.
+- [ ] Gestire nuovi campi soltanto dopo averne verificato significato,
+  disponibilità e comportamento in caso di dati mancanti.
 
-Il primo tentativo reale con la b5 e' fallito; il messaggio generico non
-permetteva di ricostruire la causa. La b6 distingue validazione del ritorno,
-scadenza, stato di altro tentativo, scambio codice, identita' e sessione.
-Un incolla errato non cambia piu' il link e un errore prima dello scambio
-non consuma il tentativo. Log solo con codici fissi, mai URL o token.
-La causa esatta del primo tentativo fallito non e' ricostruibile, ma il nuovo
-accesso e' riuscito. Il ritorno manuale e' accettato come soluzione: non e'
-un blocco aperto da sostituire prima di proseguire. La b7 lascia nel popup
-soltanto le azioni richieste all'utente, senza dettagli implementativi.
+### Copertura delle offerte
 
-Il recupero automatico della configurazione API e il ritorno OAuth a HA sono
-due problemi distinti: risolvere uno non dimostra di aver risolto l'altro.
+- [ ] Aggiungere altre versioni di offerte fisse dopo verifica delle condizioni
+  economiche pubbliche.
+- [ ] Studiare rinnovi e cambi prodotto senza riutilizzare il prezzo iniziale.
+- [ ] Valutare offerte indicizzate e multiorarie con modelli espliciti, senza
+  dedurre prezzi dal nome commerciale.
+- [ ] Mantenere fonti, impronte dei documenti e regole di validità nel catalogo.
 
-## Fase 2: client e Home Assistant
+### Esperienza di configurazione
 
-- [x] Client asincrono per forniture e consumi elettrici, provato sull'account.
-- [x] Test per scadenza/rinnovo, errori rete, 429, dati mancanti e duplicati.
-- [x] Schema gas mensile di successo e relativo client/parser in Smc.
-- [x] Polling condiviso prudente, refresh manuale e cache commissioning giornaliera.
-- [x] b9: letture identiche contemporanee deduplicate per account; annullamenti
-  isolati e cache commissioning invalidata al cambio contratto/attivazione.
-- [x] Rettifiche dei riepiloghi correnti sostituiscono la lettura precedente,
-  anche a parità di data e con importi/consumi in diminuzione; test sintetici.
-- [x] b16: importazione storica giornaliera con gestione delle rettifiche.
-- [x] Config flow/reauth e coordinatore condiviso per account.
-- [x] Sensori, identificativi stabili, disponibilita' e diagnostica HA.
-- [x] Endpoint fatture, parametri e DTO verificati staticamente nell'app.
-- [x] b8: ultima fattura, importi residui, conteggi e scadenze per account;
-  deduplicazione, pagamenti parziali e indisponibilità coperti da test sintetici.
-- [ ] Confermare una risposta con fatture reali: prova attuale vuota con
-  codici ENGIE 9/9.91 nonostante `OK`; nessuna conferma di zero da pagare.
-- [x] b17: prossima bolletta, servizi di pagamento/digitali, potenze, fine
-  condizioni economiche e finestra di autolettura da risposta reale verificata.
-- [ ] Eventuali ulteriori letture aggiunte solo dopo verifica dei dati disponibili.
-- [x] b10: prezzi della componente energia e quote fisse da CTE pubbliche,
-  con abbinamento esatto `PUMD#00016`, prima decorrenza e scadenza automatiche.
-  [Copertura e limiti](TARIFFS.md).
-- [x] b10 installata tramite HACS su HA 2026.9.2: quattro sensori tariffari
-  disponibili, 26 entità complessive, consumi conservati e nessun errore ENGIE.
-- [x] b11: 15 versioni aggiuntive verificate nei PDF ufficiali, per un totale
-  di 16 versioni di Energia PuntoFisso Mono 12 mesi. Prezzi, quote annue,
-  finestre di sottoscrizione e SHA-256 nel [registro delle fonti](TARIFF_SOURCES.md).
-- [ ] Ampliare le versioni verificate; verificare rinnovi e offerte indicizzate.
-- [x] b12: catalogo in `api/data/tariffs.json`, separato dall'abbinamento;
-  validazione offline di codici, importi, unità, date e fonti e controllo
-  del file incluso nel pacchetto distribuito. [Aggiornare il catalogo](TARIFFS.md#catalogo-json-e-aggiornamenti).
-- [x] Beta privata su dati reali, senza alterare altre integrazioni energetiche.
+- [ ] Ridurre il passaggio manuale dell'indirizzo finale se ENGIE renderà
+  disponibile un ritorno autorizzato compatibile con Home Assistant.
+- [ ] Migliorare ulteriormente i messaggi di errore sulla base di casi reali
+  anonimizzati.
+- [ ] Verificare il flusso su più browser desktop e mobili.
 
-## Fase 3: distribuzione
+### Distribuzione
 
-- [x] Manifest, traduzioni italiano/inglese e installazione assistita documentata.
-- [x] Test isolati sul framework Home Assistant e beta installata.
-- [x] Icone e loghi locali per tema chiaro/scuro e schermi ad alta densita'.
-- [x] Workflow automatici hassfest e HACS per push, PR e controllo settimanale.
-- [x] Validazione HACS e hassfest della b9 superata in CI, senza esclusioni.
-- [x] Repository personalizzato HACS aggiunto e download b9 verificato su HA,
-  con passaggio dalla copia manuale e account conservato dopo il riavvio.
-- [x] [Beta pubblica v0.1.0b9](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9)
-  pubblicata come pre-release dopo i controlli sul commit della release.
-- [x] [Beta pubblica v0.1.0b10](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b10)
-  con prezzi verificati; 129 test client, 39 test HA e validatori ufficiali
-  superati sul commit `6c54b94` della release.
-- [x] [Beta pubblica v0.1.0b11](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b11)
-  con catalogo ampliato a 16 versioni; stessi 168 test e validatori ufficiali
-  superati sul commit `fb4997f`. Installazione HACS verificata il 17 settembre,
-  con 26 entità conservate e prezzi precedenti invariati.
-- [x] [Beta pubblica v0.1.0b12](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b12)
-  con catalogo JSON: 139 test client, 39 test HA, verifica del wheel e validatori
-  ufficiali superati sul commit `b7e4ec3`. Installazione HACS verificata il
-  17 settembre: 34 file corrispondenti, 26 entità conservate, prezzi invariati,
-  nessun errore ENGIE e nessun riavvio pendente.
-- [x] [Beta pubblica v0.1.0b13](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b13)
-  con README compatibile con HACS: URL assoluti, schermate in sequenza e
-  rimozione dei tag `picture`/`source`. Controlli CI superati sul commit
-  `b08f487`; installazione HACS e caricamento delle sette immagini verificati
-  su desktop, mobile e tema scuro, con 26 entità conservate.
-- [x] [Beta pubblica v0.1.0b14](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b14)
-  per Home Assistant 2026.10: rimosso il vincolo PyJWT duplicato dal manifest,
-  evitando il conflitto con la versione gestita direttamente da Home Assistant.
-- [x] [Beta pubblica v0.1.0b15](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b15)
-  con consumi gas mensili e annuali, qualita', data ultimo dato e
-  sincronizzazione; schema verificato su una risposta reale.
-- [x] [Beta pubblica v0.1.0b16](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b16)
-  con backfill delle letture elettriche giornaliere, statistiche a lungo termine
-  e grafico del sensore ultimo giorno.
-- [x] [Beta pubblica v0.1.0b17](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17)
-  con metadati contrattuali e servizi account verificati su risposta reale.
-- [x] Richiesta di inclusione nel catalogo HACS:
-  [hacs/default #11034](https://github.com/hacs/default/pull/11034).
-- [ ] Accettazione della richiesta e disponibilità nella ricerca del catalogo HACS.
-- [ ] Logo nella ricerca HACS: immagini locali verificate; in attesa del supporto
-  nel pannello HACS. [Diagnosi e correzioni proposte](HACS.md#logo-assente-nella-ricerca-hacs).
+- [ ] Ottenere l'inclusione nel catalogo HACS; la
+  [richiesta #11034](https://github.com/hacs/default/pull/11034) è in coda.
+- [ ] Verificare ogni release su installazione pulita e aggiornamento dalla
+  versione precedente.
+- [ ] Continuare a testare le nuove versioni stabili di Home Assistant senza
+  aumentare inutilmente la versione minima richiesta.
 
-Lo storico elettrico giornaliero e' importato dalla b16 con periodi e timezone
-espliciti. Resta una fonte differita: nessuna promessa di tempo reale o di
-calcolo completo della bolletta.
+## Fuori perimetro
+
+Il progetto resta intenzionalmente in sola lettura. Non sono pianificati:
+
+- pagamenti o gestione dei metodi di pagamento;
+- invio di autoletture;
+- modifiche contrattuali, anagrafiche o delle preferenze dell'account;
+- download o archiviazione dei PDF delle fatture;
+- calcolo completo e fiscalmente affidabile della bolletta;
+- sostituzione di contatori o misuratori locali in tempo reale.
+
+Le proposte che richiedono operazioni di scrittura devono essere discusse prima
+in una issue e non verranno incluse senza API, autorizzazioni e garanzie adeguate.

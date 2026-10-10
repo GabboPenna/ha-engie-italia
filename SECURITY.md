@@ -1,67 +1,71 @@
 # Sicurezza e dati personali
 
-Il progetto e' una beta non ufficiale, non ancora destinata all'uso generalizzato.
-Non pubblicare credenziali personali, cookie, token, HAR completi, storage del
-browser, bollette, nomi, indirizzi, email, codici cliente, POD/PDR o codici fiscali.
-I file ignorati da Git non sono una protezione dei dati: controllare sempre
-diff, allegati e contenuto dei commit.
+ENGIE Italia per Home Assistant è un'integrazione non ufficiale, cloud e in sola
+lettura. Non è affiliata, sponsorizzata o approvata da ENGIE.
 
-## Parametri applicativi e autorizzazione
+## Operazioni consentite
 
-`api/app.py` contiene il parametro `x-api-key` comune distribuito nel client
-Android ENGIE Italia esaminato. Il client ID OAuth e' anch'esso applicativo,
-non un client secret. Questi valori non identificano un utente e **non concedono
-accesso alle forniture**: le letture richiedono il token di un account autorizzato.
+Il componente legge forniture, consumi, informazioni contrattuali e, quando il
+servizio le rende disponibili, fatture e scadenze. Non implementa pagamenti,
+autoletture, download di documenti o modifiche dell'account e del contratto.
 
-Non confondere la presenza tecnica di questi parametri con un'approvazione
-del progetto da parte di ENGIE o una garanzia sulla loro stabilita'. Le condizioni
-d'uso e di distribuzione restano da verificare prima dell'uso generalizzato.
-Nuovi parametri non verificati o chiavi di servizi terzi non vanno aggiunti
-come se fossero configurazione pubblica.
+## Accesso all'account
 
-Il componente non richiede, scarica, interpreta o esegue APK. Non usa mirror,
-server del manutentore o copie di configurazioni preesistenti per preparare
-un nuovo account. Il client HTTP accetta i parametri in memoria; in HA vengono
-forniti dal profilo applicativo incluso o dal deposito del proprio account
-durante la riautenticazione.
+Password ed eventuale OTP vengono inseriti esclusivamente nel sito ufficiale
+ENGIE. Il componente non li riceve, non li salva e non usa server intermediari
+del manutentore.
 
-Password e OTP si inseriscono esclusivamente sul sito ENGIE. Rispettare
-challenge, CAPTCHA e limiti del servizio; nessun aggiramento dei controlli.
-Il ritorno OAuth manuale e' temporaneo: PKCE, state, nonce e firma RS256
-proteggono il completamento. Non condividere codici o URL completi di callback.
+Il popup di configurazione crea un tentativo temporaneo protetto da PKCE,
+`state` e `nonce`. L'indirizzo finale copiato dal browser contiene un codice
+monouso: non va condiviso, registrato nei log o allegato alle issue.
+
+I parametri applicativi inclusi nell'integrazione sono comuni al client e non
+identificano un utente. Da soli non consentono di leggere forniture o consumi:
+serve sempre una sessione autorizzata dal titolare dell'account. La loro
+presenza non costituisce approvazione del progetto da parte di ENGIE né
+garanzia che il servizio rimanga invariato.
 
 ## Deposito locale
 
-In HA, `.storage/engie_italia.auth.<hash>` conserva configurazione e token con
-permessi `0600` e scritture atomiche. Il deposito **non e' cifrato**:
-amministratori, disco e backup possono esporlo. Proteggere host e backup.
-La config entry contiene solo un identificativo derivato, non chiavi o token.
+Per ogni account, Home Assistant salva configurazione e token in un file
+`.storage/engie_italia.auth.<hash>`. Le scritture sono atomiche e il file usa
+permessi `0600`, ma il contenuto **non è cifrato**.
 
-Ogni account richiede una nuova autorizzazione. La riautenticazione non puo'
-sostituire l'identita' dell'account configurato. Rimuovere l'integrazione elimina
-il deposito locale, non revoca il consenso presso ENGIE e non elimina vecchi backup.
+Amministratori, accesso al disco e backup possono quindi esporre la sessione.
+Proteggi host e copie di sicurezza e non pubblicare file `.storage`. La config
+entry contiene soltanto un identificativo derivato, non i token dell'account.
 
-Il rinnovo salva il token ruotato prima di proseguire con le letture. Se il disco
-non e' scrivibile, il token nuovo resta in RAM per ritentare il salvataggio.
-Un crash tra rinnovo remoto e scrittura puo' richiedere un nuovo login:
-non esiste una transazione atomica fra HA e il provider.
+Il rinnovo salva il token ruotato prima di proseguire con le letture. Se il
+disco non è scrivibile, la nuova sessione può restare soltanto in memoria e un
+riavvio può richiedere un nuovo accesso.
+
+Rimuovere l'integrazione elimina il deposito locale corrente, ma non revoca
+automaticamente il consenso presso ENGIE e non cancella le copie presenti nei
+backup. La revoca va gestita anche dal proprio account ENGIE, quando disponibile.
+
+## Dati in Home Assistant
+
+I sensori possono esporre consumi, date, importi, scadenze e riferimenti delle
+fatture. Recorder può conservarli nello storico secondo la configurazione
+locale di Home Assistant. Il componente non crea un archivio separato e non
+scarica i PDF delle bollette.
+
+La diagnostica usa un elenco esplicito di metadati ammessi ed esclude token,
+identificativi della fornitura, codici offerta, consumi, importi e riferimenti
+delle fatture. Controlla comunque ogni file prima di condividerlo.
 
 ## Log e segnalazioni
 
-I sensori fatture espongono numero fiscale, date e importi in Home Assistant:
-Recorder può conservarli nello storico secondo la configurazione locale.
-Il componente non scarica PDF e non conserva un archivio separato di bollette.
-La diagnostica esclude riferimenti, date, importi e conteggi delle fatture;
-i modelli omettono questi dati da `repr`.
+Non attivare trace HTTP completi su un sistema reale: URL, query e risposte
+possono contenere POD/PDR, codici cliente o altri dati personali. Un HAR del
+browser non è una diagnostica sicura.
 
-Gli errori espongono messaggi fissi e codici selezionati. Non attivare trace
-HTTP che registrino richieste autenticate: POD/PDR possono essere nelle query.
-I modelli contengono identificativi privati: `repr` li omette, ma
-`dataclasses.asdict` e serializzazioni indiscriminate non sono diagnostica sicura.
-Il riepilogo diagnostico usa una lista di metadati ammessi; non rende sicuro un HAR.
+Per problemi ordinari indica versione, tipo di fornitura e messaggio di errore
+anonimizzato. Non allegare credenziali, cookie, token, indirizzi finali del
+browser, file `.storage`, backup, bollette, nomi, indirizzi, email, codici
+cliente, POD/PDR o codici fiscali.
 
-Per segnalazioni sensibili usare la segnalazione privata GitHub, se abilitata:
-https://github.com/GabboPenna/ha-engie-italia/security/advisories/new
-
-Per problemi ordinari indicare versione, tipo di fornitura ed errore anonimizzato,
-senza allegati personali.
+Per una vulnerabilità usa la
+[segnalazione privata GitHub](https://github.com/GabboPenna/ha-engie-italia/security/advisories/new),
+se disponibile. Non aprire una issue pubblica con dettagli sfruttabili o dati
+personali.

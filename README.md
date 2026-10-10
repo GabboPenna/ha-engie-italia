@@ -2,185 +2,160 @@
 
 # ENGIE Italia per Home Assistant
 
-Forniture, consumi luce e gas, prezzi verificati e fatture, dentro Home Assistant.
+Forniture, consumi luce e gas, dati contrattuali e fatture ENGIE Italia in
+Home Assistant.
 
 [![Stato: beta 0.1.0b17](https://img.shields.io/badge/beta-0.1.0b17-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17)
-[![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#installazione)
+[![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#requisiti)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
 
-[Installazione](#installazione) · [Guida al collegamento](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md) · [Roadmap](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/ROADMAP.md) · [Segnala un problema](https://github.com/GabboPenna/ha-engie-italia/issues)
+[Installazione](#installazione) · [Collegare l'account](#collegare-laccount) ·
+[Funzioni](#funzioni) · [Limiti](#limiti-importanti) ·
+[Assistenza](https://github.com/GabboPenna/ha-engie-italia/issues)
 
-Integrazione **non ufficiale e in sola lettura** per le forniture ENGIE Italia.
-Non affiliata, sponsorizzata o approvata da ENGIE.
+Integrazione **non ufficiale, cloud e in sola lettura** per clienti domestici
+ENGIE Italia. Non è affiliata, sponsorizzata o approvata da ENGIE.
 
-**Non servono APK o chiavi API da inserire.** La connessione all'app è già
-predisposta: accedi sul sito ufficiale ENGIE e incolli in HA l'indirizzo finale
-del browser. Il ritorno manuale resta necessario; la sessione viene poi salvata
-e rinnovata automaticamente. [Procedura e limiti →](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md)
+La configurazione richiede soltanto l'accesso al proprio account sul sito
+ufficiale ENGIE. Password ed eventuale OTP vengono inseriti nel sito ENGIE,
+non in Home Assistant. Al termine si copia l'indirizzo finale del browser nel
+popup dell'integrazione; la sessione viene poi conservata e rinnovata
+automaticamente.
 
-## Uno sguardo alla configurazione
+## Funzioni
 
-Schermate reali della beta **0.1.0b7** su Home Assistant **2026.9.2**.
-Le immagini mostrano solo la finestra di collegamento, senza dati dell'account.
-
-**Da computer**
-
-![Configurazione da computer: accesso sul sito ENGIE e campo per l'indirizzo finale del browser](https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-desktop.png)
-
-**Da smartphone**
-
-<img src="https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-mobile.png" alt="La stessa configurazione di ENGIE Italia sullo schermo di uno smartphone" width="260">
-
-[Apri la schermata mobile a dimensione intera](https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-mobile.png) · [Vista desktop in tema scuro](https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-desktop-dark.png)
-
-Il campo resta vuoto finché non completi l'accesso sul sito ENGIE. Se il telefono
-apre direttamente l'app ENGIE, esegui il primo collegamento da un computer.
-
-## Cosa trovi in Home Assistant
-
-| Funzione | Disponibile nella beta |
+| Area | Dati disponibili |
 | :--- | :--- |
-| **Forniture** | Rilevamento automatico, un dispositivo per fornitura, stato e disponibilità dei dati. |
-| **Consumi luce** | Ultimo giorno, mese e anno disponibili, con periodo, qualità, data dell'ultimo dato e storico giornaliero a lungo termine. |
-| **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato ENGIE. |
-| **Fatture · sperimentale** | Ultima fattura, importo, fatture aperte, residuo da pagare e scadenze sul dispositivo Account. [Sensori e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md). |
-| **Contratto e servizi** | Prossima bolletta prevista, addebito diretto, bolletta digitale, scadenza delle condizioni economiche, potenze elettriche e finestra di autolettura gas. |
-| **Prezzi · sperimentale** | Componente energia in €/kWh e €/Smc e quota fissa annua, per le versioni di offerta verificate. [Copertura e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md). |
-| **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo da 1 a 24 ore, pulsante manuale e data dell'ultima sincronizzazione. |
-| **Accesso** | Login e OTP sul sito ENGIE, rinnovo della sessione e riautenticazione quando richiesta. |
-| **Diagnostica** | Informazioni tecniche senza identificativi, credenziali, quantità consumate o importi. |
-| **Interfaccia** | Configurazione guidata senza parametri tecnici e logo per tema chiaro e scuro. |
+| **Forniture** | Rilevamento automatico di luce e gas, stato della fornitura e disponibilità dei dati. |
+| **Consumi luce** | Ultimo giorno, mese e anno disponibili; data, periodo e qualità della misura; storico giornaliero importato nelle statistiche a lungo termine. |
+| **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato pubblicato. |
+| **Contratto** | Potenza impegnata e disponibile, scadenza delle condizioni economiche e finestra di autolettura gas, quando presenti. |
+| **Servizi account** | Prossima bolletta prevista, addebito diretto e bolletta digitale. |
+| **Fatture** | Ultimo documento, importi, scadenze e riepilogo delle fatture aperte. Funzione sperimentale, dipendente dai dati restituiti da ENGIE. |
+| **Prezzi** | Componente energia e quota fissa annua per le versioni di offerta presenti nel catalogo verificato. Non è un calcolo completo della bolletta. |
+| **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo configurabile da 1 a 24 ore e pulsante di aggiornamento manuale. |
+| **Diagnostica** | Informazioni tecniche anonimizzate, senza credenziali, identificativi della fornitura, consumi o importi. |
 
-> [!IMPORTANT]
-> **I consumi gas sono riepiloghi mensili differiti, disponibili solo quando
-> ENGIE li pubblica per la fornitura.** Download PDF, pagamenti e invio di
-> autoletture non sono implementati. I dati non rappresentano misure in tempo reale.
-
-La b15 aggiunge i consumi gas dopo la verifica di una risposta reale completa:
-mesi, totale annuale, qualità e data di aggiornamento restano distinti. Un
-account nuovo o non ancora valorizzato può non avere misure; un errore del
-servizio non viene trasformato in consumo zero. La b10 abbina il
-codice completo dell'offerta alle condizioni economiche pubbliche verificate.
-La b11 include **16 versioni di Energia PuntoFisso Mono 12 mesi**:
-[elenco e prezzi](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md#catalogo-verificato-nella-b11). Rinnovi e prezzi
-indicizzati restano in ricerca. Nessun prezzo viene dedotto dal nome dell'offerta
-o richiesto manualmente. I valori escludono tasse e altri oneri della bolletta.
-
-Dalla b12 le offerte sono raccolte in un [catalogo JSON dedicato](https://github.com/GabboPenna/ha-engie-italia/blob/main/custom_components/engie_italia/api/data/tariffs.json),
-per aggiungere versioni verificate senza modificare la logica di abbinamento.
-[Come aggiornare il catalogo](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md#catalogo-json-e-aggiornamenti).
-
-I totali mensili e annuali restano quelli del provider, non somme dei campioni
-arrotondati. Dalla b16 i soli campioni elettrici giornalieri alimentano la
-statistica **ENGIE Luce - Consumo giornaliero**, disponibile nei grafici
-statistici e come sorgente differita nella dashboard Energia. Il sensore
-**Consumo ultimo giorno disponibile** conserva inoltre il proprio grafico per
-gli aggiornamenti successivi. I misuratori locali e le altre integrazioni
-energetiche restano fonti distinte e non vengono modificati.
-
-### Fatture e automazioni
-
-La b8 aggiunge **11 sensori sul dispositivo Account**: riferimento, importo,
-data e scadenza dell'ultima fattura; numero di fatture disponibili, aperte e
-scadute; totale residuo da pagare, prima scadenza aperta, stato e sincronizzazione.
-Il residuo tiene conto dei pagamenti parziali e ogni documento viene contato
-una sola volta, anche con luce e gas sullo stesso contratto.
-
-Il cambiamento di **Ultima fattura** può essere usato nelle proprie automazioni,
-insieme a **Fatture disponibili**. L'integrazione espone i sensori; notifiche e
-automazioni restano una scelta dell'utente. [Significato e uso dei sensori](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md).
-
-La b17 aggiunge tre dati che restano utili anche quando la cronologia fatture
-non e' ancora pubblicata: **Prossima bolletta prevista**, **Addebito diretto** e
-**Bolletta digitale**. Sui dispositivi fornitura espone inoltre potenza impegnata
-e disponibile, scadenza delle condizioni economiche e termine dell'autolettura gas.
-
-> [!NOTE]
-> **La lettura di una fattura reale resta da confermare.** Schema e chiamata sono
-> verificati nell'app; la verifica reale piu' recente restituisce una lista vuota con codice
-> ENGIE `9.91`, nonostante `OK`. In questo caso gli importi risultano indisponibili:
-> la risposta non viene interpretata come conferma di zero da pagare.
+Ogni fornitura viene rappresentata da un dispositivo Home Assistant; i dati
+condivisi, come fatture e servizi, sono raccolti nel dispositivo **Account**.
 
 ## Installazione
 
-Richiede Home Assistant **2026.9.0 o successivo**; test del framework su **2026.9.2**.
-
-1. **Installa il componente.** Copia la cartella `custom_components/engie_italia`
-   nella configurazione di Home Assistant, quindi riavvia HA:
-
-   ```text
-   config/
-   └── custom_components/
-       └── engie_italia/
-           ├── manifest.json
-           ├── __init__.py
-           └── …
-   ```
-
-2. **Aggiungi l'integrazione.** Apri **Impostazioni → Dispositivi e servizi →
-   Aggiungi integrazione** e cerca **ENGIE Italia**.
-3. **Accedi a ENGIE.** Nella finestra **Collega il tuo account ENGIE**, apri il
-   collegamento al sito ufficiale e completa login ed eventuale OTP. Lascia aperta
-   la finestra di configurazione HA.
-4. **Completa il collegamento.** Incolla l'indirizzo finale del browser nel campo
-   di HA e premi **Invia** entro 10 minuti.
-
-> [!TIP]
-> La pagina finale può essere vuota o mostrare un errore: serve **l'indirizzo
-> completo della barra del browser**, con `code` e `state`, non il codice OTP.
-> Non condividere quell'indirizzo.
-
-La [guida al primo collegamento](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md) descrive il ritorno manuale,
-l'uso da smartphone e gli errori. Non servono Android, file dell'app o altri
-account configurati. Ogni account richiede il proprio consenso ENGIE.
-
-La sessione viene salvata e riutilizzata dopo un riavvio; il browser può essere
-chiuso. Revoca o scadenza definitiva del consenso richiedono un nuovo login:
-non viene promessa una sessione perpetua.
-
-<details>
-<summary><strong>Perché il browser non torna automaticamente a Home Assistant?</strong></summary>
-
-
-Il client nativo verificato accetta il callback dell'app ENGIE, non quello di
-Home Assistant. Il provider rifiuta il callback HA con `Callback URL mismatch`
-e non abilita i grant `device_code`, `password` o `password-realm`.
-Anche una sessione valida non permette
-di leggere le forniture senza chiave API (HTTP 403).
-
-Per un login completamente automatico occorre una configurazione applicativa
-autorizzata dal provider: non basta cambiare la schermata o l'URL di ritorno.
-La beta non usa proxy delle credenziali e non aggira questa protezione.
-
-</details>
-
 ### HACS
 
-La beta si distribuisce tramite repository personalizzato, con controlli
-automatici HACS e hassfest. Il progetto **non è ancora nel catalogo HACS**:
-la comparsa nella ricerca generale richiede l'approvazione della
-[richiesta d'inclusione #11034](https://github.com/hacs/default/pull/11034).
-[Procedura per provarla e stato del catalogo](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md).
-Non vengono distribuiti APK.
-I parametri comuni inclusi non costituiscono un'approvazione ENGIE e possono
-cambiare. Le condizioni d'uso/distribuzione restano da verificare
-prima di proporla all'uso generalizzato.
+Il progetto è ancora in attesa di inclusione nel catalogo HACS. Per installarlo
+ora, aggiungilo come repository personalizzato:
 
-## Sicurezza
+1. Apri **HACS → Integrazioni**.
+2. Dal menu in alto a destra scegli **Repository personalizzati**.
+3. Inserisci `https://github.com/GabboPenna/ha-engie-italia` e seleziona la
+   categoria **Integrazione**.
+4. Apri **ENGIE Italia**, abilita le versioni beta e installa l'ultima release.
+5. Riavvia Home Assistant.
 
-Nessun pagamento, autolettura o modifica contrattuale/del profilo. Password
-e OTP vengono inseriti **solo nel sito ENGIE**. Nessun server intermediario,
-download, caricamento o parser di APK. Chiave API e token sono salvati
-nel deposito privato HA con scritture atomiche e permessi restrittivi,
-**non cifrati**. Proteggere host e backup; non pubblicare i file `.storage`.
-Rimuovere l'integrazione elimina il deposito locale, non revoca automaticamente
-il consenso presso ENGIE. Dettagli in [SECURITY.md](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md).
+La [guida HACS](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md)
+spiega anche aggiornamenti, passaggio da un'installazione manuale e problemi
+di visualizzazione del logo.
+
+### Installazione manuale
+
+Scarica l'ultima release e copia la cartella
+`custom_components/engie_italia` nella directory di configurazione di Home
+Assistant:
+
+```text
+config/
+└── custom_components/
+    └── engie_italia/
+        ├── manifest.json
+        ├── __init__.py
+        └── ...
+```
+
+Riavvia Home Assistant dopo la copia o dopo ogni aggiornamento manuale.
+
+## Collegare l'account
+
+1. Apri **Impostazioni → Dispositivi e servizi → Aggiungi integrazione** e
+   cerca **ENGIE Italia**.
+2. Seleziona **Accedi al tuo account ENGIE** e completa login ed eventuale OTP
+   nel sito ufficiale, lasciando aperto il popup di Home Assistant.
+3. Al termine copia **l'intero indirizzo dalla barra del browser**, anche se la
+   pagina finale è vuota o mostra un errore.
+4. Incolla l'indirizzo nel popup e premi **Invia** entro 10 minuti.
+
+> [!IMPORTANT]
+> L'indirizzo finale contiene un codice temporaneo: non condividerlo e non
+> allegarlo alle segnalazioni. Non va incollato l'OTP né il testo della pagina.
+
+![Configurazione da computer: accesso sul sito ENGIE e campo per l'indirizzo finale del browser](https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-desktop.png)
+
+<img src="https://raw.githubusercontent.com/GabboPenna/ha-engie-italia/main/docs/images/setup-mobile.png" alt="Configurazione di ENGIE Italia su smartphone" width="260">
+
+Se il telefono apre direttamente l'app ENGIE, esegui il primo collegamento da
+un browser su computer. La [guida al collegamento](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md)
+contiene la procedura dettagliata, la riautenticazione e gli errori comuni.
+
+Una volta collegato l'account, il browser può essere chiuso. La sessione viene
+riutilizzata dopo riavvii e aggiornamenti; una revoca o una scadenza definitiva
+può richiedere un nuovo accesso.
+
+## Limiti importanti
+
+- I dati provengono dai servizi cloud ENGIE e non sono misure in tempo reale.
+- I consumi gas sono riepiloghi mensili e possono comparire con ritardo.
+- Lo storico elettrico dipende dai giorni effettivamente pubblicati da ENGIE.
+- Le fatture sono sperimentali: alcuni account ricevono dal servizio una
+  risposta vuota o non disponibile anche quando altri dati funzionano.
+- I prezzi coprono solo offerte e versioni presenti nel
+  [catalogo verificato](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md);
+  non includono tasse, trasporto, oneri o altri elementi della bolletta.
+- Non sono implementati pagamenti, invio di autoletture, modifiche contrattuali
+  o download dei PDF.
+
+Un dato assente o una risposta non valida non vengono trasformati in consumo o
+importo zero. Le forniture vengono aggiornate separatamente: un problema sul gas
+non rende automaticamente indisponibili i consumi elettrici, e viceversa.
+
+## Sicurezza e privacy
+
+L'integrazione comunica direttamente con ENGIE e non usa server intermediari
+del manutentore. I token della sessione vengono salvati nella cartella privata
+`.storage` di Home Assistant con permessi restrittivi, ma **non sono cifrati**:
+proteggi l'host e i backup e non pubblicare file di diagnostica non verificati,
+backup, URL finali del browser o contenuti di `.storage`.
+
+La rimozione dell'integrazione elimina il deposito locale, ma non revoca
+automaticamente il consenso presso ENGIE. Consulta [Sicurezza e dati personali](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
+prima di allegare materiale a una issue.
+
+## Requisiti
+
+- Home Assistant **2026.9.0 o successivo**.
+- Un account ENGIE Italia con almeno una fornitura visibile nell'area clienti.
+- Accesso a Internet da Home Assistant e dal browser usato per il collegamento.
+
+La beta è verificata con il framework Home Assistant 2026.9.2 ed è utilizzata
+su Home Assistant 2026.10. Le API ENGIE non sono pubbliche né garantite: un
+cambiamento lato provider può richiedere un aggiornamento dell'integrazione.
+
+## Documentazione
+
+| Argomento | Documento |
+| :--- | :--- |
+| Primo collegamento, riautenticazione ed errori | [Guida al collegamento](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md) |
+| Installazione e aggiornamenti con HACS | [Guida HACS](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md) |
+| Fatture, scadenze e automazioni | [Fatture](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md) |
+| Prezzi supportati e limiti del calcolo | [Tariffe](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md) |
+| Funzioni previste | [Roadmap](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/ROADMAP.md) |
+| Architettura e client Python | [Architettura](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/ARCHITECTURE.md) · [Client](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/CLIENT.md) |
+| Segnalare un problema o contribuire | [Issue](https://github.com/GabboPenna/ha-engie-italia/issues) · [Contributi](https://github.com/GabboPenna/ha-engie-italia/blob/main/CONTRIBUTING.md) |
 
 ## Sviluppo
 
-Client indipendente: **Python 3.12+**. Il codice risiede in
-`custom_components/engie_italia/api`, installato come package `engie_italia`.
+Il client indipendente richiede Python 3.12 o successivo. I test usano dati
+interamente sintetici e non contattano account reali.
 
 ```sh
 python -m pip install -e ".[dev]"
@@ -189,32 +164,11 @@ ruff check .
 ruff format --check .
 ```
 
-Test HA in un ambiente separato Python 3.14:
-
-```sh
-python -m pip install homeassistant==2026.9.2
-python -m unittest discover -s tests_ha -v
-```
-
-I test usano dati inventati e una configurazione temporanea, senza account reali.
-I tool opzionali `inspect_portal.py` e `probe_account.py` sono strumenti di ricerca
-del portale web, non configurano la sessione mobile. Richiedono l'extra
-`browser` e Chromium.
-
-## Documentazione e contributi
-
-| Cerchi… | Parti da qui |
-| :--- | :--- |
-| Primo accesso o soluzione di un errore | [Guida al collegamento](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/SETUP.md) |
-| Fatture, scadenze e sensori per automazioni | [Guida alle fatture](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/INVOICES.md) |
-| Repository personalizzato e controlli HACS | [Guida HACS](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md) |
-| Funzioni previste e stato dei lavori | [Roadmap](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/ROADMAP.md) |
-| Struttura dell'integrazione | [Architettura](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/ARCHITECTURE.md) |
-| Utilizzo del client Python | [Documentazione client](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/CLIENT.md) |
-| Dettagli delle API ENGIE | [Ricerca API](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/API_RESEARCH.md) |
-| Segnalare un problema o contribuire | [Issue](https://github.com/GabboPenna/ha-engie-italia/issues) · [Contributi](https://github.com/GabboPenna/ha-engie-italia/blob/main/CONTRIBUTING.md) |
+I test Home Assistant vengono eseguiti separatamente come indicato nel workflow
+del repository. Prima di contribuire consulta [CONTRIBUTING.md](https://github.com/GabboPenna/ha-engie-italia/blob/main/CONTRIBUTING.md).
 
 ---
 
-Codice distribuito con licenza **[MIT](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)**. Marchi e immagini appartengono
-ai rispettivi titolari: [attribuzione e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/BRANDING.md).
+Codice distribuito con licenza **[MIT](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)**.
+I nomi e le immagini ENGIE appartengono ai rispettivi titolari; consulta
+[attribuzione e limiti](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/BRANDING.md).

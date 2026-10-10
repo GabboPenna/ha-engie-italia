@@ -36,8 +36,8 @@ Non si implementeranno pagamenti, autoletture o modifiche alle forniture.
 - Gli intervalli richiedono un fuso orario e durata positiva in UTC.
 - kWh, m3 e Smc restano distinti. Nessuna conversione gas implicita.
 - Stato effettivo/stimato rimane sconosciuto se non dichiarato dalla sorgente.
-- Serie duplicate, granularita' sovrapposte e rettifiche richiederanno una
-  politica esplicita prima di qualsiasi aggregazione o importazione storica.
+- Serie duplicate o sovrapposte sono rifiutate. Le rettifiche sostituiscono il
+  periodo corrispondente senza sommare differenze o inventare campioni mancanti.
 
 Il parser mobile rifiuta duplicati e sovrapposizioni alla stessa granularita',
 ma non presume completezza delle serie. Conserva i riepiloghi ENGIE separati

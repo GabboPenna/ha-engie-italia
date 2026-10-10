@@ -101,13 +101,13 @@ autunnale viene rifiutata come ambigua, non attribuita arbitrariamente a un fuso
 Un'ora inesistente viene rifiutata. Serie sparse rimangono sparse; duplicati,
 periodi incoerenti e valori non finiti/negativi sono errori.
 
-Dalla b16 i campioni elettrici giornalieri alimentano una statistica esterna
+I campioni elettrici giornalieri alimentano una statistica esterna
 rettificabile. Resta separata dai totali mensili/annuali e non va sommata a un
 misuratore locale della stessa fornitura nella dashboard Energy.
 
 ### Cache e rettifiche della situazione corrente
 
-Dalla b9 la deduplicazione dura soltanto finché la lettura è condivisa da
+La deduplicazione dura soltanto finché la lettura è condivisa da
 chiamanti contemporanei. Risultati ed errori non vengono memorizzati per le
 richieste successive: il normale aggiornamento e il pulsante manuale rileggono
 consumi e fatture. Una risposta corretta sostituisce interamente la precedente,

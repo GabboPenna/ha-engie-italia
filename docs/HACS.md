@@ -1,150 +1,107 @@
-# Repository personalizzato HACS
+# Installazione con HACS
 
-Il progetto è una beta non ufficiale e non è incluso nel catalogo HACS.
-La b13 ha superato entrambi i validatori ufficiali, HACS e hassfest, senza esclusioni.
-I controlli automatici di struttura non confermano il funzionamento delle API
-ENGIE, le condizioni di distribuzione o l'esito di un'installazione completa.
-Il download del tag pubblico **v0.1.0b9** attraverso un repository personalizzato è stato verificato
-con HACS 2.0.5 e Home Assistant 2026.9.2, partendo da una copia manuale della b8.
-Dopo il riavvio l'account è rimasto caricato, con le stesse 22 entità e gli stessi
-valori dei consumi. Le fatture hanno mantenuto l'indisponibilità dovuta a 9/9.91.
-La prova non conferma i dati che il servizio non ha restituito.
-Nella prova della b9 HACS riconosceva versione installata e disponibile come
-`v0.1.0b9`, senza aggiornamenti o riavvii pendenti.
+ENGIE Italia è una beta pubblica. Al momento non compare ancora nel catalogo
+generale HACS: la [richiesta di inclusione #11034](https://github.com/hacs/default/pull/11034)
+è aperta e in attesa di revisione. Fino all'accettazione va aggiunta come
+repository personalizzato.
 
-Anche il successivo aggiornamento **b9 → b10** è stato verificato tramite HACS:
-account caricato, 26 entità, quattro nuovi sensori tariffari disponibili e
-consumi precedenti conservati. I 32 file del componente corrispondono alla
-release; controllo configurazione e riavvio riusciti, nessun errore ENGIE nei
-log. La lettura fatture conserva il limite 9/9.91 già documentato.
+Stato verificato l'**11 ottobre 2026**.
 
-Nella verifica HACS 2.0.5 elenca entrambe le beta ma indica ancora b9 come
-versione disponibile: **selezionare esplicitamente v0.1.0b10** nel download.
-Il download della b10 riesce e HACS la riconosce installata dopo il riavvio.
-Questo dettaglio del selettore non impedisce il funzionamento dell'integrazione.
+## Requisiti
 
-Il **17 settembre 2026** è stato verificato anche il passaggio **b10 → b11**
-tramite HACS: 26 entità conservate, prezzi e consumi invariati, account caricato
-e nessun errore ENGIE nei log. I 32 file installati corrispondono alla release;
-controllo configurazione e riavvio riusciti. Le 15 versioni aggiuntive sono
-verificate sui documenti pubblici; la prova live usa la versione già supportata.
-Anche per b11 è stata necessaria la selezione esplicita della versione nel download.
+- HACS già installato e configurato;
+- Home Assistant 2026.9.0 o successivo;
+- accesso amministrativo a Home Assistant;
+- disponibilità ad usare una release contrassegnata come beta.
 
-Il successivo passaggio **b11 → b12**, verificato nella stessa giornata, conserva
-le 26 entità e i quattro valori tariffari, ora letti dal catalogo JSON incluso.
-I 34 file installati corrispondono alla release; controllo configurazione,
-riavvio e caricamento dell'account riusciti, nessun errore ENGIE nei log.
-L'unico stato precedente cambiato è la data dell'ultima sincronizzazione luce.
-HACS riconosce **v0.1.0b12** sia come installata sia come disponibile, senza
-riavvio pendente. Le fatture mantengono l'indisponibilità già documentata.
+## Prima installazione
 
-## Installare la beta
+1. Apri **HACS → Integrazioni**.
+2. Dal menu in alto a destra scegli **Repository personalizzati**.
+3. Inserisci:
 
-Occorrono HACS già configurato e Home Assistant 2026.9.0 o successivo.
+   ```text
+   https://github.com/GabboPenna/ha-engie-italia
+   ```
 
-1. Apri HACS, il menu in alto a destra e **Repository personalizzati**.
-2. Inserisci `https://github.com/GabboPenna/ha-engie-italia`, scegli la categoria
-   **Integrazione** e aggiungi il repository.
-3. Apri **ENGIE Italia** e abilita la visualizzazione delle versioni beta del
-   repository. Scegli **v0.1.0b17** nel selettore della versione e scaricala.
-   Se è già installata, usa **Riscarica / Redownload**. Controlla le
-   [note della beta](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17):
-   la lettura di fatture reali resta da confermare; i consumi gas mensili sono
-   disponibili quando ENGIE li pubblica per la fornitura e i
-   [prezzi della componente energia](TARIFFS.md) supportano solo le versioni verificate.
-4. Riavvia Home Assistant e segui la [guida al collegamento](SETUP.md).
+4. Seleziona la categoria **Integrazione** e conferma.
+5. Cerca e apri **ENGIE Italia**.
+6. Abilita la visualizzazione delle versioni beta, scegli l'ultima release e
+   avvia il download.
+7. Riavvia Home Assistant.
+8. Apri **Impostazioni → Dispositivi e servizi → Aggiungi integrazione** e cerca
+   **ENGIE Italia**.
 
-La release è contrassegnata come **pre-release** su GitHub. Non viene presentata
-come versione stabile: a seconda della versione di HACS può essere necessario
-abilitare le beta o selezionarla esplicitamente nella finestra di download.
+La release pubblica corrente è
+[v0.1.0b17](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17).
+Se HACS propone una beta precedente, seleziona esplicitamente la versione dal
+menu di download.
 
-Per passare da una copia manuale a HACS, la cartella del componente deve essere
-la stessa: `custom_components/engie_italia`. Conserva la config entry dell'account;
-la sessione risiede nel deposito privato HA, esterno alla cartella del componente.
-Un aggiornamento non richiede intenzionalmente la cancellazione dell'account.
+## Aggiornamenti
 
-## Immagini nel README della scheda HACS
+Quando HACS segnala una nuova versione:
 
-La b13 corregge logo e schermate nella pagina del repository. Il README usa
-URL assoluti per immagini e documentazione, senza i tag `<picture>`/`<source>`
-che HACS 2.0.5 mostra come testo. Le schermate sono disposte in sequenza per
-adattarsi anche a un pannello stretto; la vista scura resta accessibile tramite
-un collegamento separato.
+1. leggi le note della release;
+2. avvia l'aggiornamento da HACS;
+3. riavvia Home Assistant se richiesto;
+4. controlla che l'integrazione sia caricata e che i sensori tornino disponibili.
 
-HACS 2.0.5 legge il README della **versione installata**: per ricevere questa
-correzione occorre aggiornare alla b13 e riaprire la scheda del repository.
-La sola modifica del README sul ramo `main` non aggiorna la scheda della b12.
-Il limite di rendering dei tag è documentato anche in
-[hacs/integration #4440](https://github.com/hacs/integration/issues/4440).
+Account, sessione ed entità sono conservati fuori dalla cartella del componente.
+Un normale aggiornamento non richiede la rimozione e la nuova aggiunta
+dell'integrazione.
 
-Verifica del **17 settembre 2026**, dopo l'aggiornamento **b12 → b13** tramite
-HACS: tutte le 7 immagini del README (logo, due schermate e quattro badge)
-caricate nella scheda reale, su desktop, mobile e tema scuro, senza tag
-`picture`/`source` visibili. Verificati logo e schermate anche su GitHub.
-I 34 file installati corrispondono alla release; configurazione e riavvio
-riusciti, account caricato, 26 entità conservate e nessun errore ENGIE nei log.
-HACS indica b13 installata e disponibile, senza riavvio pendente.
+## Passare da installazione manuale a HACS
 
-Per futuri aggiornamenti mantenere URL pubblici completi e verificare la resa
-nel pannello HACS, oltre all'anteprima GitHub. Evitare layout con tabelle HTML
-per affiancare screenshot: possono richiedere troppo spazio sui telefoni.
+La cartella deve chiamarsi già `custom_components/engie_italia`.
 
-## Logo assente nella ricerca HACS
+1. Aggiungi il repository personalizzato seguendo la procedura sopra.
+2. Installa con HACS la stessa versione o una versione successiva.
+3. Riavvia Home Assistant.
 
-Con **HACS 2.0.5** la ricerca può mostrare **icon not available** per ENGIE Italia.
-È un limite noto del pannello HACS: legge le icone dal vecchio archivio online
-Home Assistant Brands, mentre questa integrazione include le immagini nella
-cartella locale `custom_components/engie_italia/brand/`, secondo i requisiti attuali.
+Non rimuovere prima la voce dell'account: la configurazione e la sessione
+esistenti possono essere riutilizzate. È comunque prudente avere un backup
+recente di Home Assistant.
 
-Verifica del **16 settembre 2026**, con la b9 su HA 2026.9.2: l'API locale di
-Home Assistant restituisce icona e logo, chiari e scuri, con HTTP 200 e contenuto
-identico ai file installati. L'URL usato da HACS restituisce invece il segnaposto
-"icon not available". Il componente è installato correttamente; reinstallarlo
-o essere accettati nel catalogo HACS non cambia l'origine delle immagini.
+## Problemi comuni
 
-La correzione della ricerca è proposta in
-[hacs/frontend #945](https://github.com/hacs/frontend/pull/945) insieme a
-[hacs/integration #5388](https://github.com/hacs/integration/pull/5388): alla data
-della verifica sono aperte e non incluse in una release HACS.
-Il repository Home Assistant Brands
-[non accetta nuovi marchi per integrazioni personalizzate](https://github.com/home-assistant/brands/blob/master/.github/workflows/close-new-custom-integrations.yml).
-Il logo locale resta utilizzabile nell'interfaccia nativa di Home Assistant.
+### L'integrazione non compare in “Aggiungi integrazione”
 
-## Comparire nella ricerca di HACS
+Verifica che il download HACS sia terminato, che esista la cartella
+`custom_components/engie_italia` e che Home Assistant sia stato riavviato.
+Ricarica completamente il browser dopo il riavvio.
 
-Un repository personalizzato compare solo nell'HACS di chi lo ha aggiunto.
-Per renderlo trovabile agli altri utenti occorre l'inclusione in `hacs/default`:
-controlli superati, una release pubblicata dopo i controlli e accettazione della
-richiesta da parte dei manutentori. La candidatura non equivale all'inclusione.
+### HACS mostra una versione precedente
 
-La [richiesta hacs/default #11034](https://github.com/hacs/default/pull/11034)
-è stata aperta il **16 settembre 2026** ed è in attesa di accettazione.
-La [beta pubblica v0.1.0b9](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b9)
-è già disponibile tramite la procedura qui sopra.
+Apri il menu del repository, scegli **Scarica di nuovo** o il selettore della
+versione e seleziona esplicitamente l'ultima beta.
 
-La [procedura ufficiale](https://www.hacs.xyz/docs/publish/include/) segnala che
-la revisione può richiedere mesi. Dopo l'accettazione il repository entra nel
-successivo aggiornamento del catalogo. `hacs.json` dichiara il Paese `IT`.
-La ricerca **Aggiungi integrazione** di Home Assistant trova il componente
-dopo che HACS lo ha scaricato e HA è stato riavviato.
+### Logo assente nella ricerca HACS
 
-## Controlli automatici
+Alcune versioni di HACS mostrano `icon not available` per repository
+personalizzati, anche se le immagini locali incluse nell'integrazione vengono
+caricate correttamente da Home Assistant. È un limite di visualizzazione e non
+indica un'installazione incompleta.
 
-Il workflow `Validate integration` esegue i validatori ufficiali **hassfest**
-e **HACS**, senza esclusioni, su push e pull request. È disponibile anche
-l'avvio manuale; sul ramo predefinito viene ripetuto settimanalmente.
-Il workflow `Tests` esegue separatamente i test offline su Python 3.12/3.14
-e quelli del framework Home Assistant in una configurazione temporanea.
+Il logo e le icone sono contenuti in `custom_components/engie_italia/brand/` e
+sono serviti direttamente da Home Assistant nelle pagine dell'integrazione.
 
-Le azioni sono referenziate da commit specifici. I contenitori dei validatori
-sono quelli pubblicati dalle rispettive azioni e possono aggiornarsi: un nuovo
-fallimento va esaminato, non nascosto disabilitando controlli.
+### La scheda HACS mostra una documentazione vecchia
 
-La validazione usa soltanto il token GitHub del job con permesso di lettura;
-nessun account ENGIE, token HA, segreto applicativo personalizzato o payload reale
-viene passato ai job. Tutti i file necessari al componente sono nella sua
-cartella, incluse traduzioni e immagini locali del marchio.
+HACS visualizza il README contenuto nella versione installata, non sempre quello
+presente sul ramo `main`. Aggiorna all'ultima release e riapri la scheda.
 
-Fonti: [requisiti delle integrazioni HACS](https://www.hacs.xyz/docs/publish/integration/),
-[azione di validazione HACS](https://www.hacs.xyz/docs/publish/action/),
-[repository personalizzati](https://www.hacs.xyz/docs/faq/custom_repositories/).
+## Controlli del progetto
+
+Ogni push e pull request eseguono:
+
+- test offline del client su Python 3.12 e 3.14;
+- test dell'integrazione in un ambiente Home Assistant isolato;
+- validazione del catalogo tariffe e del pacchetto distribuibile;
+- Ruff, hassfest e validazione HACS senza esclusioni.
+
+I test usano dati sintetici e non ricevono credenziali o dati di account reali.
+Il superamento dei validatori controlla struttura e compatibilità del progetto,
+ma non garantisce la disponibilità futura dei servizi cloud ENGIE.
+
+Riferimenti: [repository personalizzati HACS](https://www.hacs.xyz/docs/faq/custom_repositories/),
+[requisiti per la pubblicazione](https://www.hacs.xyz/docs/publish/integration/).
