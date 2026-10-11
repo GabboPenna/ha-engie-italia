@@ -14,8 +14,9 @@ from pathlib import Path
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntries, ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -225,11 +226,16 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         power = self.tariff_sensor(self.power)
         gas = self.tariff_sensor(self.gas)
         fixed = self.tariff_sensor(self.gas, "annual_fixed_fee")
+        status = self.tariff_sensor(self.power, "tariff_status")
         self.assertTrue(power.available)
         self.assertTrue(gas.available)
+        self.assertTrue(status.available)
         self.assertEqual(power.native_value, Decimal("0.12345"))
         self.assertEqual(gas.native_value, Decimal("0.56789"))
         self.assertEqual(fixed.native_value, Decimal("75"))
+        self.assertEqual(status.native_value, "verified")
+        self.assertEqual(status.device_class, SensorDeviceClass.ENUM)
+        self.assertEqual(status.entity_category, EntityCategory.DIAGNOSTIC)
         self.assertEqual(power.native_unit_of_measurement, "EUR/kWh")
         self.assertEqual(gas.native_unit_of_measurement, "EUR/Smc")
         self.assertEqual(fixed.native_unit_of_measurement, "EUR/year")
@@ -259,10 +265,13 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     ):
         await self.prepare_tariffs()
         sensor = self.tariff_sensor(self.power)
+        status = self.tariff_sensor(self.power, "tariff_status")
         original_id = sensor.unique_id
         self.coordinator.last_update_success = False
         self.assertFalse(sensor.available)
         self.assertIsNone(sensor.native_value)
+        self.assertTrue(status.available)
+        self.assertEqual(status.native_value, "update_failed")
         self.assertEqual(
             sensor.extra_state_attributes["tariff_status"], "update_failed"
         )
@@ -278,8 +287,10 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             sensor.extra_state_attributes["tariff_status"], "unverified_offer"
         )
+        self.assertEqual(status.native_value, "unverified_offer")
         self.coordinator.data = {}
         self.assertFalse(sensor.available)
+        self.assertFalse(status.available)
         self.assertIsNone(sensor.extra_state_attributes)
 
     async def test_tariff_expires_at_italian_midnight_without_api_calls(self):

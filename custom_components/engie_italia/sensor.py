@@ -217,6 +217,24 @@ GAS_DETAILS = (
 
 TARIFFS = (
     SensorEntityDescription(
+        key="tariff_status",
+        translation_key="tariff_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "verified",
+            "missing_metadata",
+            "unverified_offer",
+            "unsupported_terms",
+            "unverified_renewal",
+            "not_yet_valid",
+            "expired",
+            "inactive",
+            "update_failed",
+        ],
+        icon="mdi:tag-check-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
         key="energy_unit_price",
         translation_key="energy_unit_price",
         icon="mdi:currency-eur",
@@ -567,10 +585,21 @@ class EngieTariffSensor(EngieSensor):
 
     @property
     def available(self):
+        if self.entity_description.key == "tariff_status":
+            return self.supply_data is not None
         return self._tariff() is not None
 
     @property
     def native_value(self):
+        if self.entity_description.key == "tariff_status":
+            data = self.supply_data
+            if data is None:
+                return None
+            return (
+                tariff_status(data.supply, dt_util.now(ROME).date())
+                if self.coordinator.last_update_success
+                else "update_failed"
+            )
         tariff = self._tariff()
         if tariff is None:
             return None

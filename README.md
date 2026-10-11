@@ -5,7 +5,7 @@
 Forniture, consumi luce e gas, dati contrattuali e fatture ENGIE Italia in
 Home Assistant.
 
-[![Stato: beta 0.1.0b17](https://img.shields.io/badge/beta-0.1.0b17-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b17)
+[![Stato: beta 0.1.0b18](https://img.shields.io/badge/beta-0.1.0b18-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b18)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#requisiti)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
@@ -33,7 +33,7 @@ automaticamente.
 | **Contratto** | Potenza impegnata e disponibile, scadenza delle condizioni economiche e finestra di autolettura gas, quando presenti. |
 | **Servizi account** | Prossima bolletta prevista, addebito diretto e bolletta digitale. |
 | **Fatture** | Ultimo documento, importi, scadenze e riepilogo delle fatture aperte. Funzione sperimentale, dipendente dai dati restituiti da ENGIE. |
-| **Prezzi** | Componente energia e quota fissa annua per le versioni di offerta presenti nel catalogo verificato. Non è un calcolo completo della bolletta. |
+| **Prezzi** | Componente energia, quota fissa annua e stato di verifica per le versioni presenti nel catalogo controllato su documenti pubblici. Non è un calcolo completo della bolletta. |
 | **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo configurabile da 1 a 24 ore e pulsante di aggiornamento manuale. |
 | **Diagnostica** | Informazioni tecniche anonimizzate, senza credenziali, identificativi della fornitura, consumi o importi. |
 

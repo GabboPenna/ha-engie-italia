@@ -159,6 +159,20 @@
       "self_reading_deadline": {
         "name": "Self-reading deadline"
       },
+      "tariff_status": {
+        "name": "Tariff verification",
+        "state": {
+          "verified": "Verified",
+          "missing_metadata": "Offer details missing",
+          "unverified_offer": "Offer not yet verified",
+          "unsupported_terms": "Unsupported terms",
+          "unverified_renewal": "Renewal not yet verified",
+          "not_yet_valid": "Not yet effective",
+          "expired": "Economic terms expired",
+          "inactive": "Supply not active",
+          "update_failed": "Update failed"
+        }
+      },
       "energy_unit_price": {
         "name": "Energy component price"
       },

@@ -1,9 +1,10 @@
 # Prezzi della componente energia
 
-L'integrazione espone due sensori per ogni fornitura, anche quando mancano i consumi:
+L'integrazione espone tre sensori per ogni fornitura, anche quando mancano i consumi:
 
 | Sensore | Unità | Significato |
 | :--- | :--- | :--- |
+| Verifica tariffa | stato | Spiega se e perché le condizioni economiche sono disponibili. |
 | Prezzo componente energia | EUR/kWh luce, EUR/Smc gas | Corrispettivo per il consumo nelle condizioni economiche verificate. |
 | Quota fissa annua vendita | EUR/year | Corrispettivo annuo del venditore, distinto dal prezzo unitario. |
 
@@ -26,9 +27,9 @@ configurano automaticamente il calcolo dei costi nella dashboard Energy.
 
 Il catalogo incluso nel componente contiene soltanto versioni controllate sui
 documenti pubblici ENGIE. Attualmente comprende
-**16 versioni di Energia PuntoFisso Mono 12 mesi**: da `PUMD#00008` a
-`PUMD#00018`, e da `PUMD#00020` a `PUMD#00024`. La `PUMD#00019` non è
-verificata e resta esclusa. Non sono sedici famiglie commerciali diverse.
+**19 versioni di Energia PuntoFisso Mono 12 mesi**: da `PUMD#00008` a
+`PUMD#00018`, e da `PUMD#00020` a `PUMD#00027`. La `PUMD#00019` non è
+verificata e resta esclusa. Non sono diciannove famiglie commerciali diverse.
 Il componente non scarica o interpreta PDF a ogni aggiornamento e non richiede
 un prezzo inserito manualmente.
 
@@ -50,8 +51,11 @@ un prezzo inserito manualmente.
 | PUMD#00022 | 0,14090 | 72,00 | 0,59900 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00022) |
 | PUMD#00023 | 0,14090 | 72,00 | 0,69000 | 84,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00023) |
 | PUMD#00024 | 0,18400 | 120,00 | 0,75000 | 120,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00024) |
+| PUMD#00025 | 0,19900 | 120,00 | 0,89000 | 120,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00025) |
+| PUMD#00026 | 0,19900 | 108,00 | 0,92000 | 108,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00026) |
+| PUMD#00027 | 0,19900 | 108,00 | 0,92000 | 108,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00027) |
 
-Documenti controllati il 17 settembre 2026, con confronto delle condizioni e
+Documenti controllati fino all'11 ottobre 2026, con confronto delle condizioni e
 verifica visiva delle tabelle della componente energia e delle quote annue.
 I documenti condividono durata di dodici mesi, perdite luce incluse, assenza di
 sconti e PCS gas di riferimento 0,03852 GJ/Smc. Ogni versione ha i propri prezzi
@@ -81,10 +85,11 @@ essere verificati nelle proprie condizioni e fatture.
 
 ## Disponibilità e attributi
 
-Fonte `source_url`, codice `offer_code`, date `valid_from` e `valid_until` e
-limiti del prezzo sono negli attributi. Gli importi diventano indisponibili,
-senza ripiego a zero, se l'abbinamento non è verificabile. `tariff_status`
-ne indica il motivo:
+Il sensore **Verifica tariffa** rende leggibile il risultato direttamente nella
+pagina del dispositivo. Fonte `source_url`, codice `offer_code`, date
+`valid_from` e `valid_until` e limiti del prezzo sono anche negli attributi.
+Gli importi diventano indisponibili, senza ripiego a zero, se l'abbinamento non
+è verificabile. Lo stato ne indica il motivo:
 
 | Stato | Significato |
 | :--- | :--- |

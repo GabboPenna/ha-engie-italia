@@ -288,6 +288,60 @@
         "unit": "EUR/Smc",
         "reference_pcs_gj_smc": "0.03852"
       }
+    },
+    "PUMD#00025": {
+      "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00025",
+      "source_sha256": "c42be2cebd557f26a2821ec04cc621a38787f7b4b343d95c01d244bb044dc724",
+      "offered_from": "2026-09-17",
+      "offered_until": "2026-09-23",
+      "electricity": {
+        "unit_price": "0.19900",
+        "annual_fee": "120.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "unit_price": "0.89000",
+        "annual_fee": "120.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00026": {
+      "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00026",
+      "source_sha256": "4b20adc453000934748af0889ea567ad635c62e3f98a16f4a0bc3a8731e325bf",
+      "offered_from": "2026-10-01",
+      "offered_until": "2026-10-07",
+      "electricity": {
+        "unit_price": "0.19900",
+        "annual_fee": "108.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "unit_price": "0.92000",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
+    },
+    "PUMD#00027": {
+      "source_url": "https://www.engie.it/documents/d/casa/223_pumd-00027",
+      "source_sha256": "ae5b7a8affd29dce4fdf6e27951cefe1c9d99a5a118dcee667f6e90fc0785934",
+      "offered_from": "2026-10-08",
+      "offered_until": "2026-10-14",
+      "electricity": {
+        "unit_price": "0.19900",
+        "annual_fee": "108.00",
+        "unit": "EUR/kWh",
+        "network_losses_included": true
+      },
+      "gas": {
+        "unit_price": "0.92000",
+        "annual_fee": "108.00",
+        "unit": "EUR/Smc",
+        "reference_pcs_gj_smc": "0.03852"
+      }
     }
   }
 }

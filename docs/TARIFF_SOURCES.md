@@ -1,6 +1,6 @@
 # Fonti del catalogo tariffe
 
-Documenti pubblici ENGIE controllati il **17 settembre 2026**. I collegamenti
+Documenti pubblici ENGIE controllati fino all'**11 ottobre 2026**. I collegamenti
 ai PDF e i prezzi verificati sono nella [tabella del catalogo](TARIFFS.md#catalogo-verificato).
 Il codice/versione è stato riscontrato nel contenuto di ogni PDF. Le tabelle
 nelle schede sintetiche e nelle CTE sono coerenti; le condizioni sono uguali
@@ -28,6 +28,9 @@ i documenti esaminati; il componente non li riscarica durante il polling.
 | PUMD#00022 | 2026-08-27 – 2026-09-02 | `c5817d1f6f5fb1bc1e7d44e015aa4196fd691d4cdb06afa2220dbaad5b657088` |
 | PUMD#00023 | 2026-09-03 – 2026-09-09 | `ae69c0941d7f2696347efd60e020fc3b5976672e30761320199b309684ef659d` |
 | PUMD#00024 | 2026-09-10 – 2026-09-16 | `892bd27e3e0b0c208dc683d6d1078f8cc66374283827c8781e16954efac3721c` |
+| PUMD#00025 | 2026-09-17 – 2026-09-23 | `c42be2cebd557f26a2821ec04cc621a38787f7b4b343d95c01d244bb044dc724` |
+| PUMD#00026 | 2026-10-01 – 2026-10-07 | `4b20adc453000934748af0889ea567ad635c62e3f98a16f4a0bc3a8731e325bf` |
+| PUMD#00027 | 2026-10-08 – 2026-10-14 | `ae5b7a8affd29dce4fdf6e27951cefe1c9d99a5a118dcee667f6e90fc0785934` |
 
 La copertura è limitata all'elenco esplicito. `PUMD#00019` non è stata verificata
 e non viene ricostruita dai prezzi delle versioni adiacenti. Le offerte a fasce,
