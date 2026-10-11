@@ -279,6 +279,7 @@ class EngieMobileClient:
                         params=params,
                         headers={
                             "sessionToken": self._access_token,
+                            "Authorization": f"Bearer {self._access_token}",
                             "x-api-key": self._api_key,
                             "locale": "IT",
                             "Accept": "application/json",

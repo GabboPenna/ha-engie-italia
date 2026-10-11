@@ -625,6 +625,8 @@ class EngieTariffSensor(EngieSensor):
         if offer is not None:
             attrs.update(
                 offer_code=offer.code,
+                price_type=offer.price_type,
+                duration_months=offer.duration_months,
                 valid_from=offer.valid_from.isoformat(),
                 valid_until=offer.valid_until.isoformat(),
             )

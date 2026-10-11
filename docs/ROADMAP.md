@@ -38,6 +38,8 @@ Aggiornata all'**11 ottobre 2026**.
 
 ### Copertura delle offerte
 
+- [ ] Automatizzare l'inventario delle offerte ENGIE negli open data storici
+  del Portale Offerte, mantenendo separati prezzi fissi, indicizzati e fasce.
 - [ ] Aggiungere altre versioni di offerte fisse dopo verifica delle condizioni
   economiche pubbliche.
 - [ ] Studiare rinnovi e cambi prodotto senza riutilizzare il prezzo iniziale.

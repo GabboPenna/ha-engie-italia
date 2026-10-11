@@ -244,6 +244,8 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(power.extra_state_attributes["tariff_status"], "verified")
         self.assertFalse(power.extra_state_attributes["all_inclusive"])
         self.assertFalse(power.extra_state_attributes["taxes_included"])
+        self.assertEqual(power.extra_state_attributes["price_type"], "FIXED")
+        self.assertEqual(power.extra_state_attributes["duration_months"], 12)
         self.assertTrue(power.extra_state_attributes["network_losses_included"])
         self.assertEqual(gas.extra_state_attributes["reference_pcs_gj_smc"], "0.03999")
         diagnostics = json.dumps(

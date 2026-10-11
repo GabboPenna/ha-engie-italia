@@ -124,10 +124,13 @@ scarti di orologio senza disabilitare la verifica temporale.
 
 La configurazione pubblica dell'issuer e' disponibile nella
 [discovery OIDC](https://login.engie.it/.well-known/openid-configuration).
-L'access token va nell'header `sessionToken`, non `Authorization: Bearer`.
-Sono presenti anche `x-api-key` e `locale: IT`: dalla b5 il parametro comune
-proviene dal profilo applicativo incluso, separato dai token personali.
-Non e' un'API pubblica documentata per terze parti.
+Nella verifica iniziale l'access token era accettato nell'header
+`sessionToken`. L'11 ottobre 2026 il backend ha iniziato a richiederlo sia in
+`sessionToken` sia in `Authorization: Bearer`; l'assenza del secondo header
+restituisce HTTP 401 con errore applicativo `6.2`. Sono presenti anche
+`x-api-key` e `locale: IT`: dalla b5 il parametro comune proviene dal profilo
+applicativo incluso, separato dai token personali. Non e' un'API pubblica
+documentata per terze parti.
 
 Il rinnovo con `refresh_token` su `/oauth/token` e una successiva lettura sono
 riusciti sia nel probe privato sia nel client asincrono del progetto.
@@ -323,8 +326,10 @@ Verifiche senza sessioni personali, 16 settembre 2026:
 - `GET authentication/v2/configurations` senza chiave restituisce HTTP 403.
 - Lo stesso endpoint con il profilo comune restituisce HTTP 200: configurazione
   dell'app, flag manutenzione, versioni e opzioni, non dati di un account.
-- Il codice del client aggiunge `x-api-key` dalle risorse; `sessionToken`
-  viene invece dalla gestione delle credenziali OAuth. Sono due ruoli distinti.
+- Il codice del client aggiunge `x-api-key` dalle risorse; `sessionToken` e
+  `Authorization: Bearer` trasportano invece lo stesso access token ottenuto
+  dalla gestione OAuth. La chiave applicativa e il token personale mantengono
+  ruoli distinti.
 - I grant `password` e `http://auth0.com/oauth/grant-type/password-realm`
   restituiscono HTTP 403, `unauthorized_client`. Le prove non hanno inviato
   username, password o OTP, ne' effettuato tentativi su account.

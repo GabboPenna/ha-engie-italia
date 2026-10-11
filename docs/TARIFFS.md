@@ -87,7 +87,8 @@ essere verificati nelle proprie condizioni e fatture.
 
 Il sensore **Verifica tariffa** rende leggibile il risultato direttamente nella
 pagina del dispositivo. Fonte `source_url`, codice `offer_code`, date
-`valid_from` e `valid_until` e limiti del prezzo sono anche negli attributi.
+`valid_from` e `valid_until`, `price_type`, `duration_months` e limiti del
+prezzo sono anche negli attributi.
 Gli importi diventano indisponibili, senza ripiego a zero, se l'abbinamento non
 è verificabile. Lo stato ne indica il motivo:
 
@@ -130,6 +131,12 @@ inserire un codice nel file non rende supportate condizioni diverse.
 Il catalogo è incluso nella release, letto localmente una sola volta e
 aggiornato insieme all'integrazione tramite HACS, con riavvio di Home Assistant.
 Non è un database remoto e non scarica nuove tariffe da Internet.
+
+Gli open data giornalieri del Portale Offerte ARERA sono una fonte utile per
+ricostruire le offerte rivolte alla generalità dei clienti. Non comprendono
+necessariamente rinnovi, condizioni personalizzate o proposte riservate; per
+questo una versione osservata nell'account non viene considerata verificata
+soltanto perché esiste una versione vicina nello storico pubblico.
 Le modifiche manuali nella cartella installata vengono sostituite al prossimo
 aggiornamento: proporle nel repository per distribuirle a tutti.
 

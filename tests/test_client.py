@@ -294,7 +294,7 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(options["raise_for_status"])
         self.assertEqual(options["timeout"].total, 20)
         self.assertEqual(options["headers"]["sessionToken"], "synthetic-access")
-        self.assertNotIn("Authorization", options["headers"])
+        self.assertEqual(options["headers"]["Authorization"], "Bearer synthetic-access")
         self.assertNotIn("synthetic", repr(reader))
 
     async def test_daily_and_hourly_parameters_and_results(self):
@@ -388,6 +388,10 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("headers", refresh[2])
         self.assertEqual(
             session.calls[2][2]["headers"]["sessionToken"], "synthetic-new-access"
+        )
+        self.assertEqual(
+            session.calls[2][2]["headers"]["Authorization"],
+            "Bearer synthetic-new-access",
         )
 
     async def test_proactive_refresh_not_followed_by_second_refresh(self):
