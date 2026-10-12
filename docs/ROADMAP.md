@@ -4,7 +4,7 @@ La roadmap descrive il lavoro ancora utile per rendere l'integrazione più
 completa e affidabile. Lo storico dettagliato delle versioni è disponibile
 nelle [release GitHub](https://github.com/GabboPenna/ha-engie-italia/releases).
 
-Aggiornata all'**11 ottobre 2026**.
+Aggiornata al **12 ottobre 2026**.
 
 ## Stato attuale
 
@@ -18,6 +18,8 @@ Aggiornata all'**11 ottobre 2026**.
 - [x] Riepilogo sperimentale di fatture, importi e scadenze.
 - [x] Metadati contrattuali e servizi account selezionati.
 - [x] Catalogo locale di prezzi verificati su condizioni pubbliche.
+- [x] Catalogo indipendente per account solo luce, solo gas o duali.
+- [x] Inventario ripetibile degli open data storici del Portale Offerte.
 - [x] Configurazione, opzioni, diagnostica anonimizzata e immagini locali.
 - [x] Distribuzione tramite repository HACS personalizzato.
 - [x] Test client, test Home Assistant, hassfest e validazione HACS in CI.
@@ -38,10 +40,12 @@ Aggiornata all'**11 ottobre 2026**.
 
 ### Copertura delle offerte
 
-- [ ] Automatizzare l'inventario delle offerte ENGIE negli open data storici
-  del Portale Offerte, mantenendo separati prezzi fissi, indicizzati e fasce.
-- [ ] Aggiungere altre versioni di offerte fisse dopo verifica delle condizioni
-  economiche pubbliche.
+- [x] Automatizzare l'inventario delle offerte ENGIE negli open data storici
+  del Portale Offerte, mantenendo separate commodity e condizioni incompatibili.
+- [ ] Riesaminare i codici con snapshot economici conflittuali senza scegliere
+  arbitrariamente una delle versioni.
+- [ ] Modellare esplicitamente sconti, offerte indicizzate e fasce prima di
+  importarli nel catalogo.
 - [ ] Studiare rinnovi e cambi prodotto senza riutilizzare il prezzo iniziale.
 - [ ] Valutare offerte indicizzate e multiorarie con modelli espliciti, senza
   dedurre prezzi dal nome commerciale.

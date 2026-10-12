@@ -1,6 +1,9 @@
 # Prezzi della componente energia
 
-L'integrazione espone tre sensori per ogni fornitura, anche quando mancano i consumi:
+L'integrazione espone tre sensori per ogni fornitura presente nell'account,
+anche quando mancano i consumi. Account con la sola luce, il solo gas o entrambe
+le forniture seguono lo stesso flusso e non dipendono dalla presenza dell'altra
+commodity:
 
 | Sensore | Unità | Significato |
 | :--- | :--- | :--- |
@@ -11,13 +14,16 @@ L'integrazione espone tre sensori per ogni fornitura, anche quando mancano i con
 Sono valori delle condizioni economiche pubbliche abbinate all'offerta, non
 importi estratti dalla propria fattura. Il prezzo unitario esclude la quota
 fissa, IVA, accise, trasporto, oneri di sistema e gli altri corrispettivi.
-Per la luce restano esclusi anche dispacciamento e mercato della capacità;
-le perdite di rete sono già comprese nella componente energia qui supportata.
+Per la luce restano esclusi anche dispacciamento e mercato della capacità.
+L'attributo `network_losses_included` compare soltanto quando la fonte consente
+di verificare se le perdite di rete sono comprese; non viene dedotto dal nome
+dell'offerta.
 La quota annua non è l'importo della prossima bolletta.
 
-Per il gas il prezzo è riferito al PCS standard indicato nel documento
-(`reference_pcs_gj_smc`). Il prezzo effettivamente applicato può essere adeguato
-al PCS del luogo di fornitura. Gli **Smc** sono metri cubi standard: non sostituire
+Per il gas, quando disponibile, `reference_pcs_gj_smc` indica il PCS standard
+riportato nel documento. Se la fonte open data non lo specifica, l'attributo
+resta assente. Il prezzo effettivamente applicato può essere adeguato al PCS
+del luogo di fornitura. Gli **Smc** sono metri cubi standard: non sostituire
 questa unità con i m³ letti al contatore, che richiedono il coefficiente C.
 L'integrazione non effettua queste conversioni e non calcola il costo completo
 della bolletta. I sensori sono utilizzabili nelle proprie automazioni; non
@@ -25,13 +31,17 @@ configurano automaticamente il calcolo dei costi nella dashboard Energy.
 
 ## Catalogo verificato
 
-Il catalogo incluso nel componente contiene soltanto versioni controllate sui
-documenti pubblici ENGIE. Attualmente comprende
-**19 versioni di Energia PuntoFisso Mono 12 mesi**: da `PUMD#00008` a
-`PUMD#00018`, e da `PUMD#00020` a `PUMD#00027`. La `PUMD#00019` non è
-verificata e resta esclusa. Non sono diciannove famiglie commerciali diverse.
-Il componente non scarica o interpreta PDF a ogni aggiornamento e non richiede
-un prezzo inserito manualmente.
+Il catalogo incluso nel componente contiene **203 codici verificati**: 98 con
+entrambe le commodity, 104 con il solo gas e uno con la sola luce, per un totale
+di 301 tariffe indipendenti. La copertura deriva dagli open data ufficiali del
+Portale Offerte campionati dal luglio 2022 all'11 ottobre 2026; la prima offerta
+compatibile rinvenuta decorre da ottobre 2023. Il componente non interroga il
+Portale Offerte durante il polling e non richiede prezzi inseriti manualmente.
+
+Le 19 versioni seguenti di Energia PuntoFisso Mono 12 mesi hanno anche una
+verifica aggiuntiva sulle CTE pubbliche ENGIE. Non sono diciannove famiglie
+commerciali diverse. I dati CTE hanno precedenza sul corrispondente record open
+data perché documentano anche perdite di rete e PCS:
 
 | Codice completo | Luce EUR/kWh | Luce EUR/anno | Gas EUR/Smc | Gas EUR/anno | Fonte |
 | :--- | ---: | ---: | ---: | ---: | :--- |
@@ -55,23 +65,28 @@ un prezzo inserito manualmente.
 | PUMD#00026 | 0,19900 | 108,00 | 0,92000 | 108,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00026) |
 | PUMD#00027 | 0,19900 | 108,00 | 0,92000 | 108,00 | [CTE ENGIE](https://www.engie.it/documents/d/casa/223_pumd-00027) |
 
-Documenti controllati fino all'11 ottobre 2026, con confronto delle condizioni e
-verifica visiva delle tabelle della componente energia e delle quote annue.
+Documenti CTE controllati fino all'11 ottobre 2026, con confronto delle
+condizioni e verifica visiva delle tabelle della componente energia e delle
+quote annue.
 I documenti condividono durata di dodici mesi, perdite luce incluse, assenza di
 sconti e PCS gas di riferimento 0,03852 GJ/Smc. Ogni versione ha i propri prezzi
 e la propria finestra di sottoscrizione: non viene usato il prezzo dell'ultima
 offerta disponibile come valore di ripiego.
 
 URL, finestre di sottoscrizione e impronte SHA-256 dei PDF esaminati sono nel
-[registro delle fonti](TARIFF_SOURCES.md). La scadenza per sottoscrivere l'offerta
-è distinta dalla validità economica del contratto: i dodici mesi decorrono
+[registro delle fonti](TARIFF_SOURCES.md). Il catalogo JSON contiene anche la
+fonte open data di ogni altra tariffa. La scadenza per sottoscrivere l'offerta
+è distinta dalla validità economica del contratto: la durata verificata decorre
 dall'attivazione della prima fornitura. Il prezzo già supportato per
 `PUMD#00016` resta invariato.
 
 L'abbinamento usa `prodottoCodiceUnivoco` e `productCode` della risposta
-forniture; il nome commerciale non viene usato. Richiede prezzo `FIXED`, uso
-domestico riconosciuto e un periodo `inizioCE`–`fineCE` coerente con `durataCE=12`
-e con la prima attivazione del contratto. Attualmente le tipologie osservate
+forniture; il nome commerciale non viene usato. Ogni codice può contenere una
+tariffa luce, una tariffa gas o entrambe. La presenza di una commodity non
+autorizza mai a dedurre il prezzo dell'altra. L'abbinamento richiede prezzo
+`FIXED`, uso domestico riconosciuto e un periodo `inizioCE`–`fineCE` coerente
+con la durata verificata nel catalogo e con la prima attivazione del contratto.
+Attualmente le tipologie osservate
 sono `Domestico residente` per la luce e `A – Uso Domestico` per il gas.
 Altre tipologie, comprese quelle domestiche non ancora verificate, rimangono
 indisponibili. Con attivazioni duali distinte, la seconda fornitura attende
@@ -97,6 +112,7 @@ Gli importi diventano indisponibili, senza ripiego a zero, se l'abbinamento non
 | verified | Condizioni pubbliche abbinate e attualmente valide. |
 | missing_metadata | Dati offerta assenti, incompleti o malformati. |
 | unverified_offer | Codice/versione non presente nel catalogo verificato. |
+| unverified_commodity | Il codice è noto, ma la variante luce o gas della fornitura non è verificata. |
 | unsupported_terms | Tipo di contratto, prezzo, durata o date non supportati. |
 | unverified_renewal | Decorrenza economica diversa dalla prima attivazione. |
 | not_yet_valid | Decorrenza o attivazione non ancora raggiunta. |
@@ -115,10 +131,13 @@ La diagnostica esportata non include codici offerta, date economiche o prezzi.
 I dati risiedono in
 [`api/data/tariffs.json`](../custom_components/engie_italia/api/data/tariffs.json).
 È il catalogo usato dal componente e dal client Python: una voce per ogni
-codice completo, con prezzi luce/gas, quote annue, unità, perdite, PCS, date
-di sottoscrizione, URL e SHA-256 del documento pubblico.
+codice completo. All'interno sono presenti `electricity`, `gas` oppure entrambe,
+ciascuna con il proprio prezzo, quota annua, unità, durata, finestra di
+sottoscrizione, URL e SHA-256 della fonte pubblica. Almeno una commodity è
+obbligatoria; una voce vuota non è valida.
 
-`schema_version` identifica il formato del file; `offers` contiene le offerte.
+`schema_version` identifica il formato del file; la versione corrente è `2` e
+`offers` contiene le offerte.
 Gli importi vanno scritti come **stringhe decimali con il punto**, per esempio
 `"0.11670"` e `"72.00"`, per conservarne la precisione. Le date usano
 `YYYY-MM-DD`. Non aggiungere campi arbitrari o duplicare codici.
@@ -139,6 +158,18 @@ questo una versione osservata nell'account non viene considerata verificata
 soltanto perché esiste una versione vicina nello storico pubblico.
 Le modifiche manuali nella cartella installata vengono sostituite al prossimo
 aggiornamento: proporle nel repository per distribuirle a tutti.
+
+Lo strumento [`tools/import_portale_offerte.py`](../tools/import_portale_offerte.py)
+costruisce un inventario ripetibile degli snapshot ufficiali. Importa soltanto
+record domestici a prezzo fisso che il modello attuale può rappresentare senza
+perdere fasce, scaglioni, periodi o sconti. Luce e gas vengono analizzati e
+salvati separatamente; prezzi indicizzati, multiorari o ambigui restano
+nell'inventario con il motivo dell'esclusione.
+
+Per le fonti PDF, `source_sha256` identifica l'intero documento. Per gli open
+data identifica invece l'esatto elemento XML `<offerta>` estratto dallo snapshot
+indicato da `source_url`; in questo modo la prova resta stabile senza incorporare
+nel pacchetto file giornalieri di molti megabyte.
 
 ## Aggiungere altre versioni
 

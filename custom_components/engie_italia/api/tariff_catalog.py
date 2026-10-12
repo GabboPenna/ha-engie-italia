@@ -21,20 +21,21 @@ class TariffRate:
     unit_price: Decimal
     annual_fee: Decimal
     unit: str
-    network_losses_included: bool = False
+    source_url: str
+    source_sha256: str
+    offered_from: date
+    offered_until: date
+    duration_months: int
+    network_losses_included: bool | None = None
     reference_pcs_gj_smc: Decimal | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class VerifiedTariff:
-    source_url: str
-    source_sha256: str
-    offered_from: date
-    offered_until: date
-    electricity: TariffRate
-    gas: TariffRate
+    electricity: TariffRate | None = None
+    gas: TariffRate | None = None
 
-    def rate(self, utility: Utility) -> TariffRate:
+    def rate(self, utility: Utility) -> TariffRate | None:
         return self.electricity if utility is Utility.ELECTRICITY else self.gas
 
 
@@ -75,50 +76,12 @@ def _date(value: object, context: str) -> date:
     raise CatalogValidationError(f"{context}: expected valid YYYY-MM-DD date")
 
 
-def _rate(value: object, utility: Utility, context: str) -> TariffRate:
-    electricity = utility is Utility.ELECTRICITY
-    extra = "network_losses_included" if electricity else "reference_pcs_gj_smc"
-    data = _object(value, {"unit_price", "annual_fee", "unit", extra}, context)
-    unit = "EUR/kWh" if electricity else "EUR/Smc"
-    if data["unit"] != unit:
-        raise CatalogValidationError(f"{context}.unit: expected {unit}")
-    losses, pcs = False, None
-    if electricity:
-        losses = data[extra]
-        if type(losses) is not bool:
-            raise CatalogValidationError(f"{context}.{extra}: expected boolean")
-    else:
-        pcs = _decimal(data[extra], f"{context}.{extra}")
-        if pcs <= 0:
-            raise CatalogValidationError(f"{context}.{extra}: expected positive PCS")
-    return TariffRate(
-        _decimal(data["unit_price"], f"{context}.unit_price"),
-        _decimal(data["annual_fee"], f"{context}.annual_fee"),
-        unit,
-        losses,
-        pcs,
-    )
-
-
-def _offer(value: object, context: str) -> VerifiedTariff:
-    data = _object(
-        value,
-        {
-            "source_url",
-            "source_sha256",
-            "offered_from",
-            "offered_until",
-            "electricity",
-            "gas",
-        },
-        context,
-    )
-    source = data["source_url"]
-    valid_source = False
-    if isinstance(source, str) and not any(char.isspace() for char in source):
+def _source_url(value: object, context: str) -> str:
+    valid = False
+    if isinstance(value, str) and not any(char.isspace() for char in value):
         try:
-            url = urlsplit(source)
-            valid_source = (
+            url = urlsplit(value)
+            valid = (
                 url.scheme == "https"
                 and bool(url.hostname)
                 and url.username is None
@@ -126,24 +89,87 @@ def _offer(value: object, context: str) -> VerifiedTariff:
             )
         except ValueError:
             pass
-    if not valid_source:
-        raise CatalogValidationError(f"{context}.source_url: expected HTTPS source URL")
-    digest = data["source_sha256"]
-    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
-        raise CatalogValidationError(
-            f"{context}.source_sha256: expected SHA-256 digest"
-        )
+    if not valid:
+        raise CatalogValidationError(f"{context}: expected HTTPS source URL")
+    return value
+
+
+def _source_digest(value: object, context: str) -> str:
+    if not isinstance(value, str) or not re.fullmatch(r"[0-9a-f]{64}", value):
+        raise CatalogValidationError(f"{context}: expected SHA-256 digest")
+    return value
+
+
+def _rate(value: object, utility: Utility, context: str) -> TariffRate:
+    electricity = utility is Utility.ELECTRICITY
+    extra = "network_losses_included" if electricity else "reference_pcs_gj_smc"
+    data = _object(
+        value,
+        {
+            "source_url",
+            "source_sha256",
+            "offered_from",
+            "offered_until",
+            "duration_months",
+            "unit_price",
+            "annual_fee",
+            "unit",
+            extra,
+        },
+        context,
+    )
+    unit = "EUR/kWh" if electricity else "EUR/Smc"
+    if data["unit"] != unit:
+        raise CatalogValidationError(f"{context}.unit: expected {unit}")
     offered_from = _date(data["offered_from"], f"{context}.offered_from")
     offered_until = _date(data["offered_until"], f"{context}.offered_until")
     if offered_from > offered_until:
         raise CatalogValidationError(f"{context}: reversed subscription dates")
-    return VerifiedTariff(
-        source,
-        digest,
+    duration = data["duration_months"]
+    if type(duration) is not int or duration <= 0:
+        raise CatalogValidationError(
+            f"{context}.duration_months: expected positive integer"
+        )
+    losses, pcs = None, None
+    if electricity:
+        losses = data[extra]
+        if losses is not None and type(losses) is not bool:
+            raise CatalogValidationError(f"{context}.{extra}: expected boolean or null")
+    else:
+        if data[extra] is not None:
+            pcs = _decimal(data[extra], f"{context}.{extra}")
+            if pcs <= 0:
+                raise CatalogValidationError(
+                    f"{context}.{extra}: expected positive PCS"
+                )
+    return TariffRate(
+        _decimal(data["unit_price"], f"{context}.unit_price"),
+        _decimal(data["annual_fee"], f"{context}.annual_fee"),
+        unit,
+        _source_url(data["source_url"], f"{context}.source_url"),
+        _source_digest(data["source_sha256"], f"{context}.source_sha256"),
         offered_from,
         offered_until,
-        _rate(data["electricity"], Utility.ELECTRICITY, f"{context}.electricity"),
-        _rate(data["gas"], Utility.GAS, f"{context}.gas"),
+        duration,
+        losses,
+        pcs,
+    )
+
+
+def _offer(value: object, context: str) -> VerifiedTariff:
+    if (
+        not isinstance(value, dict)
+        or not value
+        or not set(value) <= {"electricity", "gas"}
+    ):
+        raise CatalogValidationError(
+            f"{context}: expected at least one electricity or gas rate"
+        )
+    return VerifiedTariff(
+        _rate(value["electricity"], Utility.ELECTRICITY, f"{context}.electricity")
+        if "electricity" in value
+        else None,
+        _rate(value["gas"], Utility.GAS, f"{context}.gas") if "gas" in value else None,
     )
 
 
@@ -154,8 +180,8 @@ def parse_tariff_catalog(raw: str) -> MappingProxyType[str, VerifiedTariff]:
     except json.JSONDecodeError as err:
         raise CatalogValidationError("invalid JSON") from err
     data = _object(data, {"schema_version", "offers"}, "catalog")
-    if type(data["schema_version"]) is not int or data["schema_version"] != 1:
-        raise CatalogValidationError("unsupported schema_version; expected 1")
+    if type(data["schema_version"]) is not int or data["schema_version"] != 2:
+        raise CatalogValidationError("unsupported schema_version; expected 2")
     offers = data["offers"]
     if not isinstance(offers, dict) or not offers:
         raise CatalogValidationError("offers: expected non-empty object")

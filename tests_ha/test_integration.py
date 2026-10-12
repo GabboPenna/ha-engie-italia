@@ -208,10 +208,9 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
 
     async def prepare_tariffs(self):
         verified = catalog(tariffs)
-        for target in ("api.tariffs", "sensor"):
-            mocked = patch(MODULE + target + ".VERIFIED_TARIFFS", verified)
-            mocked.start()
-            self.addCleanup(mocked.stop)
+        mocked = patch(MODULE + "api.tariffs.VERIFIED_TARIFFS", verified)
+        mocked.start()
+        self.addCleanup(mocked.stop)
         self.power, self.gas = parse_mobile_supplies(tariff_supplies())
         self.client.async_supplies.return_value = (self.power, self.gas)
         await self.refresh()
@@ -313,6 +312,10 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIsNone(sensor.native_value)
                 self.assertEqual(
                     sensor.extra_state_attributes["tariff_status"], "expired"
+                )
+                self.assertEqual(
+                    sensor.extra_state_attributes["source_url"],
+                    "https://example.invalid/synthetic-terms.pdf",
                 )
                 sensor.async_write_ha_state.assert_called_once()
             cancel = track.return_value

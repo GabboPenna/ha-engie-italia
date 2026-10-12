@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from .api.mobile import ROME
 from .api.models import Utility
-from .api.tariffs import VERIFIED_TARIFFS, current_tariff, tariff_status
+from .api.tariffs import catalog_rate, current_tariff, tariff_status
 from .const import DOMAIN
 
 COMMON = (
@@ -224,6 +224,7 @@ TARIFFS = (
             "verified",
             "missing_metadata",
             "unverified_offer",
+            "unverified_commodity",
             "unsupported_terms",
             "unverified_renewal",
             "not_yet_valid",
@@ -630,14 +631,18 @@ class EngieTariffSensor(EngieSensor):
                 valid_from=offer.valid_from.isoformat(),
                 valid_until=offer.valid_until.isoformat(),
             )
-            verified = VERIFIED_TARIFFS.get(offer.code)
-            if verified is not None:
-                attrs["source_url"] = verified.source_url
+            evidence = catalog_rate(data.supply)
+            if evidence is not None:
+                attrs["source_url"] = evidence.source_url
         tariff = self._tariff()
-        if tariff is not None and self.entity_description.key == "energy_unit_price":
-            attrs["fixed_fee_included"] = False
-            if data.supply.utility is Utility.ELECTRICITY:
-                attrs["network_losses_included"] = tariff.network_losses_included
-            elif tariff.reference_pcs_gj_smc is not None:
-                attrs["reference_pcs_gj_smc"] = str(tariff.reference_pcs_gj_smc)
+        if tariff is not None:
+            if self.entity_description.key == "energy_unit_price":
+                attrs["fixed_fee_included"] = False
+                if (
+                    data.supply.utility is Utility.ELECTRICITY
+                    and tariff.network_losses_included is not None
+                ):
+                    attrs["network_losses_included"] = tariff.network_losses_included
+                elif tariff.reference_pcs_gj_smc is not None:
+                    attrs["reference_pcs_gj_smc"] = str(tariff.reference_pcs_gj_smc)
         return attrs

@@ -29,13 +29,13 @@ class TariffCatalogTests(unittest.TestCase):
         offer = json.dumps(catalog_data()["offers"]["SYNTHETIC#00123"])
         for duplicate in (
             raw.replace(
-                '"schema_version": 1', '"schema_version": 1, "schema_version": 1'
+                '"schema_version": 2', '"schema_version": 2, "schema_version": 2'
             ),
             raw.replace(
                 '"unit_price": "0.12345"',
                 '"unit_price": "0.9", "unit_price": "0.12345"',
             ),
-            '{"schema_version": 1, "offers": {'
+            '{"schema_version": 2, "offers": {'
             f'"SYNTHETIC#00123": {offer}, "SYNTHETIC#00123": {offer}'
             "}}",
         ):
@@ -46,10 +46,10 @@ class TariffCatalogTests(unittest.TestCase):
                     parse_tariff_catalog(duplicate)
 
     def test_invalid_json_schema_and_empty_catalogue_fail_validation(self):
-        for raw in ("{", "[]", "null", "{}", '{"schema_version": 1, "offers": {}}'):
+        for raw in ("{", "[]", "null", "{}", '{"schema_version": 2, "offers": {}}'):
             with self.subTest(raw=raw), self.assertRaises(CatalogValidationError):
                 parse_tariff_catalog(raw)
-        for version in (True, 1.0, "1", 2, None):
+        for version in (True, 2.0, "2", 1, 3, None):
             data = catalog_data()
             data["schema_version"] = version
             with (
@@ -61,7 +61,7 @@ class TariffCatalogTests(unittest.TestCase):
     def test_missing_or_unknown_fields_at_each_level_are_rejected(self):
         for path, key in (
             ((), "offers"),
-            (("offers", "SYNTHETIC#00123"), "gas"),
+            (("offers", "SYNTHETIC#00123", "electricity"), "source_url"),
             (("offers", "SYNTHETIC#00123", "electricity"), "network_losses_included"),
             (("offers", "SYNTHETIC#00123", "gas"), "reference_pcs_gj_smc"),
         ):
@@ -110,7 +110,6 @@ class TariffCatalogTests(unittest.TestCase):
             ("electricity", "network_losses_included", "true"),
             ("electricity", "network_losses_included", 1),
             ("gas", "reference_pcs_gj_smc", "0"),
-            ("gas", "reference_pcs_gj_smc", None),
         ):
             data = catalog_data()
             data["offers"]["SYNTHETIC#00123"][utility][key] = value
@@ -119,24 +118,69 @@ class TariffCatalogTests(unittest.TestCase):
                     parse_tariff_catalog(json.dumps(data))
 
     def test_offer_codes_dates_and_source_references_are_required(self):
-        for key, value in (
-            ("source_url", "http://example.invalid/terms.pdf"),
-            ("source_url", "https:///terms.pdf"),
-            ("source_url", "https://user:password@example.invalid/terms.pdf"),
-            ("source_sha256", "not-a-digest"),
-            ("offered_from", "2025-02-30"),
-            ("offered_from", "2025-01-09"),
-            ("offered_until", "20250108"),
+        for utility, key, value in (
+            ("electricity", "source_url", "http://example.invalid/terms.pdf"),
+            ("electricity", "source_url", "https:///terms.pdf"),
+            (
+                "electricity",
+                "source_url",
+                "https://user:password@example.invalid/terms.pdf",
+            ),
+            ("gas", "source_sha256", "not-a-digest"),
+            ("electricity", "offered_from", "2025-02-30"),
+            ("electricity", "offered_from", "2025-01-09"),
+            ("gas", "offered_until", "20250108"),
+            ("gas", "duration_months", 0),
+            ("gas", "duration_months", "12"),
         ):
             data = catalog_data()
-            data["offers"]["SYNTHETIC#00123"][key] = value
-            with self.subTest(key=key, value=value):
+            data["offers"]["SYNTHETIC#00123"][utility][key] = value
+            with self.subTest(utility=utility, key=key, value=value):
                 with self.assertRaises(CatalogValidationError):
                     parse_tariff_catalog(json.dumps(data))
         for code in ("SYNTHETIC", "SYNTHETIC#123", "synthetic#00123"):
             data = catalog_data()
             data["offers"][code] = data["offers"].pop("SYNTHETIC#00123")
             with self.subTest(code=code), self.assertRaises(CatalogValidationError):
+                parse_tariff_catalog(json.dumps(data))
+
+    def test_electricity_only_gas_only_and_dual_offers_are_independent(self):
+        for present, missing in (
+            ("electricity", "gas"),
+            ("gas", "electricity"),
+        ):
+            data = catalog_data()
+            del data["offers"]["SYNTHETIC#00123"][missing]
+            result = parse_tariff_catalog(json.dumps(data))["SYNTHETIC#00123"]
+            self.assertIsNotNone(getattr(result, present))
+            self.assertIsNone(getattr(result, missing))
+
+        data = catalog_data()
+        data["offers"]["SYNTHETIC#00123"] = {}
+        with self.assertRaisesRegex(CatalogValidationError, "at least one"):
+            parse_tariff_catalog(json.dumps(data))
+
+    def test_unknown_losses_and_pcs_are_explicitly_preserved(self):
+        data = catalog_data()
+        data["offers"]["SYNTHETIC#00123"]["electricity"]["network_losses_included"] = (
+            None
+        )
+        data["offers"]["SYNTHETIC#00123"]["gas"]["reference_pcs_gj_smc"] = None
+        result = parse_tariff_catalog(json.dumps(data))["SYNTHETIC#00123"]
+        self.assertIsNone(result.electricity.network_losses_included)
+        self.assertIsNone(result.gas.reference_pcs_gj_smc)
+
+    def test_unknown_offer_and_rate_fields_are_rejected(self):
+        for path in (
+            ("offers", "SYNTHETIC#00123"),
+            ("offers", "SYNTHETIC#00123", "electricity"),
+        ):
+            data = catalog_data()
+            target = data
+            for segment in path:
+                target = target[segment]
+            target["unexpected_field"] = True
+            with self.subTest(path=path), self.assertRaises(CatalogValidationError):
                 parse_tariff_catalog(json.dumps(data))
 
     def test_package_resource_loads_synthetic_catalogue(self):

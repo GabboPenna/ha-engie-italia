@@ -25,19 +25,27 @@ def tariff_supplies():
 
 
 def catalog(api):
+    common = {
+        "source_url": "https://example.invalid/synthetic-terms.pdf",
+        "source_sha256": "b" * 64,
+        "offered_from": date(2025, 1, 1),
+        "offered_until": date(2025, 1, 8),
+        "duration_months": 12,
+    }
     return {
         "SYNTHETIC#00123": api.VerifiedTariff(
-            source_url="https://example.invalid/synthetic-terms.pdf",
-            source_sha256="b" * 64,
-            offered_from=date(2025, 1, 1),
-            offered_until=date(2025, 1, 8),
             electricity=api.TariffRate(
-                Decimal("0.12345"), Decimal("65.00"), "EUR/kWh", True
+                Decimal("0.12345"),
+                Decimal("65.00"),
+                "EUR/kWh",
+                **common,
+                network_losses_included=True,
             ),
             gas=api.TariffRate(
                 Decimal("0.56789"),
                 Decimal("75.00"),
                 "EUR/Smc",
+                **common,
                 reference_pcs_gj_smc=Decimal("0.03999"),
             ),
         )
@@ -47,20 +55,26 @@ def catalog(api):
 def catalog_data():
     """Invented editable catalogue, with no account or real contract data."""
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "offers": {
             "SYNTHETIC#00123": {
-                "source_url": "https://example.invalid/synthetic-terms.pdf",
-                "source_sha256": "b" * 64,
-                "offered_from": "2025-01-01",
-                "offered_until": "2025-01-08",
                 "electricity": {
+                    "source_url": "https://example.invalid/synthetic-terms.pdf",
+                    "source_sha256": "b" * 64,
+                    "offered_from": "2025-01-01",
+                    "offered_until": "2025-01-08",
+                    "duration_months": 12,
                     "unit_price": "0.12345",
                     "annual_fee": "65.00",
                     "unit": "EUR/kWh",
                     "network_losses_included": True,
                 },
                 "gas": {
+                    "source_url": "https://example.invalid/synthetic-terms.pdf",
+                    "source_sha256": "b" * 64,
+                    "offered_from": "2025-01-01",
+                    "offered_until": "2025-01-08",
+                    "duration_months": 12,
                     "unit_price": "0.56789",
                     "annual_fee": "75.00",
                     "unit": "EUR/Smc",

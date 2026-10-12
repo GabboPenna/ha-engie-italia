@@ -88,6 +88,9 @@ def tariff_status(supply: MobileSupply, today: date) -> str:
     verified = VERIFIED_TARIFFS.get(offer.code)
     if verified is None:
         return "unverified_offer"
+    rate = verified.rate(supply.utility)
+    if rate is None:
+        return "unverified_commodity"
     # These domestic labels have been observed in the Italian mobile response.
     domestic_type = (
         "Domestico residente"
@@ -98,14 +101,17 @@ def tariff_status(supply: MobileSupply, today: date) -> str:
         return "unsupported_terms"
     if offer.first_activation != offer.valid_from:
         return "unverified_renewal"
+    target_month = offer.valid_from.month - 1 + rate.duration_months
+    target_year = offer.valid_from.year + target_month // 12
+    target_month = target_month % 12 + 1
     try:
-        anniversary = offer.valid_from.replace(year=offer.valid_from.year + 1)
+        anniversary = offer.valid_from.replace(year=target_year, month=target_month)
     except ValueError:
-        anniversary = date(offer.valid_from.year + 1, 2, 28)
+        anniversary = date(target_year, target_month, 28)
     if (
-        offer.duration_months != 12
+        offer.duration_months != rate.duration_months
         or offer.valid_until != anniversary - timedelta(days=1)
-        or offer.valid_from < verified.offered_from
+        or offer.valid_from < rate.offered_from
         or supply.activation_date is None
         or not offer.valid_from <= supply.activation_date <= offer.valid_until
     ):
@@ -120,4 +126,12 @@ def tariff_status(supply: MobileSupply, today: date) -> str:
 def current_tariff(supply: MobileSupply, today: date) -> TariffRate | None:
     if tariff_status(supply, today) != "verified":
         return None
-    return VERIFIED_TARIFFS[supply.offer.code].rate(supply.utility)
+    return catalog_rate(supply)
+
+
+def catalog_rate(supply: MobileSupply) -> TariffRate | None:
+    """Return evidence for this exact code and commodity, regardless of dates."""
+    if supply.offer is None:
+        return None
+    verified = VERIFIED_TARIFFS.get(supply.offer.code)
+    return verified.rate(supply.utility) if verified is not None else None

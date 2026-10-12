@@ -1,7 +1,16 @@
 # Fonti del catalogo tariffe
 
-Documenti pubblici ENGIE controllati fino all'**11 ottobre 2026**. I collegamenti
-ai PDF e i prezzi verificati sono nella [tabella del catalogo](TARIFFS.md#catalogo-verificato).
+Il catalogo combina gli open data ufficiali del Portale Offerte con documenti
+pubblici ENGIE controllati fino all'**11 ottobre 2026**. Copertura, criteri di
+importazione e prezzi verificati sono descritti nella
+[pagina del catalogo](TARIFFS.md#catalogo-verificato).
+
+Lo storico open data è stato campionato ogni sette giorni dal 1° luglio 2022
+all'11 ottobre 2026. Ogni tariffa conserva l'URL dello snapshot e l'impronta
+SHA-256 dell'esatto elemento XML `<offerta>`. Record conflittuali, indicizzati,
+multiorari, scontati o non rappresentabili integralmente restano esclusi.
+
+Le fonti aggiuntive sotto sono le CTE ENGIE usate per 19 versioni `PUMD`.
 Il codice/versione è stato riscontrato nel contenuto di ogni PDF. Le tabelle
 nelle schede sintetiche e nelle CTE sono coerenti; le condizioni sono uguali
 al netto di prezzi, identificativi dell'offerta e date di sottoscrizione.
@@ -32,6 +41,8 @@ i documenti esaminati; il componente non li riscarica durante il polling.
 | PUMD#00026 | 2026-10-01 – 2026-10-07 | `4b20adc453000934748af0889ea567ad635c62e3f98a16f4a0bc3a8731e325bf` |
 | PUMD#00027 | 2026-10-08 – 2026-10-14 | `ae5b7a8affd29dce4fdf6e27951cefe1c9d99a5a118dcee667f6e90fc0785934` |
 
-La copertura è limitata all'elenco esplicito. `PUMD#00019` non è stata verificata
-e non viene ricostruita dai prezzi delle versioni adiacenti. Le offerte a fasce,
-quelle indicizzate e i rinnovi richiedono verifiche e supporto specifici.
+Questa tabella elenca soltanto le verifiche CTE aggiuntive, non l'intero catalogo.
+Le altre fonti sono registrate direttamente accanto alla rispettiva commodity
+in `api/data/tariffs.json`. Nessun prezzo viene ricostruito dalle versioni
+adiacenti. Le offerte a fasce, quelle indicizzate, gli sconti e i rinnovi
+richiedono modelli e verifiche specifici.

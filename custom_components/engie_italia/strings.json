@@ -165,6 +165,7 @@
           "verified": "Verified",
           "missing_metadata": "Offer details missing",
           "unverified_offer": "Offer not yet verified",
+          "unverified_commodity": "Supply type not verified for this offer",
           "unsupported_terms": "Unsupported terms",
           "unverified_renewal": "Renewal not yet verified",
           "not_yet_valid": "Not yet effective",

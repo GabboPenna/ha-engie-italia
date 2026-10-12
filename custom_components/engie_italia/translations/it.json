@@ -165,6 +165,7 @@
           "verified": "Verificata",
           "missing_metadata": "Dati offerta mancanti",
           "unverified_offer": "Offerta non ancora verificata",
+          "unverified_commodity": "Tipo di fornitura non verificato per questa offerta",
           "unsupported_terms": "Condizioni non supportate",
           "unverified_renewal": "Rinnovo non ancora verificato",
           "not_yet_valid": "Non ancora in vigore",

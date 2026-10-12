@@ -44,6 +44,37 @@ class TariffTests(unittest.TestCase):
         power = parse_mobile_supplies(data)[0]
         self.assertIsNone(tariffs.current_tariff(power, TODAY))
         self.assertEqual(tariffs.tariff_status(power, TODAY), "unverified_offer")
+        self.assertIsNone(tariffs.catalog_rate(power))
+
+    def test_single_commodity_catalogues_do_not_invent_the_other_price(self):
+        dual = catalog(tariffs)["SYNTHETIC#00123"]
+        for utility, supported, unsupported in (
+            ("electricity", self.power, self.gas),
+            ("gas", self.gas, self.power),
+        ):
+            partial = tariffs.VerifiedTariff(**{utility: getattr(dual, utility)})
+            with (
+                self.subTest(utility=utility),
+                patch.object(tariffs, "VERIFIED_TARIFFS", {"SYNTHETIC#00123": partial}),
+            ):
+                self.assertIsNotNone(tariffs.current_tariff(supported, TODAY))
+                self.assertIsNone(tariffs.current_tariff(unsupported, TODAY))
+                self.assertEqual(
+                    tariffs.tariff_status(unsupported, TODAY),
+                    "unverified_commodity",
+                )
+                self.assertIsNone(tariffs.catalog_rate(unsupported))
+
+    def test_single_supply_accounts_keep_their_own_activation_reference(self):
+        for index, utility in ((0, "electricity"), (1, "gas")):
+            data = tariff_supplies()
+            data["listaContratti"][0]["forniture"] = [
+                data["listaContratti"][0]["forniture"][index]
+            ]
+            supply = parse_mobile_supplies(data)[0]
+            with self.subTest(utility=utility):
+                self.assertEqual(supply.offer.first_activation, supply.activation_date)
+                self.assertEqual(tariffs.tariff_status(supply, TODAY), "verified")
 
     def test_missing_or_malformed_optional_metadata_keeps_supplies(self):
         original = tariff_supplies()["listaContratti"][0]["forniture"][0]
@@ -123,6 +154,23 @@ class TariffTests(unittest.TestCase):
                     tariffs.tariff_status(power, TODAY), "unsupported_terms"
                 )
                 self.assertIsNone(tariffs.current_tariff(power, TODAY))
+
+    def test_catalogue_duration_is_matched_instead_of_assuming_twelve_months(self):
+        verified = catalog(tariffs)["SYNTHETIC#00123"]
+        extended = tariffs.VerifiedTariff(
+            electricity=replace(verified.electricity, duration_months=24)
+        )
+        power = replace(
+            self.power,
+            offer=replace(
+                self.power.offer,
+                duration_months=24,
+                valid_until=date(2027, 2, 28),
+            ),
+        )
+        with patch.object(tariffs, "VERIFIED_TARIFFS", {"SYNTHETIC#00123": extended}):
+            self.assertEqual(tariffs.tariff_status(power, TODAY), "verified")
+            self.assertIsNotNone(tariffs.current_tariff(power, TODAY))
 
     def test_inactive_supply_and_unknown_activation_have_no_price(self):
         power = replace(self.power, status=SupplyStatus.UNKNOWN)

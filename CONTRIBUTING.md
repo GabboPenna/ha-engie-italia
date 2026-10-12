@@ -19,6 +19,8 @@ Per aggiornare le tariffe modificare `custom_components/engie_italia/api/data/ta
 e seguire la [guida al catalogo](docs/TARIFFS.md#aggiungere-altre-versioni).
 Eseguire anche `python -m engie_italia.tariff_catalog`: i prezzi devono provenire
 da condizioni pubbliche verificate, la validazione del file non verifica la fonte.
+Per inventariare gli snapshot ufficiali usare `tools/import_portale_offerte.py`;
+non rimuovere i filtri conservativi per aumentare artificialmente la copertura.
 
 I test devono essere offline; i dati devono essere interamente sintetici.
 Per modifiche all'integrazione eseguire anche `tests_ha` in un ambiente isolato
