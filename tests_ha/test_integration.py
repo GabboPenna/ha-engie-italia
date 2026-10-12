@@ -683,6 +683,52 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             8 + len(SUPPLY_DETAILS) + len(ELECTRICITY_DETAILS) + len(TARIFFS),
         )
 
+    async def test_electricity_only_account_creates_only_electricity_entities(self):
+        self.client.async_supplies.return_value = (self.power,)
+        await self.refresh()
+
+        self.assertEqual(tuple(self.coordinator.data), (supply_key(self.power),))
+        self.client.async_commissioning_date.assert_awaited_once_with(self.power)
+        self.client.async_daily_electricity.assert_awaited_once()
+        self.client.async_gas_last_update_date.assert_not_awaited()
+        self.client.async_monthly_gas.assert_not_awaited()
+
+        add = MagicMock()
+        await setup_sensors(self.hass, self.entry, add)
+        self.assertEqual(
+            len(add.call_args.args[0]),
+            len(ACCOUNT_SENSORS)
+            + len(INVOICES)
+            + len(COMMON)
+            + len(ELECTRICITY)
+            + len(SUPPLY_DETAILS)
+            + len(ELECTRICITY_DETAILS)
+            + len(TARIFFS),
+        )
+
+    async def test_gas_only_account_creates_only_gas_entities(self):
+        self.client.async_supplies.return_value = (self.gas,)
+        await self.refresh()
+
+        self.assertEqual(tuple(self.coordinator.data), (supply_key(self.gas),))
+        self.client.async_commissioning_date.assert_not_awaited()
+        self.client.async_daily_electricity.assert_not_awaited()
+        self.client.async_gas_last_update_date.assert_awaited_once_with(self.gas)
+        self.client.async_monthly_gas.assert_awaited_once()
+
+        add = MagicMock()
+        await setup_sensors(self.hass, self.entry, add)
+        self.assertEqual(
+            len(add.call_args.args[0]),
+            len(ACCOUNT_SENSORS)
+            + len(INVOICES)
+            + len(COMMON)
+            + len(GAS)
+            + len(SUPPLY_DETAILS)
+            + len(GAS_DETAILS)
+            + len(TARIFFS),
+        )
+
     async def test_private_atomic_storage_reload_and_remove(self):
         data = credentials(
             "synthetic-key",
