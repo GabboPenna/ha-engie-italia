@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigEntries, ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tests"))
 from invoice_fixtures import invoice, invoices  # noqa: E402
@@ -96,6 +97,8 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.hass = HomeAssistant(self.directory.name)
         self.hass.config_entries = ConfigEntries(self.hass, {})
+        dr.async_setup(self.hass)
+        await dr.async_load(self.hass)
         self.entry = ConfigEntry(
             domain="engie_italia",
             title="ENGIE Italia",
