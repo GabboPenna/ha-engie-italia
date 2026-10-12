@@ -695,6 +695,11 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
 
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
+        supply_entities = [
+            entity
+            for entity in add.call_args.args[0]
+            if isinstance(entity, EngieSensor)
+        ]
         self.assertEqual(
             len(add.call_args.args[0]),
             len(ACCOUNT_SENSORS)
@@ -705,6 +710,11 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             + len(ELECTRICITY_DETAILS)
             + len(TARIFFS),
         )
+        self.assertEqual(
+            len({entity.device_info["via_device_id"] for entity in supply_entities}),
+            1,
+        )
+        self.assertIsNotNone(supply_entities[0].device_info["via_device_id"])
 
     async def test_gas_only_account_creates_only_gas_entities(self):
         self.client.async_supplies.return_value = (self.gas,)
@@ -718,6 +728,11 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
 
         add = MagicMock()
         await setup_sensors(self.hass, self.entry, add)
+        supply_entities = [
+            entity
+            for entity in add.call_args.args[0]
+            if isinstance(entity, EngieSensor)
+        ]
         self.assertEqual(
             len(add.call_args.args[0]),
             len(ACCOUNT_SENSORS)
@@ -728,6 +743,11 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             + len(GAS_DETAILS)
             + len(TARIFFS),
         )
+        self.assertEqual(
+            len({entity.device_info["via_device_id"] for entity in supply_entities}),
+            1,
+        )
+        self.assertIsNotNone(supply_entities[0].device_info["via_device_id"])
 
     async def test_private_atomic_storage_reload_and_remove(self):
         data = credentials(

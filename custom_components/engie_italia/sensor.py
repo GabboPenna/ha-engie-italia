@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -253,6 +254,17 @@ TARIFFS = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = entry.runtime_data
+    account_device_id = (
+        dr.async_get(hass)
+        .async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.unique_id)},
+            name="ENGIE Italia",
+            manufacturer="ENGIE",
+            model="Account",
+        )
+        .id
+    )
     seen = set()
     account_added = False
 
@@ -278,7 +290,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 ELECTRICITY if data.supply.utility is Utility.ELECTRICITY else GAS
             )
             entities.extend(
-                EngieSensor(coordinator, entry, key, data.supply.utility, description)
+                EngieSensor(
+                    coordinator,
+                    entry,
+                    key,
+                    data.supply.utility,
+                    description,
+                    account_device_id,
+                )
                 for description in descriptions
             )
             detail_descriptions = SUPPLY_DETAILS + (
@@ -288,13 +307,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
             entities.extend(
                 EngieSupplyDetailSensor(
-                    coordinator, entry, key, data.supply.utility, description
+                    coordinator,
+                    entry,
+                    key,
+                    data.supply.utility,
+                    description,
+                    account_device_id,
                 )
                 for description in detail_descriptions
             )
             entities.extend(
                 EngieTariffSensor(
-                    coordinator, entry, key, data.supply.utility, description
+                    coordinator,
+                    entry,
+                    key,
+                    data.supply.utility,
+                    description,
+                    account_device_id,
                 )
                 for description in TARIFFS
             )
@@ -415,7 +444,9 @@ class EngieInvoiceSensor(CoordinatorEntity, SensorEntity):
 class EngieSensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entry, key, utility, description):
+    def __init__(
+        self, coordinator, entry, key, utility, description, account_device_id=None
+    ):
         super().__init__(coordinator)
         self._key = key
         self.entity_description = description
@@ -427,7 +458,7 @@ class EngieSensor(CoordinatorEntity, SensorEntity):
             model="Electricity supply"
             if utility is Utility.ELECTRICITY
             else "Gas supply",
-            via_device=(DOMAIN, entry.unique_id),
+            via_device_id=account_device_id,
         )
 
     @property
@@ -546,8 +577,17 @@ class EngieSupplyDetailSensor(EngieSensor):
 class EngieTariffSensor(EngieSensor):
     """Reviewed energy component, independent of consumption availability."""
 
-    def __init__(self, coordinator, entry, key, utility, description):
-        super().__init__(coordinator, entry, key, utility, description)
+    def __init__(
+        self, coordinator, entry, key, utility, description, account_device_id=None
+    ):
+        super().__init__(
+            coordinator,
+            entry,
+            key,
+            utility,
+            description,
+            account_device_id,
+        )
         self._unsub_midnight = None
         if description.key == "energy_unit_price":
             self._attr_native_unit_of_measurement = (
