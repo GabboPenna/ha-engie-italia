@@ -111,6 +111,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             discovery_keys=MappingProxyType({}),
             subentries_data=None,
         )
+        self.hass.config_entries._entries[self.entry.entry_id] = self.entry
         self.power, self.gas = parse_mobile_supplies(supplies())
         self.readings = parse_daily_electricity(
             daily(), supply_id="synthetic-power", fetched_at=datetime.now(UTC)
