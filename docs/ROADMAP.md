@@ -4,7 +4,7 @@ La roadmap descrive il lavoro ancora utile per rendere l'integrazione più
 completa e affidabile. Lo storico dettagliato delle versioni è disponibile
 nelle [release GitHub](https://github.com/GabboPenna/ha-engie-italia/releases).
 
-Aggiornata al **12 ottobre 2026**.
+Aggiornata al **19 ottobre 2026**.
 
 ## Stato attuale
 
@@ -21,7 +21,9 @@ Aggiornata al **12 ottobre 2026**.
 - [x] Catalogo indipendente per account solo luce, solo gas o duali.
 - [x] Inventario ripetibile degli open data storici del Portale Offerte.
 - [x] Configurazione, opzioni, diagnostica anonimizzata e immagini locali.
-- [x] Distribuzione tramite repository HACS personalizzato.
+- [x] Distribuzione iniziale tramite repository HACS personalizzato.
+- [x] Inclusione nel catalogo predefinito HACS tramite la
+  [richiesta #11034](https://github.com/hacs/default/pull/11034).
 - [x] Test client, test Home Assistant, hassfest e validazione HACS in CI.
 
 ## Priorità
@@ -61,8 +63,9 @@ Aggiornata al **12 ottobre 2026**.
 
 ### Distribuzione
 
-- [ ] Ottenere l'inclusione nel catalogo HACS; la
-  [richiesta #11034](https://github.com/hacs/default/pull/11034) è in coda.
+- [x] Ottenere l'inclusione nel catalogo HACS; la
+  [richiesta #11034](https://github.com/hacs/default/pull/11034) è stata
+  approvata e unita il 19 ottobre 2026.
 - [ ] Verificare ogni release su installazione pulita e aggiornamento dalla
   versione precedente.
 - [ ] Continuare a testare le nuove versioni stabili di Home Assistant senza

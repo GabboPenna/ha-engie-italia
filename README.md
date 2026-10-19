@@ -6,6 +6,7 @@ Forniture, consumi luce e gas, dati contrattuali e fatture ENGIE Italia in
 Home Assistant.
 
 [![Stato: beta 0.1.0b21](https://img.shields.io/badge/beta-0.1.0b21-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b21)
+[![HACS: catalogo predefinito](https://img.shields.io/badge/HACS-catalogo_predefinito-41bdf5?style=flat-square)](https://github.com/hacs/default/pull/11034)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#requisiti)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
 [![Licenza del codice: MIT](https://img.shields.io/badge/licenza-MIT-64748b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/LICENSE)
@@ -44,15 +45,14 @@ condivisi, come fatture e servizi, sono raccolti nel dispositivo **Account**.
 
 ### HACS
 
-Il progetto è ancora in attesa di inclusione nel catalogo HACS. Per installarlo
-ora, aggiungilo come repository personalizzato:
+ENGIE Italia è inclusa nel catalogo predefinito HACS dalla
+[richiesta approvata #11034](https://github.com/hacs/default/pull/11034). Non è
+necessario aggiungere un repository personalizzato:
 
 1. Apri **HACS → Integrazioni**.
-2. Dal menu in alto a destra scegli **Repository personalizzati**.
-3. Inserisci `https://github.com/GabboPenna/ha-engie-italia` e seleziona la
-   categoria **Integrazione**.
-4. Apri **ENGIE Italia**, abilita le versioni beta e installa l'ultima release.
-5. Riavvia Home Assistant.
+2. Cerca e apri **ENGIE Italia**.
+3. Abilita le versioni beta, se richiesto, e scarica l'ultima release.
+4. Riavvia Home Assistant.
 
 La [guida HACS](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md)
 spiega anche aggiornamenti, passaggio da un'installazione manuale e problemi

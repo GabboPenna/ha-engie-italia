@@ -1,11 +1,11 @@
 # Installazione con HACS
 
-ENGIE Italia è una beta pubblica. Al momento non compare ancora nel catalogo
-generale HACS: la [richiesta di inclusione #11034](https://github.com/hacs/default/pull/11034)
-è aperta e in attesa di revisione. Fino all'accettazione va aggiunta come
+ENGIE Italia è una beta pubblica inclusa nel catalogo predefinito HACS. La
+[richiesta di inclusione #11034](https://github.com/hacs/default/pull/11034) è
+stata approvata e unita il 19 ottobre 2026. Non è necessario aggiungere un
 repository personalizzato.
 
-Stato verificato l'**11 ottobre 2026**.
+Stato verificato il **19 ottobre 2026**.
 
 ## Requisiti
 
@@ -17,19 +17,11 @@ Stato verificato l'**11 ottobre 2026**.
 ## Prima installazione
 
 1. Apri **HACS → Integrazioni**.
-2. Dal menu in alto a destra scegli **Repository personalizzati**.
-3. Inserisci:
-
-   ```text
-   https://github.com/GabboPenna/ha-engie-italia
-   ```
-
-4. Seleziona la categoria **Integrazione** e conferma.
-5. Cerca e apri **ENGIE Italia**.
-6. Abilita la visualizzazione delle versioni beta, scegli l'ultima release e
-   avvia il download.
-7. Riavvia Home Assistant.
-8. Apri **Impostazioni → Dispositivi e servizi → Aggiungi integrazione** e cerca
+2. Cerca e apri **ENGIE Italia** nel catalogo.
+3. Abilita la visualizzazione delle versioni beta, se richiesto, scegli
+   l'ultima release e avvia il download.
+4. Riavvia Home Assistant.
+5. Apri **Impostazioni → Dispositivi e servizi → Aggiungi integrazione** e cerca
    **ENGIE Italia**.
 
 La release pubblica corrente è
@@ -54,7 +46,7 @@ dell'integrazione.
 
 La cartella deve chiamarsi già `custom_components/engie_italia`.
 
-1. Aggiungi il repository personalizzato seguendo la procedura sopra.
+1. Cerca **ENGIE Italia** nel catalogo predefinito HACS.
 2. Installa con HACS la stessa versione o una versione successiva.
 3. Riavvia Home Assistant.
 
@@ -72,23 +64,25 @@ Ricarica completamente il browser dopo il riavvio.
 
 ### HACS mostra una versione precedente
 
-Apri il menu del repository, scegli **Scarica di nuovo** o il selettore della
-versione e seleziona esplicitamente l'ultima beta.
+Apri il menu del repository e scegli **Aggiorna informazioni**. Se la versione
+resta precedente, scegli **Scarica di nuovo** e seleziona esplicitamente
+l'ultima beta.
 
 ### Logo assente nella ricerca HACS
 
-Alcune versioni di HACS mostrano `icon not available` per repository
-personalizzati, anche se le immagini locali incluse nell'integrazione vengono
-caricate correttamente da Home Assistant. È un limite di visualizzazione e non
-indica un'installazione incompleta.
+Alcune versioni di HACS possono mostrare `icon not available` nella ricerca,
+anche se le immagini locali incluse nell'integrazione vengono caricate
+correttamente da Home Assistant dopo il download. Non indica
+un'installazione incompleta.
 
 Il logo e le icone sono contenuti in `custom_components/engie_italia/brand/` e
 sono serviti direttamente da Home Assistant nelle pagine dell'integrazione.
 
 ### La scheda HACS mostra una documentazione vecchia
 
-HACS visualizza il README contenuto nella versione installata, non sempre quello
-presente sul ramo `main`. Aggiorna all'ultima release e riapri la scheda.
+HACS aggiorna periodicamente i metadati del repository. Dal menu di ENGIE Italia
+scegli **Aggiorna informazioni** per forzare il controllo; per aggiornare i file
+installati usa invece **Scarica di nuovo** e riavvia Home Assistant.
 
 ## Controlli del progetto
 
@@ -103,5 +97,6 @@ I test usano dati sintetici e non ricevono credenziali o dati di account reali.
 Il superamento dei validatori controlla struttura e compatibilità del progetto,
 ma non garantisce la disponibilità futura dei servizi cloud ENGIE.
 
-Riferimenti: [repository personalizzati HACS](https://www.hacs.xyz/docs/faq/custom_repositories/),
-[requisiti per la pubblicazione](https://www.hacs.xyz/docs/publish/integration/).
+Riferimenti: [uso del catalogo HACS](https://www.hacs.xyz/docs/use/repositories/dashboard/),
+[integrazioni HACS](https://www.hacs.xyz/docs/use/repositories/type/integration/)
+e [requisiti per la pubblicazione](https://www.hacs.xyz/docs/publish/integration/).
