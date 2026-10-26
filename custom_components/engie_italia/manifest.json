@@ -2,6 +2,7 @@
   "domain": "engie_italia",
   "name": "ENGIE Italia",
   "after_dependencies": ["recorder"],
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@GabboPenna"],
   "config_flow": true,
   "documentation": "https://github.com/GabboPenna/ha-engie-italia",
