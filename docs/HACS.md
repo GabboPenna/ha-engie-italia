@@ -1,33 +1,29 @@
 # Installazione con HACS
 
-ENGIE Italia è una beta pubblica inclusa nel catalogo predefinito HACS. La
+ENGIE Italia è inclusa nel catalogo predefinito HACS. La
 [richiesta di inclusione #11034](https://github.com/hacs/default/pull/11034) è
 stata approvata e unita il 19 ottobre 2026. Non è necessario aggiungere un
 repository personalizzato.
 
-Stato verificato il **19 ottobre 2026**.
+Stato verificato il **26 ottobre 2026**.
 
 ## Requisiti
 
 - HACS già installato e configurato;
 - Home Assistant 2026.9.0 o successivo;
-- accesso amministrativo a Home Assistant;
-- disponibilità ad usare una release contrassegnata come beta.
+- accesso amministrativo a Home Assistant.
 
 ## Prima installazione
 
 1. Apri **HACS → Integrazioni**.
 2. Cerca e apri **ENGIE Italia** nel catalogo.
-3. Abilita la visualizzazione delle versioni beta, se richiesto, scegli
-   l'ultima release e avvia il download.
+3. Scegli l'ultima release stabile e avvia il download.
 4. Riavvia Home Assistant.
 5. Apri **Impostazioni → Dispositivi e servizi → Aggiungi integrazione** e cerca
    **ENGIE Italia**.
 
 La release pubblica corrente è
-[v0.1.0b22](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b22).
-Se HACS propone una beta precedente, seleziona esplicitamente la versione dal
-menu di download.
+[v0.1.0](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0).
 
 ## Aggiornamenti
 
@@ -66,7 +62,7 @@ Ricarica completamente il browser dopo il riavvio.
 
 Apri il menu del repository e scegli **Aggiorna informazioni**. Se la versione
 resta precedente, scegli **Scarica di nuovo** e seleziona esplicitamente
-l'ultima beta.
+l'ultima release stabile.
 
 ### Logo assente nella ricerca HACS
 

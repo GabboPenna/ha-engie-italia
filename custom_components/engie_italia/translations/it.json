@@ -65,7 +65,7 @@
         "state": {
           "available": "Disponibili",
           "no_data": "Nessuna misura",
-          "unsupported": "Non supportati in questa beta",
+          "unsupported": "Non supportati dall'integrazione",
           "error": "Aggiornamento non riuscito"
         }
       },

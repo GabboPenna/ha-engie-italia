@@ -9,7 +9,7 @@ Non configurare trace HTTP che esportino header, URL completi o payload.
 
 - `async_supplies()`: forniture luce/gas e metadati contrattuali selezionati,
   senza anagrafica, coordinate bancarie o indirizzi.
-- `async_invoices()`: riepilogo fatture dei contratti dell'account, sperimentale;
+- `async_invoices()`: riepilogo fatture dei contratti dell'account;
   restituisce `InvoiceSnapshot` con documenti normalizzati e data di lettura.
 - `async_commissioning_date(supply)`: data di disponibilita' del servizio elettrico.
 - `lower_bound(supply, commissioning_date, today=...)`: limite iniziale osservato

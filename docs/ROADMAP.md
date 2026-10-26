@@ -15,7 +15,7 @@ Aggiornata al **26 ottobre 2026**.
 - [x] Importazione dello storico elettrico nelle statistiche a lungo termine.
 - [x] Consumi gas mensili e annuali in Smc.
 - [x] Stato, qualità e periodo dei dati senza valori zero inventati.
-- [x] Riepilogo sperimentale di fatture, importi e scadenze.
+- [x] Riepilogo verificato di fatture, importi, stato e scadenze.
 - [x] Metadati contrattuali e servizi account selezionati.
 - [x] Catalogo locale di prezzi verificati su condizioni pubbliche.
 - [x] Catalogo indipendente per account solo luce, solo gas o duali.
@@ -25,6 +25,7 @@ Aggiornata al **26 ottobre 2026**.
 - [x] Inclusione nel catalogo predefinito HACS tramite la
   [richiesta #11034](https://github.com/hacs/default/pull/11034).
 - [x] Test client, test Home Assistant, hassfest e validazione HACS in CI.
+- [x] Prima release stabile `v0.1.0`.
 
 ## Priorità
 

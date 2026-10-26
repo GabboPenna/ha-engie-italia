@@ -5,7 +5,7 @@
 Forniture, consumi luce e gas, dati contrattuali e fatture ENGIE Italia in
 Home Assistant.
 
-[![Stato: beta 0.1.0b22](https://img.shields.io/badge/beta-0.1.0b22-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b22)
+[![Versione stabile 0.1.0](https://img.shields.io/badge/stabile-0.1.0-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0)
 [![HACS: catalogo predefinito](https://img.shields.io/badge/HACS-catalogo_predefinito-41bdf5?style=flat-square)](https://github.com/hacs/default/pull/11034)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#requisiti)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
@@ -51,7 +51,7 @@ necessario aggiungere un repository personalizzato:
 
 1. Apri **HACS → Integrazioni**.
 2. Cerca e apri **ENGIE Italia**.
-3. Abilita le versioni beta, se richiesto, e scarica l'ultima release.
+3. Scarica l'ultima release stabile.
 4. Riavvia Home Assistant.
 
 La [guida HACS](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/HACS.md)
@@ -136,7 +136,7 @@ prima di allegare materiale a una issue.
 - Un account ENGIE Italia con almeno una fornitura visibile nell'area clienti.
 - Accesso a Internet da Home Assistant e dal browser usato per il collegamento.
 
-La beta è verificata con il framework Home Assistant 2026.9.2 ed è utilizzata
+La release è verificata con il framework Home Assistant 2026.9.2 ed è utilizzata
 su Home Assistant 2026.10. Le API ENGIE non sono pubbliche né garantite: un
 cambiamento lato provider può richiedere un aggiornamento dell'integrazione.
 
