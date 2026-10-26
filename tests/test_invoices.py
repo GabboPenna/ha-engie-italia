@@ -38,6 +38,10 @@ class InvoiceTests(unittest.TestCase):
         self.assertEqual(result.earliest_due, date(2025, 3, 10))
         self.assertEqual(result.latest.reference, "SYNTHETIC-2025-002")
         self.assertEqual(result.latest.amount, Decimal("100.75"))
+        self.assertEqual(result.latest.remaining, Decimal("100.75"))
+        self.assertEqual(result.latest.vat_amount, Decimal("9.16"))
+        self.assertEqual(result.latest.billing_period_start, date(2025, 1, 1))
+        self.assertEqual(result.latest.billing_period_end, date(2025, 2, 28))
         self.assertEqual(result.data_status(NOW.date()), "available")
 
     def test_valid_empty_history_and_fully_paid_history_report_zero(self):
@@ -165,13 +169,15 @@ class InvoiceTests(unittest.TestCase):
     def test_malformed_financial_fields_fail_without_leaking_values(self):
         cases = [
             {field: value}
-            for field in ("amount", "unpaidRemainingAmount")
+            for field in ("amount", "unpaidRemainingAmount", "vatAmount")
             for value in (True, "private-amount", float("nan"), float("inf"), 1e13, {})
         ] + [
             {"fiscalNumber": ""},
             {"fiscalNumber": "x" * 256},
             {"emissionDate": "private-date"},
             {"expiryDate": "2025-02-30"},
+            {"billingPeriodStartDate": "private-date"},
+            {"billingPeriodEndDate": "2025-02-30"},
         ]
         for changes in cases:
             with (
@@ -182,6 +188,13 @@ class InvoiceTests(unittest.TestCase):
             self.assertNotIn("private", str(error.exception))
         with self.assertRaises(PayloadError):
             parse_invoices(invoices(engieErrorCode=True))
+        with self.assertRaises(PayloadError):
+            snapshot(
+                invoice(
+                    billingPeriodStartDate="2025-03-01",
+                    billingPeriodEndDate="2025-02-28",
+                )
+            )
 
     def test_models_exclude_private_fields_and_do_not_log_invoice_metadata(self):
         result = snapshot(invoice())

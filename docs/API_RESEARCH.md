@@ -211,13 +211,17 @@ Campi selezionati da `Invoice`:
 | `fiscalNumber` | Stringa, numero fiscale della fattura |
 | `amount` | Numero, importo originale; presentazione in EUR nell'app |
 | `unpaidRemainingAmount` | Numero, importo residuo da pagare |
+| `vatAmount` | Numero, IVA totale della fattura |
 | `emissionDate` | Stringa `YYYY-MM-DD`, data di emissione |
 | `expiryDate` | Stringa `YYYY-MM-DD`, scadenza |
+| `billingPeriodStartDate` | Stringa `YYYY-MM-DD`, inizio periodo fatturato |
+| `billingPeriodEndDate` | Stringa `YYYY-MM-DD`, fine periodo fatturato |
 | `invoiceStatus` | `PAID`, `NOT_PAID`, `EXPIRED`, `PARTIALLY_PAID` |
 
 La conversione dell'app conferma le date ISO e la presentazione numerica in
 euro. Il parser conserva sconosciuti eventuali stati futuri. Non conserva
-`pdfUrl`, dati di addebito, periodi o quantità fatturate non necessari ai sensori.
+`pdfUrl`, identificativi del documento, etichette della fornitura o dati di
+addebito non necessari ai sensori.
 
 La lettura autorizzata del 16 settembre 2026 ha restituito **HTTP 200 e
 `code: OK`**, ma anche **`engieErrorCode: 9`, `engieDetailedErrorCode: 9.91`**,
@@ -228,16 +232,17 @@ Il significato esatto del codice non è confermato. `user/v4/dashboard`, letto
 durante la ricerca, non ha fornito un riepilogo alternativo delle fatture e
 non è stato aggiunto alle operazioni del client.
 
-Parser e sensori b8 sono sperimentali, con fixture inventate per pagamenti
-parziali, errori, scadenze, dati mancanti e duplicati. Una risposta con errore
-applicativo non produce importi zero. Rimane aperta la verifica di fatture
-reali e della copertura storica effettiva: [dettagli](INVOICES.md).
+Il 26 ottobre 2026 lo stesso account ha restituito una fattura reale valorizzata:
+stato `PAID`, importo e residuo coerenti, IVA, emissione, scadenza e periodo
+fatturato. Parser e sensori b22 includono questi campi con fixture inventate per
+pagamenti parziali, errori, scadenze, dati mancanti e duplicati. Una risposta con
+errore applicativo non produce importi zero. La copertura storica effettiva
+resta dipendente dai documenti restituiti da ENGIE: [dettagli](INVOICES.md).
 
-La b8 è stata installata e riavviata su HA 2026.9.2: tutte le 11 nuove entità
-sono state create sul dispositivo Account. La lettura reale produce stato
-fatture `error`, codici 9/9.91 e valori indisponibili; i sensori di consumo
-precedenti restano disponibili. Verificati 113 test del client e 33 test HA
-isolati, oltre al controllo della configurazione e alla corrispondenza dei file.
+La b8 aveva introdotto le prime 11 entità sul dispositivo Account. Nella prova
+iniziale la lettura produceva stato fatture `error`, codici 9/9.91 e valori
+indisponibili, lasciando disponibili i sensori di consumo. La b22 estende lo
+stesso modello con i campi verificati sulla prima fattura reale.
 
 ### Gas verificato con successo il 9 ottobre 2026
 
@@ -357,7 +362,7 @@ rimane necessario.
 - [x] Consumi gas mensili e annuali su risposta reale valorizzata.
 - [ ] Revoca e challenge aggiuntive osservate nel tempo in Home Assistant.
 - [ ] Ore ripetute, rettifiche e serie parziali durante i cambi d'ora.
-- [ ] Risposta con fatture reali valorizzate.
+- [x] Risposta con fatture reali valorizzate.
 - [ ] Limiti e condizioni d'uso verificati prima di un utilizzo generalizzato.
 
 Le fixture pubblicate devono restare inventate e i test offline: non si

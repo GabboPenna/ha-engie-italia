@@ -123,8 +123,9 @@ Questa politica copre i riepiloghi correnti; le statistiche giornaliere esterne
 ricalcolano invece il tratto disponibile quando ENGIE corregge un campione.
 
 `InvoiceSnapshot` usa il numero fiscale per distinguere i documenti; conserva
-solo importo, residuo, emissione, scadenza e stato di pagamento. Importi in EUR
-come `Decimal`, date di calendario e nessun PDF/URL o dato bancario. Il totale
+importo, residuo, IVA, periodo fatturato, emissione, scadenza e stato di
+pagamento. Importi in EUR come `Decimal`, date di calendario e nessun PDF/URL
+o dato bancario. Il totale
 aperto somma esclusivamente i residui confermati. Campi incompleti danno `None`,
-non zero. Schema verificato staticamente, risposta positiva con fatture reali
-ancora da confermare: [semantica e limiti](INVOICES.md).
+non zero. Lo schema è verificato staticamente e con una risposta reale:
+[semantica e limiti](INVOICES.md).

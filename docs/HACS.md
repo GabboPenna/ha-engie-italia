@@ -25,7 +25,7 @@ Stato verificato il **19 ottobre 2026**.
    **ENGIE Italia**.
 
 La release pubblica corrente è
-[v0.1.0b21](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b21).
+[v0.1.0b22](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b22).
 Se HACS propone una beta precedente, seleziona esplicitamente la versione dal
 menu di download.
 

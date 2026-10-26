@@ -114,11 +114,33 @@
       "latest_invoice_amount": {
         "name": "Latest invoice amount"
       },
+      "latest_invoice_remaining_amount": {
+        "name": "Latest invoice remaining amount"
+      },
+      "latest_invoice_vat_amount": {
+        "name": "Latest invoice VAT amount"
+      },
+      "latest_invoice_status": {
+        "name": "Latest invoice status",
+        "state": {
+          "paid": "Paid",
+          "not_paid": "Not paid",
+          "expired": "Overdue",
+          "partially_paid": "Partially paid",
+          "unknown": "Unknown"
+        }
+      },
       "latest_invoice_date": {
         "name": "Latest invoice date"
       },
       "latest_invoice_due_date": {
         "name": "Latest invoice due date"
+      },
+      "latest_invoice_period_start": {
+        "name": "Latest invoice period start"
+      },
+      "latest_invoice_period_end": {
+        "name": "Latest invoice period end"
       },
       "earliest_invoice_due_date": {
         "name": "Earliest open invoice due date"

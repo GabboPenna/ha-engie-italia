@@ -138,6 +138,26 @@ INVOICES = (
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
+        key="latest_invoice_remaining_amount",
+        translation_key="latest_invoice_remaining_amount",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="EUR",
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="latest_invoice_vat_amount",
+        translation_key="latest_invoice_vat_amount",
+        device_class=SensorDeviceClass.MONETARY,
+        native_unit_of_measurement="EUR",
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="latest_invoice_status",
+        translation_key="latest_invoice_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["paid", "not_paid", "expired", "partially_paid", "unknown"],
+    ),
+    SensorEntityDescription(
         key="latest_invoice_date",
         translation_key="latest_invoice_date",
         device_class=SensorDeviceClass.DATE,
@@ -145,6 +165,16 @@ INVOICES = (
     SensorEntityDescription(
         key="latest_invoice_due_date",
         translation_key="latest_invoice_due_date",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    SensorEntityDescription(
+        key="latest_invoice_period_start",
+        translation_key="latest_invoice_period_start",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    SensorEntityDescription(
+        key="latest_invoice_period_end",
+        translation_key="latest_invoice_period_end",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
@@ -426,8 +456,13 @@ class EngieInvoiceSensor(CoordinatorEntity, SensorEntity):
         return {
             "latest_invoice": latest.reference,
             "latest_invoice_amount": latest.amount,
+            "latest_invoice_remaining_amount": latest.remaining,
+            "latest_invoice_vat_amount": latest.vat_amount,
+            "latest_invoice_status": latest.status.value,
             "latest_invoice_date": latest.issued,
             "latest_invoice_due_date": latest.due,
+            "latest_invoice_period_start": latest.billing_period_start,
+            "latest_invoice_period_end": latest.billing_period_end,
         }.get(key)
 
     @property

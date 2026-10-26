@@ -5,13 +5,12 @@ Le entità sono condivise fra le forniture dello stesso account.
 Gli aggiornamenti seguono l'intervallo dell'integrazione, 6 ore per impostazione
 predefinita, e il pulsante **Aggiorna dati**.
 
-**Funzione sperimentale:** endpoint, parametri, campi e stati sono stati verificati
-nel codice dell'app ENGIE 10.1.0 e coperti con dati sintetici. Nelle prove del
-16 settembre e 9 ottobre 2026 il servizio ha restituito HTTP 200, `code: OK`, nessuna fattura
-e codici ENGIE `9` / `9.91`. Il significato preciso di `9.91` non è confermato:
-questa risposta non dimostra l'assenza di fatture o debiti. Una risposta con
-fatture reali resta da verificare; in presenza di questo codice i sensori dei
-valori rimangono indisponibili e riprovano al normale aggiornamento.
+Endpoint, parametri, campi e stati sono stati verificati nel codice dell'app
+ENGIE 10.1.0 e con una fattura reale il 26 ottobre 2026. Prima della pubblicazione
+del primo documento lo stesso account restituiva HTTP 200, `code: OK`, lista
+vuota e codici ENGIE `9` / `9.91`: questa risposta non dimostra l'assenza di
+fatture o debiti. In presenza di questi codici i sensori dei valori rimangono
+indisponibili e riprovano al normale aggiornamento.
 
 ## Sensori
 
@@ -27,8 +26,13 @@ Assistant. La chiave è il suffisso stabile dell'identificativo interno.
 | Fatture scadute | `overdue_invoices` | Fatture aperte con stato scaduto o scadenza precedente alla data locale di HA. |
 | Ultima fattura | `latest_invoice` | Numero fiscale della fattura con data di emissione più recente. |
 | Importo ultima fattura | `latest_invoice_amount` | Importo originale in EUR, anche se già pagato. |
+| Residuo ultima fattura | `latest_invoice_remaining_amount` | Importo ancora da pagare sul documento più recente. |
+| IVA ultima fattura | `latest_invoice_vat_amount` | IVA totale indicata da ENGIE sul documento più recente. |
+| Stato ultima fattura | `latest_invoice_status` | Pagata, da pagare, scaduta, parzialmente pagata o sconosciuta. |
 | Data ultima fattura | `latest_invoice_date` | Data di emissione comunicata da ENGIE. |
 | Scadenza ultima fattura | `latest_invoice_due_date` | Scadenza dell'ultima fattura, anche se già pagata. |
+| Inizio periodo ultima fattura | `latest_invoice_period_start` | Primo giorno del periodo fatturato. |
+| Fine periodo ultima fattura | `latest_invoice_period_end` | Ultimo giorno del periodo fatturato. |
 | Prima scadenza aperta | `earliest_invoice_due_date` | Prima scadenza fra le fatture aperte; può essere già trascorsa. |
 | Ultima sincronizzazione fatture | `invoices_last_sync` | Ultima lettura delle fatture completata senza errori; categoria diagnostica. |
 | Prossima bolletta prevista | `next_bill_date` | Prima data comunicata nel riepilogo contrattuale, indipendente dalla cronologia documenti. |

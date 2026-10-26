@@ -354,8 +354,13 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             "overdue_invoices": 1,
             "latest_invoice": "SYNTHETIC-2025-002",
             "latest_invoice_amount": Decimal("100.75"),
+            "latest_invoice_remaining_amount": Decimal("100.75"),
+            "latest_invoice_vat_amount": Decimal("9.16"),
+            "latest_invoice_status": "not_paid",
             "latest_invoice_date": date(2025, 3, 1),
             "latest_invoice_due_date": date(2025, 3, 20),
+            "latest_invoice_period_start": date(2025, 1, 1),
+            "latest_invoice_period_end": date(2025, 2, 28),
             "earliest_invoice_due_date": date(2025, 3, 10),
             "invoices_last_sync": datetime(2025, 3, 11, tzinfo=UTC),
         }

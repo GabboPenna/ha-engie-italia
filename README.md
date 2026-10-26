@@ -5,7 +5,7 @@
 Forniture, consumi luce e gas, dati contrattuali e fatture ENGIE Italia in
 Home Assistant.
 
-[![Stato: beta 0.1.0b21](https://img.shields.io/badge/beta-0.1.0b21-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b21)
+[![Stato: beta 0.1.0b22](https://img.shields.io/badge/beta-0.1.0b22-f59e0b?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/releases/tag/v0.1.0b22)
 [![HACS: catalogo predefinito](https://img.shields.io/badge/HACS-catalogo_predefinito-41bdf5?style=flat-square)](https://github.com/hacs/default/pull/11034)
 [![Home Assistant 2026.9.0 o successivo](https://img.shields.io/badge/Home_Assistant-2026.9%2B-18bcf2?style=flat-square&logo=homeassistant&logoColor=white)](#requisiti)
 [![Accesso in sola lettura](https://img.shields.io/badge/accesso-sola_lettura-10b981?style=flat-square)](https://github.com/GabboPenna/ha-engie-italia/blob/main/SECURITY.md)
@@ -33,7 +33,7 @@ automaticamente.
 | **Consumi gas** | Ultimo mese e anno disponibili in Smc, con periodo, qualità e data dell'ultimo dato pubblicato. |
 | **Contratto** | Potenza impegnata e disponibile, scadenza delle condizioni economiche e finestra di autolettura gas, quando presenti. |
 | **Servizi account** | Prossima bolletta prevista, addebito diretto e bolletta digitale. |
-| **Fatture** | Ultimo documento, importi, scadenze e riepilogo delle fatture aperte. Funzione sperimentale, dipendente dai dati restituiti da ENGIE. |
+| **Fatture** | Ultimo documento, stato di pagamento, importo, residuo, IVA, periodo fatturato, scadenze e riepilogo delle fatture aperte. |
 | **Prezzi** | Componente energia, quota fissa annua e stato di verifica per le versioni presenti nel catalogo controllato su documenti pubblici. Non è un calcolo completo della bolletta. |
 | **Aggiornamenti** | Sincronizzazione condivisa ogni 6 ore, intervallo configurabile da 1 a 24 ore e pulsante di aggiornamento manuale. |
 | **Diagnostica** | Informazioni tecniche anonimizzate, senza credenziali, identificativi della fornitura, consumi o importi. |
@@ -106,8 +106,8 @@ può richiedere un nuovo accesso.
 - I dati provengono dai servizi cloud ENGIE e non sono misure in tempo reale.
 - I consumi gas sono riepiloghi mensili e possono comparire con ritardo.
 - Lo storico elettrico dipende dai giorni effettivamente pubblicati da ENGIE.
-- Le fatture sono sperimentali: alcuni account ricevono dal servizio una
-  risposta vuota o non disponibile anche quando altri dati funzionano.
+- Le fatture dipendono dai documenti effettivamente pubblicati da ENGIE; alcuni
+  account possono ricevere una risposta vuota o temporaneamente non disponibile.
 - I prezzi coprono solo offerte e versioni presenti nel
   [catalogo verificato](https://github.com/GabboPenna/ha-engie-italia/blob/main/docs/TARIFFS.md);
   non includono tasse, trasporto, oneri o altri elementi della bolletta.

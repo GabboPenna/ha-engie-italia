@@ -114,11 +114,33 @@
       "latest_invoice_amount": {
         "name": "Importo ultima fattura"
       },
+      "latest_invoice_remaining_amount": {
+        "name": "Residuo ultima fattura"
+      },
+      "latest_invoice_vat_amount": {
+        "name": "IVA ultima fattura"
+      },
+      "latest_invoice_status": {
+        "name": "Stato ultima fattura",
+        "state": {
+          "paid": "Pagata",
+          "not_paid": "Da pagare",
+          "expired": "Scaduta",
+          "partially_paid": "Parzialmente pagata",
+          "unknown": "Sconosciuto"
+        }
+      },
       "latest_invoice_date": {
         "name": "Data ultima fattura"
       },
       "latest_invoice_due_date": {
         "name": "Scadenza ultima fattura"
+      },
+      "latest_invoice_period_start": {
+        "name": "Inizio periodo ultima fattura"
+      },
+      "latest_invoice_period_end": {
+        "name": "Fine periodo ultima fattura"
       },
       "earliest_invoice_due_date": {
         "name": "Prima scadenza aperta"

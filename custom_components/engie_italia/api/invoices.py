@@ -38,8 +38,11 @@ class Invoice:
     reference: str
     amount: Decimal | None
     remaining: Decimal | None
+    vat_amount: Decimal | None
     issued: date | None
     due: date | None
+    billing_period_start: date | None
+    billing_period_end: date | None
     status: InvoiceStatus
 
     @property
@@ -97,13 +100,24 @@ def parse_invoices(payload: object) -> tuple[Invoice, ...]:
             )
         except ValueError:
             normalized = InvoiceStatus.UNKNOWN
+        billing_period_start = _date(row.get("billingPeriodStartDate"))
+        billing_period_end = _date(row.get("billingPeriodEndDate"))
+        if (
+            billing_period_start is not None
+            and billing_period_end is not None
+            and billing_period_end < billing_period_start
+        ):
+            raise PayloadError("Invalid invoice billing period")
         invoices.append(
             Invoice(
                 reference=reference,
                 amount=_amount(row.get("amount")),
                 remaining=_amount(row.get("unpaidRemainingAmount")),
+                vat_amount=_amount(row.get("vatAmount")),
                 issued=_date(row.get("emissionDate")),
                 due=_date(row.get("expiryDate")),
+                billing_period_start=billing_period_start,
+                billing_period_end=billing_period_end,
                 status=normalized,
             )
         )

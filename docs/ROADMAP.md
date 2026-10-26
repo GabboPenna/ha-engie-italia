@@ -4,7 +4,7 @@ La roadmap descrive il lavoro ancora utile per rendere l'integrazione più
 completa e affidabile. Lo storico dettagliato delle versioni è disponibile
 nelle [release GitHub](https://github.com/GabboPenna/ha-engie-italia/releases).
 
-Aggiornata al **19 ottobre 2026**.
+Aggiornata al **26 ottobre 2026**.
 
 ## Stato attuale
 
@@ -30,9 +30,8 @@ Aggiornata al **19 ottobre 2026**.
 
 ### Affidabilità dei dati
 
-- [ ] Confermare il comportamento delle fatture con account che restituiscono
-  documenti reali. La risposta finora osservata può essere vuota con codice
-  applicativo ENGIE anche quando consumi e contratto funzionano.
+- [x] Confermare il comportamento delle fatture con un account che restituisce
+  documenti reali, inclusi stato, residuo, IVA e periodo fatturato.
 - [ ] Verificare rettifiche storiche, giorni con cambio d'ora e serie parziali
   su più tipologie di account.
 - [ ] Ampliare le fixture sintetiche quando vengono osservate nuove strutture,
